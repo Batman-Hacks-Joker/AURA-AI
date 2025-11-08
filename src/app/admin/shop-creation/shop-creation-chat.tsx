@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Mic, Paperclip, SendHorizonal, User, Save } from 'lucide-react';
+import { Bot, Mic, Paperclip, SendHorizonal, User, Save, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React, { useRef, useState, useEffect } from 'react';
@@ -19,13 +19,23 @@ type Message = {
 
 const initialBotMessage: Message = {
     role: 'bot',
-    text: "Hello! I'm here to help you create a new product listing. To start, please tell me a bit about your product. For example, you could say 'It's a high-quality smart speaker with voice assistant capabilities'."
+    text: "Hello! I'm here to help you create a new product listing. To start, please tell me a bit about your product. For example, you could say 'It's a high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
 };
+
+// Define SpeechRecognition type for broader browser support
+interface CustomWindow extends Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+}
+declare const window: CustomWindow;
+
 
 export function ShopCreationChat() {
     const [messages, setMessages] = useState<Message[]>([initialBotMessage]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
 
@@ -41,6 +51,60 @@ export function ShopCreationChat() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn("Speech Recognition is not supported in this browser.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => {
+            setIsListening(true);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            setIsListening(false);
+        };
+
+        recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            for (let i = 0; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            setInput(input + finalTranscript + interimTranscript);
+        };
+
+        recognitionRef.current = recognition;
+
+        return () => {
+            recognition.stop();
+        };
+
+    }, [input]);
+
+    const handleMicClick = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+        } else {
+            recognitionRef.current?.start();
+        }
+    };
+
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -138,12 +202,14 @@ export function ShopCreationChat() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Tell me about your product..."
+                        placeholder={isListening ? 'Listening...' : 'Tell me about your product...'}
                         className="pr-28"
                         disabled={isLoading}
                     />
                     <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Mic className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
+                           {isListening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Paperclip className="h-4 w-4" /></Button>
                         <Button size="icon" className="h-8 w-8 bg-accent hover:bg-accent/90" onClick={handleSend} disabled={isLoading}><SendHorizonal className="h-4 w-4" /></Button>
                     </div>

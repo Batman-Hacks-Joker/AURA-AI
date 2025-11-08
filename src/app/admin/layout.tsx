@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span>Service Center</span>
                 </Link>
               </SidebarMenuButton>
-            </-SidebarMenuItem>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

@@ -79,18 +79,26 @@ export function ShopCreationChat() {
         };
 
         recognition.onresult = (event) => {
-            let finalTranscript = input;
+            let interimTranscript = '';
+            let finalTranscript = '';
+    
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setInput(finalTranscript);
+            setInput(prevInput => finalTranscript ? prevInput + finalTranscript : prevInput);
         };
 
         recognitionRef.current = recognition;
+        
+        return () => {
+            recognitionRef.current?.abort();
+        };
 
-    }, [input]);
+    }, []);
 
     const handleMicClick = () => {
         if (isListening) {

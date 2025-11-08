@@ -71,18 +71,25 @@ export function Chatbot() {
         };
 
         recognition.onresult = (event) => {
-            let finalTranscript = input;
+            let interimTranscript = '';
+            let finalTranscript = '';
+    
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setInput(finalTranscript);
+            setInput(prevInput => finalTranscript ? prevInput + finalTranscript : prevInput);
         };
 
         recognitionRef.current = recognition;
 
-    }, [input]);
+        return () => {
+            recognitionRef.current?.abort();
+        };
+    }, []);
 
     const handleMicClick = () => {
         if (isListening) {

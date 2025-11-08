@@ -27,23 +27,31 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    let role: string | null = null;
+    let userEmail: string | null = null;
+
     // Check for original test users first
     if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.pass) {
-      router.push('/admin/dashboard');
-      return;
-    }
-    if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
-      router.push('/customer/dashboard');
-      return;
+      role = 'admin';
+      userEmail = TEST_USERS.admin.email;
+    } else if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
+      role = 'customer';
+      userEmail = TEST_USERS.customer.email;
+    } else {
+      // Check for users created via signup flow (stored in localStorage)
+      const storedPassword = localStorage.getItem(email);
+      const storedRole = localStorage.getItem(`${email}-role`);
+      if (storedPassword && storedPassword === password && storedRole) {
+        role = storedRole;
+        userEmail = email;
+      }
     }
 
-    // Check for users created via signup flow (stored in localStorage)
-    const storedPassword = localStorage.getItem(email);
-    const storedRole = localStorage.getItem(`${email}-role`);
-
-    if (storedPassword && storedPassword === password && storedRole) {
-        router.push(`/${storedRole}/dashboard`);
-        return;
+    if (role && userEmail) {
+      localStorage.setItem('loggedInUser', JSON.stringify({ email: userEmail, role }));
+      window.dispatchEvent(new Event("storage")); // Notify other components of storage change
+      router.push(`/${role}/dashboard`);
+      return;
     }
 
     toast({

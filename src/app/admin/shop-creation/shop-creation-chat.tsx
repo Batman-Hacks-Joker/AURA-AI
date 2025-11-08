@@ -112,6 +112,10 @@ export function ShopCreationChat() {
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
 
+        if (isListening) {
+            recognitionRef.current?.stop();
+        }
+
         const userMessage: Message = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
         

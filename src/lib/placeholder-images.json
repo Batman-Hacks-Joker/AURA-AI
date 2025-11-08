@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "product-1",
+      "description": "A modern smart speaker on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1536571195711-1b796f9f9f7f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzbWFydCUyMHNwZWFrZXJ8ZW58MHx8fHwxNzYyNTYzODkxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart speaker"
+    },
+    {
+      "id": "product-2",
+      "description": "A sleek, black wireless headphone set.",
+      "imageUrl": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3aXJlbGVzcyUyMGhlYWRwaG9uZXN8ZW58MHx8fHwxNzYyNTEyMDc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wireless headphones"
+    },
+    {
+      "id": "product-3",
+      "description": "A professional camera with a large lens.",
+      "imageUrl": "https://images.unsplash.com/photo-1526417429346-b5835066f54e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwcm9mZXNzaW9uYWwlMjBjYW1lcmF8ZW58MHx8fHwxNzYyNjI0NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional camera"
+    },
+    {
+      "id": "inventory-part-1",
+      "description": "A computer motherboard with various components.",
+      "imageUrl": "https://images.unsplash.com/photo-1589779255718-3c459da9ffeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y29tcHV0ZXIlMjBtb3RoZXJib2FyZHxlbnwwfHx8fDE3NjI1NDA3NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "computer motherboard"
+    },
+    {
+      "id": "inventory-part-2",
+      "description": "A set of screwdrivers and tools.",
+      "imageUrl": "https://images.unsplash.com/photo-1733024155732-193bb846bba1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyZXBhaXIlMjB0b29sc3xlbnwwfHx8fDE3NjI1NDUyNTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "repair tools"
+    }
+  ]
 }

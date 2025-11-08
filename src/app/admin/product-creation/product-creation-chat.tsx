@@ -111,6 +111,15 @@ export function ProductCreationChat() {
     };
 
     const handleSave = () => {
+        if (!generatedDetails) {
+            toast({
+                variant: 'destructive',
+                title: 'No Details to Save',
+                description: "Please generate product details before saving.",
+            });
+            return;
+        }
+        
         const productToSave = {
             ...generatedDetails,
             name: generatedDetails.productName,
@@ -166,6 +175,13 @@ export function ProductCreationChat() {
                         </div>
                     </div>
                 </CardContent>
+                 {(generatedDetails || isLoading) && (
+                    <CardFooter>
+                       <Button onClick={handleSave} disabled={!generatedDetails || isLoading} className="w-full">
+                           <Save className="mr-2" /> Save & Launch
+                       </Button>
+                   </CardFooter>
+                )}
             </Card>
 
             {isLoading && !generatedDetails && (
@@ -198,9 +214,6 @@ export function ProductCreationChat() {
                                 Category: {generatedDetails.productCategory} | Price: ${generatedDetails.productPrice}
                             </CardDescription>
                         </div>
-                         <Button onClick={handleSave}>
-                            <Save className="mr-2" /> Save & Launch
-                        </Button>
                     </CardHeader>
                     <CardContent className="grid gap-6">
                         <div>

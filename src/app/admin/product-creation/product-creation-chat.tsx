@@ -3,13 +3,12 @@
 import { Mic, Paperclip, Save, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useRef, useState, useEffect } from 'react';
-import { getProductCreationResponse, getGeneratedProductDetails } from './product-creation-actions';
+import { getProductCreationResponse } from './product-creation-actions';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Define SpeechRecognition type for broader browser support
@@ -57,17 +56,15 @@ export function ProductCreationChat() {
         };
 
         recognition.onresult = (event) => {
-            let interimTranscript = '';
             let finalTranscript = '';
-    
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setInput(prevInput => finalTranscript ? prevInput + finalTranscript : prevInput);
+            if (finalTranscript) {
+                setInput(prevInput => prevInput + finalTranscript);
+            }
         };
 
         recognitionRef.current = recognition;
@@ -93,14 +90,13 @@ export function ProductCreationChat() {
 
         if (isListening) {
             recognitionRef.current?.stop();
+            setIsListening(false);
         }
         
         setIsLoading(true);
         
         try {
-            // We are not using conversation history for now
-            await getProductCreationResponse(input, "");
-            const details = await getGeneratedProductDetails();
+            const details = await getProductCreationResponse(input, "");
             setGeneratedDetails(details);
         } catch (error) {
             console.error(error);
@@ -115,11 +111,27 @@ export function ProductCreationChat() {
     };
 
     const handleSave = () => {
+        const productToSave = {
+            ...generatedDetails,
+            name: generatedDetails.productName,
+            price: generatedDetails.productPrice,
+            category: generatedDetails.productCategory,
+            sku: `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+            stock: Math.floor(Math.random() * 100),
+            status: "In Stock"
+        };
+        
+        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const updatedProducts = [...existingProducts, productToSave];
+        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        window.dispatchEvent(new Event('storage'));
+
+
         toast({
             title: 'Product Saved!',
             description: `${generatedDetails?.productName || 'Your new product'} has been added to the warehouse.`,
         });
-        // In a real app, you would also clear the state and redirect.
+        
         setGeneratedDetails(null);
         setInput('');
         router.push('/admin/inventory');
@@ -139,7 +151,7 @@ export function ProductCreationChat() {
                         <Textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Provide details to add new product. For example: 'It's a high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
+                            placeholder="Provide details to add new product. For example: 'A rugged, all-terrain electric truck with 500 miles of range, a solar panel roof, and a built-in air compressor.'"
                             className="min-h-[150px] text-base"
                             disabled={isLoading}
                         />
@@ -156,7 +168,7 @@ export function ProductCreationChat() {
                 </CardContent>
             </Card>
 
-            {isLoading && (
+            {isLoading && !generatedDetails && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Generating Product Details...</CardTitle>
@@ -209,5 +221,3 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    

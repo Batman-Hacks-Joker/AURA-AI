@@ -3,9 +3,34 @@ import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+
+type LoggedInUser = {
+  email: string;
+  role: 'admin' | 'customer';
+};
 
 export function Hero() {
   const speakerImage = PlaceHolderImages.find(p => p.id === 'product-1');
+  const [user, setUser] = useState<LoggedInUser | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('loggedInUser');
+    setUser(storedUser ? JSON.parse(storedUser) : null);
+
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem('loggedInUser');
+      setUser(storedUser ? JSON.parse(storedUser) : null);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
+  const getStartedLink = user ? `/${user.role}/dashboard` : "/signup";
 
   return (
     <section className="bg-background text-foreground">
@@ -20,7 +45,7 @@ export function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
-                <Link href="/signup">Get Started</Link>
+                <Link href={getStartedLink}>Get Started</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link href="#">Learn More</Link>

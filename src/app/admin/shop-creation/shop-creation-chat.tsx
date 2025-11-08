@@ -62,6 +62,8 @@ export function ShopCreationChat() {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
 
         recognition.onstart = () => {
             setIsListening(true);
@@ -77,23 +79,16 @@ export function ShopCreationChat() {
         };
 
         recognition.onresult = (event) => {
-            let finalTranscript = '';
-            let interimTranscript = '';
-            for (let i = 0; i < event.results.length; ++i) {
+            let finalTranscript = input;
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setInput(input + finalTranscript + interimTranscript);
+            setInput(finalTranscript);
         };
 
         recognitionRef.current = recognition;
-
-        return () => {
-            recognition.stop();
-        };
 
     }, [input]);
 

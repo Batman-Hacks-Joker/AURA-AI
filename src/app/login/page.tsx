@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,15 +12,13 @@ import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const TEST_USERS = {
-  admin: { email: 'atest@email.com', pass: 'atest' },
+  admin: { email: 'admintest@email.com', pass: 'admin' },
   customer: { email: 'ctest@email.com', pass: 'ctest' },
 };
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
-  const role = searchParams.get('role') || 'customer';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,15 +26,24 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const userRole = role as keyof typeof TEST_USERS;
-    const testUser = TEST_USERS[userRole];
+    if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.pass) {
+      localStorage.setItem('user-role', 'admin');
+      router.push('/admin/dashboard');
+      return;
+    }
+    if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
+      localStorage.setItem('user-role', 'customer');
+      router.push('/customer/dashboard');
+      return;
+    }
 
-    // This is a simplified check. A real app would also check the temporary user database.
-    if ((email === testUser.email && password === testUser.pass) || (localStorage.getItem(email) === password)) {
-      if (role === 'admin') {
-        router.push('/admin/dashboard');
+    const storedPassword = localStorage.getItem(email);
+    if (storedPassword === password) {
+      const userRole = localStorage.getItem(`${email}-role`);
+      if (userRole) {
+        router.push(`/${userRole}/dashboard`);
       } else {
-        router.push('/customer/dashboard');
+        router.push(`/onboarding?email=${encodeURIComponent(email)}`);
       }
     } else {
       toast({
@@ -46,9 +53,6 @@ export default function LoginPage() {
       });
     }
   };
-
-  const title = role === 'admin' ? 'Admin Portal' : 'Customer Hub';
-  const description = `Sign in to access the ${title.toLowerCase()}.`;
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 bg-background">
@@ -60,8 +64,8 @@ export default function LoginPage() {
         </div>
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-2xl">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
+            <CardDescription>Sign in to access your KARMA account.</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
-import { Mail, KeyRound, User } from 'lucide-react';
+import { Mail, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -40,14 +40,22 @@ export default function SignupPage() {
         return;
     }
 
-    // Temporary "database" using localStorage
     try {
+      if (localStorage.getItem(email)) {
+        toast({
+          variant: "destructive",
+          title: "User already exists",
+          description: "An account with this email already exists. Please log in.",
+        });
+        return;
+      }
+
       localStorage.setItem(email, password);
       toast({
         title: "Account Created!",
         description: "You have been successfully signed up. Please log in.",
       });
-      router.push('/login?role=customer');
+      router.push('/login');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -68,7 +76,7 @@ export default function SignupPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
-            <CardDescription>Join KARMA to manage your products.</CardDescription>
+            <CardDescription>Join KARMA to manage your products or business.</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -97,7 +105,7 @@ export default function SignupPage() {
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign Up</Button>
               <p className="text-xs text-muted-foreground text-center">
-                Already have an account? <Link href="/login?role=customer" className="text-primary hover:underline font-semibold">Log in</Link>
+                Already have an account? <Link href="/login" className="text-primary hover:underline font-semibold">Log in</Link>
               </p>
             </CardFooter>
           </form>

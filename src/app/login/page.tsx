@@ -8,21 +8,41 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { Mail, KeyRound } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
+const TEST_USERS = {
+  admin: { email: 'admintest@email.com', pass: 'admin' },
+  customer: { email: 'ctest@email.com', pass: 'ctest' },
+};
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const role = searchParams.get('role') || 'customer';
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd perform authentication here.
-    // For this prototype, we'll just redirect.
-    if (role === 'admin') {
-      router.push('/admin/dashboard');
+    
+    const userRole = role as keyof typeof TEST_USERS;
+    const testUser = TEST_USERS[userRole];
+
+    if (email === testUser.email && password === testUser.pass) {
+      if (role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/customer/dashboard');
+      }
     } else {
-      router.push('/customer/dashboard');
+      toast({
+        variant: "destructive",
+        title: "Invalid Credentials",
+        description: "Please check your email and password and try again.",
+      });
     }
   };
 
@@ -48,7 +68,7 @@ export default function LoginPage() {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="name@example.com" required className="pl-10" />
+                  <Input id="email" type="email" placeholder="name@example.com" required className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -60,14 +80,14 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" required placeholder="••••••••" className="pl-10" />
+                  <Input id="password" type="password" required placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In</Button>
               <p className="text-xs text-muted-foreground text-center">
-                Don't have an account? <Link href="#" className="text-primary hover:underline font-semibold">Sign up</Link>
+                Don't have an account? <Link href="/login?role=customer" className="text-primary hover:underline font-semibold">Sign up</Link>
               </p>
             </CardFooter>
           </form>

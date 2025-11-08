@@ -1,26 +1,16 @@
 'use client';
 
-import { Bot, Mic, Paperclip, SendHorizonal, User, Save, Square } from 'lucide-react';
+import { Mic, Paperclip, Save, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import React, { useRef, useState, useEffect } from 'react';
-import { getProductCreationResponse } from './product-creation-actions';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { getProductCreationResponse, getGeneratedProductDetails } from './product-creation-actions';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-
-type Message = {
-    role: 'user' | 'bot';
-    text: string;
-};
-
-const initialBotMessage: Message = {
-    role: 'bot',
-    text: "Hello! I'm here to help you create a new product listing. To start, please tell me a bit about your product. For example, you could say 'It's a high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
-};
+import { Textarea } from '@/components/ui/textarea';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Define SpeechRecognition type for broader browser support
 interface CustomWindow extends Window {
@@ -31,26 +21,14 @@ declare const window: CustomWindow;
 
 
 export function ProductCreationChat() {
-    const [messages, setMessages] = useState<Message[]>([initialBotMessage]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
+    const [generatedDetails, setGeneratedDetails] = useState<any>(null);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+    const router = useRouter();
 
-    const scrollToBottom = () => {
-        if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({
-                top: scrollAreaRef.current.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -104,124 +82,132 @@ export function ProductCreationChat() {
         if (isListening) {
             recognitionRef.current?.stop();
         } else {
+            setInput('');
             recognitionRef.current?.start();
         }
     };
 
 
-    const handleSend = async () => {
+    const handleGenerate = async () => {
         if (!input.trim() || isLoading) return;
 
         if (isListening) {
             recognitionRef.current?.stop();
         }
-
-        const userMessage: Message = { role: 'user', text: input };
-        setMessages(prev => [...prev, userMessage]);
         
         setIsLoading(true);
-        setTimeout(scrollToBottom, 100);
-
-        const fullConversation = [...messages, userMessage].map(m => `${m.role}: ${m.text}`).join('\n');
         
         try {
-            const botResponseText = await getProductCreationResponse(input, fullConversation);
-            const botMessage: Message = { role: 'bot', text: botResponseText };
-            setMessages(prev => [...prev, botMessage]);
+            // We are not using conversation history for now
+            await getProductCreationResponse(input, "");
+            const details = await getGeneratedProductDetails();
+            setGeneratedDetails(details);
         } catch (error) {
             console.error(error);
-            const errorMessage: Message = { role: 'bot', text: "I'm having trouble connecting right now. Please try again in a moment." };
-            setMessages(prev => [...prev, errorMessage]);
+            toast({
+                variant: 'destructive',
+                title: 'Error Generating Details',
+                description: "I'm having trouble connecting right now. Please try again in a moment.",
+            });
         } finally {
-            setInput('');
             setIsLoading(false);
-            setTimeout(scrollToBottom, 100);
         }
     };
 
     const handleSave = () => {
         toast({
             title: 'Product Saved!',
-            description: 'Your new product has been successfully created and is ready for the marketplace.',
+            description: `${generatedDetails?.productName || 'Your new product'} has been added to the warehouse.`,
         });
+        // In a real app, you would also clear the state and redirect.
+        setGeneratedDetails(null);
+        setInput('');
+        router.push('/admin/inventory');
     };
 
     return (
-        <Card className="h-[70vh] flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-primary">
-                        <AvatarFallback className="bg-background"><Bot className="h-5 w-5" /></AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <h2 className="text-lg font-semibold">KARMA Product Bot</h2>
-                        <p className="text-sm text-muted-foreground">Listing creation in progress...</p>
+        <div className="space-y-6">
+            <Card className="flex flex-col">
+                <CardHeader>
+                    <CardTitle>Hello, Admin!</CardTitle>
+                    <CardDescription>
+                        Provide initial details for KARMA Bot to generate a new product listing.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid w-full gap-4">
+                        <Textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Provide details to add new product. For example: 'It's a high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
+                            className="min-h-[150px] text-base"
+                            disabled={isLoading}
+                        />
+                        <div className="flex items-center gap-2">
+                             <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
+                               {isListening ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip className="h-5 w-5" /></Button>
+                            <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="ml-auto bg-primary hover:bg-primary/90">
+                                {isLoading ? 'Generating...' : 'Generate Details'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" className="bg-accent hover:bg-accent/90" onClick={handleSave}>
-                        <Save className="mr-2" /> Save & Launch
-                    </Button>
-                </div>
-            </CardHeader>
+                </CardContent>
+            </Card>
 
-            <CardContent className="flex-1 overflow-hidden p-0">
-                <ScrollArea className="h-full" ref={scrollAreaRef}>
-                    <div className="space-y-6 px-6 py-4">
-                        {messages.map((msg, index) => (
-                           <div key={index} className={cn("flex items-start gap-3", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                               {msg.role === 'bot' && (
-                                   <Avatar className="h-8 w-8 border">
-                                       <AvatarFallback className="bg-background"><Bot className="h-4 w-4" /></AvatarFallback>
-                                   </Avatar>
-                               )}
-                               <div className={cn(
-                                   "max-w-[75%] rounded-lg p-3 text-sm shadow-sm whitespace-pre-wrap", 
-                                   msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border'
-                                )}>
-                                   {msg.text}
-                               </div>
-                               {msg.role === 'user' && (
-                                   <Avatar className="h-8 w-8 border">
-                                       <AvatarFallback className="bg-background"><User className="h-4 w-4" /></AvatarFallback>
-                                   </Avatar>
-                               )}
-                           </div>
-                        ))}
-                        {isLoading && (
-                            <div className="flex items-start gap-3 justify-start">
-                                <Avatar className="h-8 w-8 border">
-                                    <AvatarFallback className="bg-background"><Bot className="h-4 w-4" /></AvatarFallback>
-                                </Avatar>
-                                <div className="max-w-[75%] rounded-lg p-3 text-sm bg-card border space-y-2">
-                                    <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="h-4 w-32" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </ScrollArea>
-            </CardContent>
+            {isLoading && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Generating Product Details...</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-8 w-1/2" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-1/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                        </div>
+                         <div className="space-y-2">
+                            <Skeleton className="h-4 w-1/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
-            <CardFooter className="p-4 border-t">
-                 <div className="relative w-full">
-                    <Input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder={isListening ? 'Listening...' : 'Tell me about your product...'}
-                        className="pr-28"
-                        disabled={isLoading}
-                    />
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                        <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
-                           {isListening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            {generatedDetails && !isLoading && (
+                <Card>
+                    <CardHeader className='flex-row items-center justify-between'>
+                        <div className='space-y-1.5'>
+                            <CardTitle>{generatedDetails.productName}</CardTitle>
+                            <CardDescription>
+                                Category: {generatedDetails.productCategory} | Price: ${generatedDetails.productPrice}
+                            </CardDescription>
+                        </div>
+                         <Button onClick={handleSave}>
+                            <Save className="mr-2" /> Save & Launch
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Paperclip className="h-4 w-4" /></Button>
-                        <Button size="icon" className="h-8 w-8 bg-accent hover:bg-accent/90" onClick={handleSend} disabled={isLoading}><SendHorizonal className="h-4 w-4" /></Button>
-                    </div>
-                </div>
-            </CardFooter>
-        </Card>
+                    </CardHeader>
+                    <CardContent className="grid gap-6">
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Key Features</h3>
+                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                                {generatedDetails.productFeatures.map((feature: string, i: number) => <li key={i}>{feature}</li>)}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Customer Benefits</h3>
+                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                                {generatedDetails.productBenefits.map((benefit: string, i: number) => <li key={i}>{benefit}</li>)}
+                            </ul>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     );
 }
+
+    

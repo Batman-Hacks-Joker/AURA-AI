@@ -5,11 +5,8 @@ import { Logo } from "@/components/logo";
 
 export default function OnboardingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-background to-violet-100 dark:to-violet-900/20">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-background to-violet-100 dark:to-violet-900/20 pt-16">
       <div className="max-w-4xl w-full text-center space-y-8">
-        <div className="flex justify-center">
-          <Logo />
-        </div>
         
         <div className="text-center">
           <h2 className="font-headline text-4xl md:text-5xl font-bold tracking-tighter text-foreground">

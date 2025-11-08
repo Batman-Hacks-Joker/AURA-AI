@@ -49,10 +49,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Shop Creation" className="text-base">
-                <Link href="/admin/shop-creation">
+              <SidebarMenuButton asChild tooltip="Product Creation" className="text-base">
+                <Link href="/admin/product-creation">
                   <Store />
-                  <span>Shop Creation</span>
+                  <span>Product Creation</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span>Service Center</span>
                 </Link>
               </SidebarMenuButton>
-            </SidebarMenuItem>
+            </-SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

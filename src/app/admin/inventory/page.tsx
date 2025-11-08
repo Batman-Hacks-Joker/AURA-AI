@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, File, ListFilter } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import {
     DropdownMenu,
@@ -68,11 +69,13 @@ export default function InventoryPage() {
                             Export
                         </span>
                     </Button>
-                    <Button size="sm" className="h-8 gap-1 bg-accent hover:bg-accent/90">
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            Add Product
-                        </span>
+                    <Button size="sm" asChild className="h-8 gap-1 bg-accent hover:bg-accent/90">
+                        <Link href="/admin/product-creation">
+                          <PlusCircle className="h-3.5 w-3.5" />
+                          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                              Add Product
+                          </span>
+                        </Link>
                     </Button>
                 </div>
             </div>

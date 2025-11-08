@@ -1,10 +1,10 @@
 'use client';
 
-import { Bot, Mic, Paperclip, SendHorizonal, User, Sparkles, Save, CircleCheck, ShoppingCart } from 'lucide-react';
+import { Bot, Mic, Paperclip, SendHorizonal, User, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React, { useRef, useState, useEffect } from 'react';
-import { getChatbotResponse } from '@/components/chatbot-actions';
+import { getProductCreationResponse } from './shop-creation-actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -19,9 +19,8 @@ type Message = {
 
 const initialBotMessage: Message = {
     role: 'bot',
-    text: "Hello! I'm here to help you create a new product listing. To start, please tell me a bit about your product. You can describe it, or upload a picture."
+    text: "Hello! I'm here to help you create a new product listing. To start, please tell me a bit about your product. For example, you could say 'It's a high-quality smart speaker with voice assistant capabilities'."
 };
-
 
 export function ShopCreationChat() {
     const [messages, setMessages] = useState<Message[]>([initialBotMessage]);
@@ -48,17 +47,25 @@ export function ShopCreationChat() {
 
         const userMessage: Message = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
-        setInput('');
-        setIsLoading(true);
-
-        setTimeout(scrollToBottom, 100);
-
-        const botResponse = await getChatbotResponse(input);
-        const botMessage: Message = { role: 'bot', text: botResponse };
-        setMessages(prev => [...prev, botMessage]);
-        setIsLoading(false);
         
+        setIsLoading(true);
         setTimeout(scrollToBottom, 100);
+
+        const fullConversation = [...messages, userMessage].map(m => `${m.role}: ${m.text}`).join('\n');
+        
+        try {
+            const botResponseText = await getProductCreationResponse(input, fullConversation);
+            const botMessage: Message = { role: 'bot', text: botResponseText };
+            setMessages(prev => [...prev, botMessage]);
+        } catch (error) {
+            console.error(error);
+            const errorMessage: Message = { role: 'bot', text: "I'm having trouble connecting right now. Please try again in a moment." };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setInput('');
+            setIsLoading(false);
+            setTimeout(scrollToBottom, 100);
+        }
     };
 
     const handleSave = () => {
@@ -97,7 +104,10 @@ export function ShopCreationChat() {
                                        <AvatarFallback className="bg-background"><Bot className="h-4 w-4" /></AvatarFallback>
                                    </Avatar>
                                )}
-                               <div className={cn("max-w-[75%] rounded-lg p-3 text-sm shadow-sm", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border')}>
+                               <div className={cn(
+                                   "max-w-[75%] rounded-lg p-3 text-sm shadow-sm whitespace-pre-wrap", 
+                                   msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border'
+                                )}>
                                    {msg.text}
                                </div>
                                {msg.role === 'user' && (

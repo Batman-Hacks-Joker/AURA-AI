@@ -11,6 +11,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+// The original test users are kept as a fallback.
 const TEST_USERS = {
   admin: { email: 'admintest@email.com', pass: 'admin' },
   customer: { email: 'ctest@email.com', pass: 'ctest' },
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check for original test users first
     if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.pass) {
       router.push('/admin/dashboard');
       return;
@@ -33,6 +35,15 @@ export default function LoginPage() {
     if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
       router.push('/customer/dashboard');
       return;
+    }
+
+    // Check for users created via signup flow (stored in localStorage)
+    const storedPassword = localStorage.getItem(email);
+    const storedRole = localStorage.getItem(`${email}-role`);
+
+    if (storedPassword && storedPassword === password && storedRole) {
+        router.push(`/${storedRole}/dashboard`);
+        return;
     }
 
     toast({

@@ -40,8 +40,9 @@ export default function SignupPage() {
         return;
     }
     
-    // For demo purposes, we will just show a success message and redirect to the onboarding page
-    // In a real app, you would handle user creation on the backend.
+    // Save user credentials to localStorage for this demo
+    localStorage.setItem(email, password);
+
     toast({
         title: "Account Created!",
         description: "You have been successfully signed up.",

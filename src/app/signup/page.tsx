@@ -39,30 +39,14 @@ export default function SignupPage() {
         });
         return;
     }
-
-    try {
-      if (localStorage.getItem(email)) {
-        toast({
-          variant: "destructive",
-          title: "User already exists",
-          description: "An account with this email already exists. Please log in.",
-        });
-        return;
-      }
-
-      localStorage.setItem(email, password);
-      toast({
+    
+    // For demo purposes, we will just show a success message and redirect to the onboarding page
+    // In a real app, you would handle user creation on the backend.
+    toast({
         title: "Account Created!",
-        description: "You have been successfully signed up. Please log in.",
-      });
-      router.push('/login');
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: "Something went wrong. Please try again.",
-      });
-    }
+        description: "You have been successfully signed up.",
+    });
+    router.push(`/onboarding?email=${encodeURIComponent(email)}`);
   };
 
   return (

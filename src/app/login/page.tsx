@@ -27,31 +27,19 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.pass) {
-      localStorage.setItem('user-role', 'admin');
       router.push('/admin/dashboard');
       return;
     }
     if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
-      localStorage.setItem('user-role', 'customer');
       router.push('/customer/dashboard');
       return;
     }
 
-    const storedPassword = localStorage.getItem(email);
-    if (storedPassword === password) {
-      const userRole = localStorage.getItem(`${email}-role`);
-      if (userRole) {
-        router.push(`/${userRole}/dashboard`);
-      } else {
-        router.push(`/onboarding?email=${encodeURIComponent(email)}`);
-      }
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Invalid Credentials",
-        description: "Please check your email and password and try again.",
-      });
-    }
+    toast({
+      variant: "destructive",
+      title: "Invalid Credentials",
+      description: "Please check your email and password and try again.",
+    });
   };
 
   return (

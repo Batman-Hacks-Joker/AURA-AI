@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Logo } from './logo';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from './theme-toggle';
 
 export function Navbar({ className }: { className?: string }) {
   return (
@@ -10,7 +11,7 @@ export function Navbar({ className }: { className?: string }) {
         <Link href="/">
           <Logo />
         </Link>
-        <nav className="hidden md:flex gap-6">
+        <nav className="hidden md:flex gap-6 items-center">
           <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
             Home
           </Link>
@@ -18,9 +19,12 @@ export function Navbar({ className }: { className?: string }) {
             Features
           </Link>
         </nav>
-        <Button asChild variant="outline">
-          <Link href="/login">Login</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button asChild variant="outline">
+            <Link href="/login">Login</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );

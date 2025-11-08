@@ -40,7 +40,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="My Products">
+              <SidebarMenuButton asChild tooltip="My Products" className="text-base">
                 <Link href="/customer/dashboard">
                   <LayoutDashboard />
                   <span>My Products</span>
@@ -48,7 +48,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Marketplace">
+              <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
                 <Link href="#">
                   <ShoppingCart />
                   <span>Marketplace</span>
@@ -56,7 +56,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Support">
+              <SidebarMenuButton asChild tooltip="Support" className="text-base">
                 <Link href="#">
                   <LifeBuoy />
                   <span>Support</span>

@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard">
+              <SidebarMenuButton asChild tooltip="Dashboard" className="text-base">
                 <Link href="/admin/dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Shop Creation">
+              <SidebarMenuButton asChild tooltip="Shop Creation" className="text-base">
                 <Link href="/admin/shop-creation">
                   <Store />
                   <span>Shop Creation</span>
@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Inventory">
+              <SidebarMenuButton asChild tooltip="Inventory" className="text-base">
                 <Link href="/admin/inventory">
                   <Warehouse />
                   <span>Inventory</span>
@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Service Center">
+              <SidebarMenuButton asChild tooltip="Service Center" className="text-base">
                 <Link href="/admin/service-center">
                   <Wrench />
                   <span>Service Center</span>

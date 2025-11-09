@@ -34,6 +34,9 @@ function AdminSidebarInner() {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
     if (!isRailClick || !isCollapsed) {
+      if ((e.target as HTMLElement).closest('[data-sidebar="menu-button"]')) {
+        return
+      }
       toggleSidebar();
     }
   };
@@ -71,7 +74,7 @@ function AdminSidebarInner() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-              <ThemeToggle />
+              <ThemeToggle withinSidebar />
           </SidebarMenuItem>
           <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Logout" className="text-base">

@@ -30,6 +30,9 @@ function CustomerSidebarInner() {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
     if (!isRailClick || !isCollapsed) {
+       if ((e.target as HTMLElement).closest('[data-sidebar="menu-button"]')) {
+        return
+      }
       toggleSidebar();
     }
   };

@@ -43,37 +43,51 @@ const defaultProducts: Product[] = [
     { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'offroad-1') },
 ];
 
+const getUniqueProducts = (products: Product[]): Product[] => {
+    const seen = new Set<string>();
+    return products.filter(product => {
+        const duplicate = seen.has(product.sku);
+        seen.add(product.sku);
+        return !duplicate;
+    });
+};
+
 export default function InventoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const { toast, dismiss } = useToast();
     const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
 
     useEffect(() => {
-        const storedProducts = localStorage.getItem('products');
-        if (storedProducts) {
-            setProducts(JSON.parse(storedProducts));
-        } else {
-            setProducts(defaultProducts);
-            localStorage.setItem('products', JSON.stringify(defaultProducts));
-        }
-
-        const handleStorageChange = () => {
-          const updatedProducts = localStorage.getItem('products');
-          if (updatedProducts) {
-            setProducts(JSON.parse(updatedProducts));
-          }
+        const loadProducts = () => {
+            const storedProductsRaw = localStorage.getItem('products');
+            if (storedProductsRaw) {
+                const storedProducts: Product[] = JSON.parse(storedProductsRaw);
+                const uniqueProducts = getUniqueProducts(storedProducts);
+                setProducts(uniqueProducts);
+                // If duplicates were found, update localStorage with the clean list
+                if (uniqueProducts.length !== storedProducts.length) {
+                    localStorage.setItem('products', JSON.stringify(uniqueProducts));
+                }
+            } else {
+                const uniqueDefaultProducts = getUniqueProducts(defaultProducts);
+                setProducts(uniqueDefaultProducts);
+                localStorage.setItem('products', JSON.stringify(uniqueDefaultProducts));
+            }
         };
 
-        window.addEventListener('storage', handleStorageChange);
+        loadProducts();
+
+        window.addEventListener('storage', loadProducts);
 
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('storage', loadProducts);
         };
     }, []);
     
     const updateLocalStorage = (updatedProducts: Product[]) => {
-        setProducts(updatedProducts);
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        const uniqueProducts = getUniqueProducts(updatedProducts);
+        setProducts(uniqueProducts);
+        localStorage.setItem('products', JSON.stringify(uniqueProducts));
     };
 
     const handleRemoveProduct = (sku: string) => {
@@ -94,7 +108,6 @@ export default function InventoryPage() {
             onUndo: () => {
                 if (lastRemovedProduct.current) {
                     const { product, index } = lastRemovedProduct.current;
-                    // Read the latest state from localStorage to avoid race conditions
                     const productsFromStorage: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
                     const restoredProducts = [
                         ...productsFromStorage.slice(0, index),

@@ -84,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
             <div className="flex items-center gap-2 md:gap-6 text-sm font-medium">
                 <SidebarToggle />
                 <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">

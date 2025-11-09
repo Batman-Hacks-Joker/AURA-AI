@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
@@ -15,12 +16,14 @@ import {
   LayoutDashboard,
   ShoppingCart,
   LifeBuoy,
+  PanelLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 import React from "react";
+import { Button } from "@/components/ui/button";
 
 
 function CustomerSidebarInner() {
@@ -82,9 +85,15 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       <CustomerSidebarInner />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
-            <Link href="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                Marketplace
-            </Link>
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="md:hidden">
+                <PanelLeft />
+                <span className="sr-only">Toggle Menu</span>
+              </SidebarTrigger>
+              <Link href="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hidden md:block">
+                  Marketplace
+              </Link>
+            </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <UserMenu />

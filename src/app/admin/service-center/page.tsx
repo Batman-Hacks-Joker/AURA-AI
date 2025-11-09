@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Clock, Smile, Wrench, UploadCloud } from "lucide-react";
+import { Phone, Clock, Smile, Wrench, UserPlus } from "lucide-react";
 import Link from "next/link";
 
 const metrics = [
@@ -31,8 +31,8 @@ export default function ServiceCenterPage() {
                     <p className="text-muted-foreground">Monitor customer support and after-sales service.</p>
                 </div>
                 <Button asChild>
-                    <Link href="/admin/service-center/knowledge-base">
-                        <UploadCloud className="mr-2 h-4 w-4" /> Upload KB
+                    <Link href="/admin/service-center/create-agent">
+                        <UserPlus className="mr-2 h-4 w-4" /> Create Agent
                     </Link>
                 </Button>
             </div>

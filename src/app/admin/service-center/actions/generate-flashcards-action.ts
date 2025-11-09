@@ -12,9 +12,9 @@ export async function generateFlashcards(input: Input) {
     const result = await generateFlashcardsFlow(input);
     return result;
   } catch (error) {
-    console.error("Flashcard generation action error:", error);
+    console.error("Agent response generation action error:", error);
     return {
-        error: "I'm sorry, I'm having trouble generating flashcards right now. The document might be too complex or in an unsupported format."
+        error: "I'm sorry, I'm having trouble generating agent responses right now. The document might be too complex or in an unsupported format."
     };
   }
 }

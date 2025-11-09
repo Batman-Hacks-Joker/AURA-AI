@@ -1,11 +1,10 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Clock, Smile, Wrench, UserPlus, Bot, MoreHorizontal, Link2 } from "lucide-react";
+import { Phone, Clock, Smile, Wrench, UserPlus, Bot, MoreHorizontal, Link2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -93,6 +92,20 @@ export default function ServiceCenterPage() {
         });
     };
 
+    const handleDeleteAgent = (agentId: string) => {
+        const agentToDelete = agents.find(agent => agent.id === agentId);
+        if (!agentToDelete) return;
+
+        const updatedAgents = agents.filter(agent => agent.id !== agentId);
+        setAgents(updatedAgents);
+        localStorage.setItem('serviceAgents', JSON.stringify(updatedAgents));
+
+        toast({
+            title: "Agent Deleted",
+            description: `Agent "${agentToDelete.name}" has been deleted.`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -165,11 +178,11 @@ export default function ServiceCenterPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Assign to Product</DropdownMenuLabel>
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuSub>
                                                             <DropdownMenuSubTrigger>
                                                                 <Link2 className="mr-2 h-4 w-4" />
-                                                                <span>{launchedProducts.length > 0 ? "Select Product" : "No products launched"}</span>
+                                                                <span>{launchedProducts.length > 0 ? "Assign Product" : "No products launched"}</span>
                                                             </DropdownMenuSubTrigger>
                                                             {launchedProducts.length > 0 && (
                                                                 <DropdownMenuPortal>
@@ -183,6 +196,11 @@ export default function ServiceCenterPage() {
                                                                 </DropdownMenuPortal>
                                                             )}
                                                         </DropdownMenuSub>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleDeleteAgent(agent.id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <span>Delete Agent</span>
+                                                        </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                                 </TableCell>
@@ -230,5 +248,3 @@ export default function ServiceCenterPage() {
         </div>
     );
 }
-
-    

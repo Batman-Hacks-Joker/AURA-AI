@@ -1,7 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +17,12 @@ type ServiceTicket = {
 
 export default function SupportPage() {
     const [tickets, setTickets] = useState<ServiceTicket[]>([]);
+    const router = useRouter();
 
     useEffect(() => {
         const loadTickets = () => {
             const storedTickets = localStorage.getItem('serviceTickets');
             if (storedTickets) {
-                // Sort tickets by date, newest first
                 const parsedTickets: ServiceTicket[] = JSON.parse(storedTickets);
                 parsedTickets.sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
                 setTickets(parsedTickets);
@@ -37,6 +37,12 @@ export default function SupportPage() {
         };
     }, []);
 
+    const handleTicketClick = (ticket: ServiceTicket) => {
+        if (ticket.status === 'Open' || ticket.status === 'In Progress') {
+            router.push(`/customer/support/${ticket.id}`);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div>
@@ -47,7 +53,7 @@ export default function SupportPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Service History</CardTitle>
-                    <CardDescription>An overview of all your support tickets.</CardDescription>
+                    <CardDescription>An overview of all your support tickets. Click an open ticket to chat with an agent.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {tickets.length === 0 ? (
@@ -69,7 +75,11 @@ export default function SupportPage() {
                             </TableHeader>
                             <TableBody>
                                 {tickets.map((ticket) => (
-                                    <TableRow key={ticket.id}>
+                                    <TableRow 
+                                        key={ticket.id} 
+                                        onClick={() => handleTicketClick(ticket)}
+                                        className={ticket.status !== 'Resolved' ? 'cursor-pointer hover:bg-muted/50' : ''}
+                                    >
                                         <TableCell className="font-medium">{ticket.id}</TableCell>
                                         <TableCell>{ticket.productName}</TableCell>
                                         <TableCell>{ticket.issue}</TableCell>

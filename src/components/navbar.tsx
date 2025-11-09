@@ -37,31 +37,15 @@ export function Navbar({ className }: { className?: string }) {
 
   return (
     <header className={cn("fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm", className)}>
-      <div className="container mx-auto flex h-24 flex-col items-center justify-between px-4">
-        <div className="flex w-full items-center justify-center pt-4 relative">
-          <div className="absolute left-0">
-             {/* Placeholder for sidebar trigger if needed in this layout */}
-          </div>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/">
             <Logo />
           </Link>
-          <div className="absolute right-0 flex items-center gap-2">
-            <ThemeToggle />
-            {!user && (
-              <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
-            )}
-          </div>
-        </div>
-        <nav className="flex gap-6 items-center py-2">
-          <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Home
-          </Link>
-          <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-            Features
-          </Link>
-        </nav>
+          {!user && (
+            <Button asChild variant="outline">
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
       </div>
     </header>
   );

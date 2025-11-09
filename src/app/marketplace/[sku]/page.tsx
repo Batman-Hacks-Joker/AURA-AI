@@ -2,15 +2,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 type Product = {
     name: string;
@@ -38,6 +38,8 @@ export default function ProductDetailPage() {
     const { sku } = useParams();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+    const router = useRouter();
     
     useEffect(() => {
         if (sku) {
@@ -50,6 +52,30 @@ export default function ProductDetailPage() {
         }
         setIsLoading(false);
     }, [sku]);
+
+    const handleAddToCart = () => {
+        if (!product) return;
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (!cart.some((item: Product) => item.sku === product.sku)) {
+            cart.push(product);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            window.dispatchEvent(new Event('storage')); // Notify other components
+            toast({
+                title: "Added to Cart",
+                description: `${product.productName || product.name} has been added.`,
+                action: (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/customer/cart')}>
+                        View Cart
+                    </Button>
+                ),
+            });
+        } else {
+            toast({
+                title: "Already in Cart",
+                description: "This item is already in your shopping cart.",
+            });
+        }
+    };
     
     const imageMap: { [key: string]: any } = {
         "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
@@ -138,7 +164,7 @@ export default function ProductDetailPage() {
                     )}
 
                     <div className="flex items-center gap-2 pt-4">
-                        <Button size="lg" className="w-full bg-accent hover:bg-accent/90">
+                        <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleAddToCart}>
                            <ShoppingCart className="mr-2" /> Add to Cart
                         </Button>
                         <Button size="lg" variant="outline">
@@ -155,4 +181,3 @@ export default function ProductDetailPage() {
         </div>
     );
 }
-

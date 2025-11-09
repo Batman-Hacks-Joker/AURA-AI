@@ -9,8 +9,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 type Product = {
     name: string;
@@ -33,32 +34,45 @@ type Product = {
     productBenefits?: string[];
 };
 
-function BuyNowButton({ product }: { product: Product }) {
-    const [isHovered, setIsHovered] = useState(false);
+function CartButton({ product }: { product: Product }) {
     const router = useRouter();
-    const productPrice = product.productPrice || product.price;
+    const { toast } = useToast();
+    const [isInCart, setIsInCart] = useState(false);
 
-    const handleBuyNow = () => {
-        // In a real app, you'd add to a cart state management
-        // For this demo, we'll pass the product SKU to a dedicated cart page
-        router.push(`/customer/cart?sku=${product.sku}`);
+    useEffect(() => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        setIsInCart(cart.some((item: Product) => item.sku === product.sku));
+    }, [product.sku]);
+
+    const handleAddToCart = () => {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (!cart.some((item: Product) => item.sku === product.sku)) {
+            cart.push(product);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            window.dispatchEvent(new Event('storage')); // Notify other components like header
+            setIsInCart(true);
+            toast({
+                title: "Added to Cart",
+                description: `${product.productName || product.name} has been added to your cart.`,
+            });
+        }
     };
 
+    if (isInCart) {
+        return (
+            <Button asChild className="w-full">
+                <Link href="/customer/cart">
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    Checkout
+                </Link>
+            </Button>
+        );
+    }
+    
     return (
-        <Button
-            className="w-full bg-accent hover:bg-accent/90"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={handleBuyNow}
-        >
-            {isHovered ? (
-                <>
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Buy Now
-                </>
-            ) : (
-                `$${Number(productPrice).toLocaleString()}`
-            )}
+        <Button onClick={handleAddToCart} className="w-full bg-accent hover:bg-accent/90">
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Add to Cart
         </Button>
     );
 }
@@ -123,8 +137,7 @@ export default function MarketplacePage() {
                                 <Skeleton className="h-4 w-full" />
                             </CardContent>
                             <CardFooter className="gap-2">
-                                <Skeleton className="h-10 w-1/2" />
-                                <Skeleton className="h-10 w-1/2" />
+                                <Skeleton className="h-10 w-full" />
                             </CardFooter>
                         </Card>
                     ))}
@@ -138,6 +151,7 @@ export default function MarketplacePage() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {launchedProducts.map((product) => {
                         const productName = product.productName || product.name;
+                        const productPrice = product.productPrice || product.price;
                         const productImage = product.image || imageMap[productName];
                         const isOwned = purchasedSkus.has(product.sku);
 
@@ -168,17 +182,15 @@ export default function MarketplacePage() {
                                         {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
                                     </p>
                                 </CardContent>
-                                <CardFooter className="gap-2">
-                                    <Button asChild variant="outline" size="sm" className="w-full">
-                                      <Link href={`/marketplace/${product.sku}`}>View Details</Link>
-                                    </Button>
+                                <CardFooter className="flex-col items-start gap-2">
+                                     <p className="font-semibold text-lg w-full">${Number(productPrice).toLocaleString()}</p>
                                     {isOwned ? (
                                         <Badge variant="secondary" className="w-full flex justify-center items-center h-9">
                                             <CheckCircle className="mr-2 h-4 w-4" />
                                             Owned
                                         </Badge>
                                     ) : (
-                                        <BuyNowButton product={product} />
+                                        <CartButton product={product} />
                                     )}
                                 </CardFooter>
                             </Card>

@@ -2,13 +2,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter, notFound } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, ShoppingCart } from 'lucide-react';
+import { CreditCard, ShoppingCart, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -35,46 +35,55 @@ type Product = {
 };
 
 export default function CartPage() {
-    const searchParams = useSearchParams();
     const router = useRouter();
-    const sku = searchParams.get('sku');
-    const [product, setProduct] = useState<Product | null>(null);
+    const [cart, setCart] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     
     useEffect(() => {
-        if (sku) {
-            const storedProductsRaw = localStorage.getItem('products');
-            if (storedProductsRaw) {
-                const allProducts: Product[] = JSON.parse(storedProductsRaw);
-                const foundProduct = allProducts.find(p => p.sku === sku && p.launched);
-                setProduct(foundProduct || null);
-            }
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+            setCart(JSON.parse(storedCart));
         }
         setIsLoading(false);
-    }, [sku]);
+    }, []);
 
     const handleCheckout = () => {
-        if (!product) return;
+        if (cart.length === 0) return;
 
-        const purchasedProduct = {
+        const purchasedProducts = cart.map(product => ({
             ...product,
             purchaseDate: `Purchased on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-        };
+        }));
 
         const existingPurchases: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
-        const updatedPurchases = [...existingPurchases, purchasedProduct];
+        const updatedPurchases = [...existingPurchases, ...purchasedProducts];
         localStorage.setItem('purchasedProducts', JSON.stringify(updatedPurchases));
-        window.dispatchEvent(new Event('storage'));
+        
+        localStorage.removeItem('cart'); // Clear the cart
+        window.dispatchEvent(new Event('storage')); // Notify all components of storage change
 
         toast({
             title: "Purchase Complete!",
-            description: `You have successfully purchased the ${product.productName || product.name}.`,
+            description: `You have successfully purchased ${cart.length} item(s).`,
             duration: 5000,
         });
 
         router.push('/customer/dashboard');
     };
+
+    const handleRemoveFromCart = (sku: string) => {
+        const updatedCart = cart.filter(product => product.sku !== sku);
+        setCart(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+        window.dispatchEvent(new Event('storage'));
+        toast({
+            title: "Item Removed",
+            description: "The item has been removed from your cart.",
+        });
+    };
+
+    const subtotal = cart.reduce((acc, product) => acc + (Number(product.productPrice || product.price)), 0);
 
     const imageMap: { [key: string]: any } = {
         "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
@@ -89,14 +98,9 @@ export default function CartPage() {
             <div className="max-w-4xl mx-auto py-8 px-4">
                 <Skeleton className="h-8 w-1/3 mb-6" />
                 <Card>
-                    <CardContent className="grid md:grid-cols-[1fr_2fr] gap-6 p-6">
-                        <Skeleton className="rounded-lg aspect-square w-full" />
-                        <div className="space-y-4">
-                            <Skeleton className="h-8 w-3/4" />
-                            <Skeleton className="h-6 w-1/4" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-5/6" />
-                        </div>
+                    <CardContent className="p-6">
+                        <Skeleton className="h-10 w-full mb-4" />
+                        <Skeleton className="h-10 w-full" />
                     </CardContent>
                     <CardFooter>
                         <Skeleton className="h-12 w-full" />
@@ -106,7 +110,7 @@ export default function CartPage() {
         );
     }
     
-    if (!sku || !product) {
+    if (cart.length === 0) {
         return (
              <div className="max-w-4xl mx-auto py-8 px-4 text-center">
                  <ShoppingCart className="mx-auto h-16 w-16 text-muted-foreground" />
@@ -119,45 +123,53 @@ export default function CartPage() {
         );
     }
     
-    const productName = product.productName || product.name;
-    const productPrice = product.productPrice || product.price;
-    const productImage = product.image || imageMap[productName];
-
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
             <h1 className="text-3xl font-bold tracking-tight mb-6">Shopping Cart</h1>
             <Card>
                 <CardHeader>
                     <CardTitle>Order Summary</CardTitle>
-                    <CardDescription>Review your item before proceeding to checkout.</CardDescription>
+                    <CardDescription>Review your items before proceeding to checkout.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid md:grid-cols-[120px_1fr_auto] items-start gap-6">
-                    {productImage ? (
-                        <Image
-                            src={productImage.imageUrl}
-                            alt={productName}
-                            width={120}
-                            height={120}
-                            data-ai-hint={productImage.imageHint}
-                            className="rounded-lg shadow-sm aspect-square object-cover"
-                        />
-                    ) : (
-                        <div className="rounded-lg aspect-square bg-muted flex items-center justify-center shadow-sm">
-                            <span className="text-sm text-muted-foreground">No Image</span>
-                        </div>
-                    )}
-                    <div className="space-y-1">
-                        <h2 className="text-lg font-semibold">{productName}</h2>
-                        <p className="text-sm text-muted-foreground">{product.productCategory || product.category}</p>
-                         <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
-                    </div>
-                    <p className="text-lg font-semibold text-right">${Number(productPrice).toLocaleString()}</p>
+                <CardContent className="space-y-4">
+                   {cart.map(product => {
+                        const productName = product.productName || product.name;
+                        const productPrice = product.productPrice || product.price;
+                        const productImage = product.image || imageMap[productName];
+
+                       return (
+                           <div key={product.sku} className="grid grid-cols-[80px_1fr_auto_auto] items-center gap-4">
+                               {productImage ? (
+                                   <Image
+                                       src={productImage.imageUrl}
+                                       alt={productName}
+                                       width={80}
+                                       height={80}
+                                       data-ai-hint={productImage.imageHint}
+                                       className="rounded-md aspect-square object-cover"
+                                   />
+                               ) : (
+                                   <div className="rounded-md aspect-square bg-muted flex items-center justify-center">
+                                       <span className="text-xs text-muted-foreground">No Image</span>
+                                   </div>
+                               )}
+                               <div className="space-y-1">
+                                   <h3 className="font-semibold">{productName}</h3>
+                                   <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                               </div>
+                               <p className="font-semibold text-right">${Number(productPrice).toLocaleString()}</p>
+                               <Button variant="ghost" size="icon" onClick={() => handleRemoveFromCart(product.sku)}>
+                                   <Trash2 className="h-4 w-4 text-destructive" />
+                               </Button>
+                           </div>
+                       )
+                   })}
                 </CardContent>
                 <Separator />
                 <CardContent className="p-6 space-y-2">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span>${Number(productPrice).toLocaleString()}</span>
+                        <span>${subtotal.toLocaleString()}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Shipping</span>
@@ -172,7 +184,7 @@ export default function CartPage() {
                  <CardContent className="p-6">
                     <div className="flex justify-between font-bold text-xl">
                         <span>Total</span>
-                        <span>${Number(productPrice).toLocaleString()}</span>
+                        <span>${subtotal.toLocaleString()}</span>
                     </div>
                  </CardContent>
                 <CardFooter>

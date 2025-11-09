@@ -22,8 +22,9 @@ import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 
 function CustomerSidebarInner() {
@@ -80,6 +81,23 @@ function CustomerSidebarInner() {
 
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
+    const [cartCount, setCartCount] = useState(0);
+
+    useEffect(() => {
+        const updateCartCount = () => {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            setCartCount(cart.length);
+        };
+        
+        updateCartCount();
+        
+        window.addEventListener('storage', updateCartCount);
+        
+        return () => {
+            window.removeEventListener('storage', updateCartCount);
+        };
+    }, []);
+
   return (
     <>
       <CustomerSidebarInner />
@@ -94,7 +112,16 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
                   Marketplace
               </Link>
             </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <Button asChild variant="ghost" size="icon" className="relative">
+                <Link href="/customer/cart">
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartCount > 0 && (
+                        <Badge className="absolute -top-2 -right-2 h-5 w-5 justify-center p-0">{cartCount}</Badge>
+                    )}
+                    <span className="sr-only">View Cart</span>
+                </Link>
+            </Button>
             <ThemeToggle />
             <UserMenu />
           </div>

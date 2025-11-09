@@ -15,8 +15,6 @@ import {
   Star,
   LogOut,
   User,
-  Moon,
-  Sun,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

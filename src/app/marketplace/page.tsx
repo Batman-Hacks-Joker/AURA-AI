@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 type Product = {
     name: string;
@@ -64,16 +65,34 @@ function BuyNowButton({ product }: { product: Product }) {
 
 export default function MarketplacePage() {
     const [launchedProducts, setLaunchedProducts] = useState<Product[]>([]);
+    const [purchasedSkus, setPurchasedSkus] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const storedProductsRaw = localStorage.getItem('products');
-        if (storedProductsRaw) {
-            const allProducts: Product[] = JSON.parse(storedProductsRaw);
-            const launched = allProducts.filter(p => p.launched);
-            setLaunchedProducts(launched);
+        const loadData = () => {
+            const storedProductsRaw = localStorage.getItem('products');
+            const purchasedProductsRaw = localStorage.getItem('purchasedProducts');
+            
+            if (storedProductsRaw) {
+                const allProducts: Product[] = JSON.parse(storedProductsRaw);
+                const launched = allProducts.filter(p => p.launched);
+                setLaunchedProducts(launched);
+            }
+
+            if (purchasedProductsRaw) {
+                const purchasedProducts: Product[] = JSON.parse(purchasedProductsRaw);
+                setPurchasedSkus(new Set(purchasedProducts.map(p => p.sku)));
+            }
+            
+            setIsLoading(false);
+        };
+        
+        loadData();
+        window.addEventListener('storage', loadData);
+
+        return () => {
+            window.removeEventListener('storage', loadData);
         }
-        setIsLoading(false);
     }, []);
 
     const imageMap: { [key: string]: any } = {
@@ -120,6 +139,7 @@ export default function MarketplacePage() {
                     {launchedProducts.map((product) => {
                         const productName = product.productName || product.name;
                         const productImage = product.image || imageMap[productName];
+                        const isOwned = purchasedSkus.has(product.sku);
 
                         return (
                             <Card key={product.sku} className="flex flex-col h-full transition-shadow duration-300 hover:shadow-lg">
@@ -152,7 +172,14 @@ export default function MarketplacePage() {
                                     <Button asChild variant="outline" size="sm" className="w-full">
                                       <Link href={`/marketplace/${product.sku}`}>View Details</Link>
                                     </Button>
-                                    <BuyNowButton product={product} />
+                                    {isOwned ? (
+                                        <Badge variant="secondary" className="w-full flex justify-center items-center h-9">
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            Owned
+                                        </Badge>
+                                    ) : (
+                                        <BuyNowButton product={product} />
+                                    )}
                                 </CardFooter>
                             </Card>
                         );

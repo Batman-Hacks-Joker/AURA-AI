@@ -47,7 +47,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     <SidebarProvider>
       <CustomerSidebar>
         <SidebarHeader className="flex items-center justify-between">
-          <Logo />
+          <Logo collapsed={useSidebar().state === 'collapsed'} />
           <SidebarToggle />
         </SidebarHeader>
         <SidebarContent>

@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <SidebarProvider>
       <AdminSidebar>
         <SidebarHeader className="flex items-center justify-between">
-          <Logo />
+          <Logo collapsed={useSidebar().state === 'collapsed'} />
           <SidebarToggle />
         </SidebarHeader>
         <SidebarContent>

@@ -16,18 +16,14 @@ import {
   LayoutDashboard,
   ShoppingCart,
   LifeBuoy,
-  User,
-  LogOut,
-  Settings,
-  ArrowLeftToLine,
-  ArrowRightToLine,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 
-function CustomerSidebar({ children }: { children: React.ReactNode }) {
+
+function CustomerSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -38,47 +34,49 @@ function CustomerSidebar({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return <Sidebar collapsible="icon" onClick={handleClick}>{children}</Sidebar>
+  return (
+    <Sidebar collapsible="icon" onClick={handleClick}>
+      <SidebarHeader className="flex items-center justify-between">
+        <Logo collapsed={isCollapsed} />
+        <SidebarToggle />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="My Products" className="text-base">
+              <Link href="/customer/dashboard">
+                <LayoutDashboard />
+                <span>My Products</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
+              <Link href="/marketplace">
+                <ShoppingCart />
+                <span>Marketplace</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Support" className="text-base">
+              <Link href="#">
+                <LifeBuoy />
+                <span>Support</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
+  );
 }
 
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <CustomerSidebar>
-        <SidebarHeader className="flex items-center justify-between">
-          <Logo collapsed={useSidebar().state === 'collapsed'} />
-          <SidebarToggle />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="My Products" className="text-base">
-                <Link href="/customer/dashboard">
-                  <LayoutDashboard />
-                  <span>My Products</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
-                <Link href="/marketplace">
-                  <ShoppingCart />
-                  <span>Marketplace</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Support" className="text-base">
-                <Link href="#">
-                  <LifeBuoy />
-                  <span>Support</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </CustomerSidebar>
+      <CustomerSidebarInner />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
           <div className="flex items-center gap-2">

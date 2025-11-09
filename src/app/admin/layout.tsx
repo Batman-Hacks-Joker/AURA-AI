@@ -20,16 +20,13 @@ import {
   Warehouse,
   Store,
   Wrench,
-  ArrowRightToLine,
-  ArrowLeftToLine,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 
-
-function AdminSidebar({ children }: { children: React.ReactNode }) {
+function AdminSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -40,57 +37,59 @@ function AdminSidebar({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return <Sidebar collapsible="icon" onClick={handleClick}>{children}</Sidebar>
+  return (
+    <Sidebar collapsible="icon" onClick={handleClick}>
+      <SidebarHeader className="flex items-center justify-between">
+        <Logo collapsed={isCollapsed} />
+        <SidebarToggle />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="group/menu-item relative flex items-center gap-2">
+                <UserMenu />
+                <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+                  Hi, Admin!
+                </span>
+            </div>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Home" className="text-base">
+              <Link href="/">
+                <Home />
+                <span>Home</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Features" className="text-base">
+              <Link href="#">
+                <Star />
+                <span>Features</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+              <ThemeToggle />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Logout" className="text-base">
+                  <Link href="/">
+                      <LogOut />
+                      <span>Log out</span>
+                  </Link>
+              </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
+  );
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <AdminSidebar>
-        <SidebarHeader className="flex items-center justify-between">
-          <Logo collapsed={useSidebar().state === 'collapsed'} />
-          <SidebarToggle />
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <div className="group/menu-item relative flex items-center gap-2">
-                  <UserMenu />
-                  <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-                    Hi, Admin!
-                  </span>
-              </div>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Home" className="text-base">
-                <Link href="/">
-                  <Home />
-                  <span>Home</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Features" className="text-base">
-                <Link href="#">
-                  <Star />
-                  <span>Features</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <ThemeToggle />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Logout" className="text-base">
-                    <Link href="/">
-                        <LogOut />
-                        <span>Log out</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </AdminSidebar>
+      <AdminSidebarInner />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4">
             <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">

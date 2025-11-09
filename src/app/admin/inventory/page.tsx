@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, File, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,6 +17,7 @@ import {
   } from "@/components/ui/dropdown-menu";
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import data from '@/lib/placeholder-images.json';
 
 type Product = {
     name: string;
@@ -27,14 +27,20 @@ type Product = {
     stock: number;
     status: string;
     launched?: boolean;
+    image?: {
+        id: string;
+        description: string;
+        imageUrl: string;
+        imageHint: string;
+    };
 };
 
 const defaultProducts: Product[] = [
-    { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock" },
-    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock" },
-    { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock" },
-    { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock" },
-    { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock" },
+    { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'truck-1')},
+    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'ev-1') },
+    { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock", image: data.placeholderImages.find(p => p.id === 'sedan-1') },
+    { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'suv-1') },
+    { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'offroad-1') },
 ];
 
 export default function InventoryPage() {
@@ -71,13 +77,14 @@ export default function InventoryPage() {
     };
 
     const handleRemoveProduct = (sku: string) => {
-        const productIndex = products.findIndex(p => p.sku === sku);
+        const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const productIndex = currentProducts.findIndex((p: Product) => p.sku === sku);
         if (productIndex === -1) return;
 
-        const productToRemove = products[productIndex];
+        const productToRemove = currentProducts[productIndex];
         lastRemovedProduct.current = { product: productToRemove, index: productIndex };
         
-        const updatedProducts = products.filter(p => p.sku !== sku);
+        const updatedProducts = currentProducts.filter((p: Product) => p.sku !== sku);
         updateLocalStorage(updatedProducts);
 
         const { id } = toast({
@@ -88,9 +95,9 @@ export default function InventoryPage() {
                 if (lastRemovedProduct.current) {
                     const { product, index } = lastRemovedProduct.current;
                     const restoredProducts = [
-                        ...products.slice(0, index),
+                        ...updatedProducts.slice(0, index),
                         product,
-                        ...products.slice(index)
+                        ...updatedProducts.slice(index)
                     ];
                     updateLocalStorage(restoredProducts);
                     lastRemovedProduct.current = null;
@@ -101,37 +108,24 @@ export default function InventoryPage() {
     }
 
     const handleLaunchProduct = (sku: string) => {
-        const productIndex = products.findIndex(p => p.sku === sku);
+        const currentProducts: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
+        const productIndex = currentProducts.findIndex(p => p.sku === sku);
         if (productIndex === -1) return;
         
-        const updatedProducts = products.map(p => p.sku === sku ? { ...p, launched: true } : p);
+        const updatedProducts = currentProducts.map(p => p.sku === sku ? { ...p, launched: true } : p);
         updateLocalStorage(updatedProducts);
 
         const { id } = toast({
             title: "Product Launched!",
-            description: `${products[productIndex].name} has been launched.`,
+            description: `${currentProducts[productIndex].name} has been launched.`,
             duration: 5000,
             onUndo: () => {
-                const revertedProducts = products.map(p => p.sku === sku ? { ...p, launched: false } : p);
+                const revertedProducts = updatedProducts.map(p => p.sku === sku ? { ...p, launched: false } : p);
                 updateLocalStorage(revertedProducts);
                 dismiss(id);
             },
         });
     }
-
-    const truckImage = PlaceHolderImages.find(p => p.id === 'truck-1');
-    const evImage = PlaceHolderImages.find(p => p.id === 'ev-1');
-    const sedanImage = PlaceHolderImages.find(p => p.id === 'sedan-1');
-    const suvImage = PlaceHolderImages.find(p => p.id === 'suv-1');
-    const offroadImage = PlaceHolderImages.find(p => p.id === 'offroad-1');
-    
-    const imageMap: { [key: string]: any } = {
-        "Off-Road Beast": truckImage,
-        "Urban Explorer": evImage,
-        "City Commuter": sedanImage,
-        "Family Voyager": suvImage,
-        "Adventure Seeker": offroadImage,
-    };
 
     return (
         <div className="space-y-6">
@@ -181,13 +175,13 @@ export default function InventoryPage() {
                             {products.map((product) => (
                                 <TableRow key={product.sku}>
                                     <TableCell className="hidden sm:table-cell">
-                                      {imageMap[product.name] ? (
+                                      {product.image ? (
                                         <Image
-                                            alt="Product image"
+                                            alt={product.name}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
-                                            src={imageMap[product.name].imageUrl}
-                                            data-ai-hint={imageMap[product.name].imageHint}
+                                            src={product.image.imageUrl}
+                                            data-ai-hint={product.image.imageHint}
                                             width="64"
                                         />
                                       ) : (
@@ -231,4 +225,4 @@ export default function InventoryPage() {
             </Card>
         </div>
     );
-}
+    

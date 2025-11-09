@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Image from "next/image";
-import { Wrench, Palette, CircleDot } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Wrench, Palette, CircleDot, Trash2 } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type Product = {
   id?: string;
@@ -57,7 +58,19 @@ const defaultProducts: Product[] = [
 export default function CustomerDashboardPage() {
   const [purchasedProducts, setPurchasedProducts] = useState<Product[]>([]);
   const [serviceTickets, setServiceTickets] = useState<ServiceTicket[]>([]);
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
+  const lastRemovedProduct = useRef<{ product: Product; index: number } | null>(null);
+
+
+  const updateLocalStorageAndState = (updatedProducts: Product[]) => {
+      // Ensure no duplicates, just in case
+      const uniqueProducts = updatedProducts.filter((product, index, self) =>
+        index === self.findIndex((p) => p.sku === product.sku)
+      );
+      setPurchasedProducts(uniqueProducts);
+      localStorage.setItem('purchasedProducts', JSON.stringify(uniqueProducts));
+      window.dispatchEvent(new Event('storage'));
+  };
 
   useEffect(() => {
     const loadData = () => {
@@ -108,6 +121,39 @@ export default function CustomerDashboardPage() {
     });
   };
 
+  const handleRemoveProduct = (sku: string) => {
+    const currentProducts: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
+    const productIndex = currentProducts.findIndex((p) => p.sku === sku);
+    if (productIndex === -1) return;
+
+    const productToRemove = currentProducts[productIndex];
+    lastRemovedProduct.current = { product: productToRemove, index: productIndex };
+    
+    const updatedProducts = currentProducts.filter((p) => p.sku !== sku);
+    updateLocalStorageAndState(updatedProducts);
+
+    const { id } = toast({
+        title: "Product Removed",
+        description: `You have removed ${productToRemove.name} from your products.`,
+        duration: 5000,
+        onUndo: () => {
+            if (lastRemovedProduct.current) {
+                const { product, index } = lastRemovedProduct.current;
+                const productsFromStorage: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
+                const restoredProducts = [
+                    ...productsFromStorage.slice(0, index),
+                    product,
+                    ...productsFromStorage.slice(index)
+                ];
+                updateLocalStorageAndState(restoredProducts);
+                lastRemovedProduct.current = null; // Clear after undo
+                dismiss(id);
+            }
+        },
+    });
+  };
+
+
   return (
     <div className="space-y-6">
       <div>
@@ -124,7 +170,16 @@ export default function CustomerDashboardPage() {
              const isInService = serviceTickets.some(ticket => ticket.productName === productName && ticket.status !== 'Resolved');
 
             return (
-              <Card key={product.sku} className="flex flex-col">
+              <Card key={product.sku} className="flex flex-col group relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-2 right-2 z-10 h-8 w-8 bg-background/80 text-destructive opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100"
+                  onClick={() => handleRemoveProduct(product.sku)}
+                  >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Remove Product</span>
+                </Button>
                 <CardHeader>
                   {image && (
                     <Image

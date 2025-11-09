@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
-  LayoutDashboard,
+  Home,
   Store,
   Warehouse,
   Wrench,
@@ -19,8 +20,9 @@ import {
   LogOut,
   Settings,
   ShoppingCart,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Sun,
+  Moon,
+  Star,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -45,56 +47,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard" className="text-base">
-                <Link href="/admin/dashboard">
-                  <LayoutDashboard />
-                  <span>Dashboard</span>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Home" className="text-base">
+                <Link href="/">
+                  <Home />
+                  <span>Home</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Product Creation" className="text-base">
-                <Link href="/admin/product-creation">
-                  <Store />
-                  <span>Product Creation</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Inventory" className="text-base">
-                <Link href="/admin/inventory">
-                  <Warehouse />
-                  <span>Inventory</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
-                <Link href="/marketplace">
-                  <ShoppingCart />
-                  <span>Marketplace</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Service Center" className="text-base">
-                <Link href="/admin/service-center">
-                  <Wrench />
-                  <span>Service Center</span>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Features" className="text-base">
+                <Link href="#">
+                  <Star />
+                  <span>Features</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-            <SidebarToggle />
+          <ThemeToggle />
+          <UserMenu />
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
-          <ThemeToggle />
-          <UserMenu />
+        <header className="flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
+            <div className="flex items-center gap-6 text-sm font-medium">
+                <SidebarToggle />
+                <Link href="/admin/product-creation" className="text-muted-foreground transition-colors hover:text-foreground">Product Creation</Link>
+                <Link href="/admin/inventory" className="text-muted-foreground transition-colors hover:text-foreground">Inventory</Link>
+                <Link href="/marketplace" className="text-muted-foreground transition-colors hover:text-foreground">Marketplace</Link>
+                <Link href="/admin/service-center" className="text-muted-foreground transition-colors hover:text-foreground">Service Center</Link>
+            </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">
           {children}

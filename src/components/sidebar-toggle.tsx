@@ -1,3 +1,4 @@
+
 "use client"
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
@@ -6,25 +7,17 @@ import { Button } from "./ui/button"
 import { cn } from "@/lib/utils"
 
 export function SidebarToggle() {
-    const { state, toggleSidebar } = useSidebar()
+    const { toggleSidebar } = useSidebar()
 
     return (
         <Button
           variant="ghost"
-          className={cn(
-            "h-10 w-full justify-center transition-all",
-            state === "expanded" ? "justify-end" : "justify-center"
-          )}
+          size="icon"
+          className="h-10 w-10"
           onClick={toggleSidebar}
         >
-          {state === 'expanded' ? (
-            <div className="flex items-center gap-2">
-                <span className="text-sm">Collapse</span>
-                <PanelLeftClose />
-            </div>
-          ) : (
-            <PanelLeftOpen />
-          )}
+          <PanelLeftOpen />
+          <span className="sr-only">Toggle Sidebar</span>
         </Button>
       )
 }

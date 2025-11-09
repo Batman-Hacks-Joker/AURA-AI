@@ -1,4 +1,5 @@
 
+'use client';
 import {
   Sidebar,
   SidebarContent,
@@ -98,10 +99,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Wrench className="h-5 w-5" />
                     <span className="hidden md:inline">Service Center</span>
                 </Link>
-            </div>
-            <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <UserMenu />
             </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">

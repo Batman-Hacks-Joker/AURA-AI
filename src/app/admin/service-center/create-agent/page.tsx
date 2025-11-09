@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw } from "lucide-react";
+import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw, Save } from "lucide-react";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateFlashcards } from "../actions/generate-flashcards-action";
@@ -40,6 +40,7 @@ type Flashcard = {
 };
 
 export default function CreateAgentPage() {
+    const [agentName, setAgentName] = useState("");
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -63,8 +64,10 @@ export default function CreateAgentPage() {
             ];
             if (allowedTypes.includes(selectedFile.type)) {
                 setFile(selectedFile);
-                setFlashcards([]);
-                setFlippedCardIndex(null);
+                if (flashcards.length > 0) {
+                  setFlashcards([]);
+                  setFlippedCardIndex(null);
+                }
             } else {
                 toast({
                     variant: "destructive",
@@ -134,13 +137,70 @@ export default function CreateAgentPage() {
         toast({ title: "Agent Response Deleted", description: "The response has been removed." });
     };
 
+    const handleSaveAgent = () => {
+      if (!agentName.trim()) {
+        toast({ variant: "destructive", title: "Agent Name Required", description: "Please enter a name for your agent." });
+        return;
+      }
+      if (flashcards.length === 0) {
+        toast({ variant: "destructive", title: "No Responses", description: "Please generate responses before saving the agent." });
+        return;
+      }
+
+      const newAgent = {
+        id: `agent-${Date.now()}`,
+        name: agentName,
+        knowledgeBase: flashcards,
+      };
+
+      const existingAgents = JSON.parse(localStorage.getItem('serviceAgents') || '[]');
+      const updatedAgents = [...existingAgents, newAgent];
+      localStorage.setItem('serviceAgents', JSON.stringify(updatedAgents));
+      window.dispatchEvent(new Event('storage'));
+
+      toast({ title: "Agent Saved!", description: `The agent "${agentName}" has been saved.` });
+
+      // Reset form
+      setAgentName("");
+      setFile(null);
+      setFlashcards([]);
+      setFlippedCardIndex(null);
+    };
+
     return (
         <Dialog onOpenChange={(isOpen) => !isOpen && setEditingCard(null)}>
             <AlertDialog onOpenChange={(isOpen) => !isOpen && setDeleteIndex(null)}>
                 <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight">Create Agent</h1>
+                            <p className="text-muted-foreground">Build a new AI agent by providing a name and a knowledge base document.</p>
+                        </div>
+                        {flashcards.length > 0 && (
+                            <Button onClick={handleSaveAgent} className="bg-accent hover:bg-accent/90">
+                                <Save className="mr-2 h-4 w-4" /> Save Agent
+                            </Button>
+                        )}
+                    </div>
+
                     <Card>
                         <CardHeader>
-                            <CardTitle>Create Agent</CardTitle>
+                            <CardTitle>1. Agent Details</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Label htmlFor="agent-name">Agent Name</Label>
+                            <Input
+                                id="agent-name"
+                                placeholder="e.g., 'Smart Speaker Support Bot'"
+                                value={agentName}
+                                onChange={(e) => setAgentName(e.target.value)}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>2. Knowledge Base</CardTitle>
                             <CardDescription>Upload a user manual or FAQ document to generate Q&amp;A responses for your new agent.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -171,7 +231,7 @@ export default function CreateAgentPage() {
                     {flashcards.length > 0 && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>Generated Agent Responses</CardTitle>
+                                <CardTitle>3. Generated Agent Responses</CardTitle>
                                 <CardDescription>Click a card to flip it. Hover to see edit and delete options.</CardDescription>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -208,7 +268,6 @@ export default function CreateAgentPage() {
                         </Card>
                     )}
 
-                    {/* Edit Dialog Content - It's placed outside the map but inside the main Dialog wrapper */}
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Edit Agent Response</DialogTitle>
@@ -234,7 +293,6 @@ export default function CreateAgentPage() {
                         </DialogFooter>
                     </DialogContent>
 
-                    {/* Delete Alert Dialog Content - Similarly, outside the map */}
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>

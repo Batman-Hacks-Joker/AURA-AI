@@ -31,13 +31,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SheetTitle } from "@/components/ui/sheet";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+      <Sidebar sheetTitle="Admin Menu">
         <SidebarHeader>
           <Logo />
         </SidebarHeader>

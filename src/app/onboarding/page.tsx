@@ -31,7 +31,7 @@ export default function OnboardingPage() {
         
         <div className="text-center">
           <h2 className="font-headline text-4xl md:text-5xl font-bold tracking-tighter text-foreground">
-            Welcome to KARMA!
+            Welcome to AURA AI!
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
             You're one step away. Choose your role to get started.
@@ -52,7 +52,7 @@ export default function OnboardingPage() {
         </div>
       </div>
       <footer className="absolute bottom-4 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} KARMA. All Rights Reserved.
+        © {new Date().getFullYear()} AURA AI. All Rights Reserved.
       </footer>
     </main>
   );

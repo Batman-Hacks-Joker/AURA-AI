@@ -13,7 +13,7 @@ export function Logo({
       <Gem className="h-7 w-7 text-primary" />
       {!collapsed && (
         <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
-          KARMA
+          AURA AI
         </h1>
       )}
     </div>

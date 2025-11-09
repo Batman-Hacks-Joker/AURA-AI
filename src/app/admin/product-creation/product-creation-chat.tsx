@@ -156,7 +156,7 @@ export function ProductCreationChat() {
                 <CardHeader>
                     <CardTitle>Hello, Admin!</CardTitle>
                     <CardDescription>
-                        Provide initial details for KARMA Bot to generate a new product listing.
+                        Provide initial details for AURA AI Bot to generate a new product listing.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

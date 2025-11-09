@@ -30,7 +30,7 @@ export function UserMenu() {
     };
     
     // This is a placeholder user. In a real app, you'd get this from context or a hook.
-    const user = { email: 'admin@karma.com', role: 'admin' };
+    const user = { email: 'admin@aura-ai.com', role: 'admin' };
     const seed = user.role === 'admin' ? 'admin' : 'customer';
   
     return (

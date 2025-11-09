@@ -11,7 +11,7 @@ import React from 'react';
 // Metadata needs to be exported from a server component, so we can't define it here.
 // We will move it to the page.tsx files that are server components.
 // export const metadata: Metadata = {
-//   title: 'KARMA',
+//   title: 'AURA AI',
 //   description: 'Your Integrated Commerce Ecosystem',
 // };
 
@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>KARMA</title>
+        <title>AURA AI</title>
         <meta name="description" content="Your Integrated Commerce Ecosystem" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -43,7 +43,7 @@ export function Hero() {
               The Future of Smart Living is Here.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-prose">
-              Experience the seamless integration of your favorite devices with KARMA. Effortless control, intelligent automation, and a personalized ecosystem designed for you.
+              Experience the seamless integration of your favorite devices with AURA AI. Effortless control, intelligent automation, and a personalized ecosystem designed for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="bg-accent hover:bg-accent/90">

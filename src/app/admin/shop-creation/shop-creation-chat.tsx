@@ -154,7 +154,7 @@ export function ShopCreationChat() {
                         <AvatarFallback className="bg-background"><Bot className="h-5 w-5" /></AvatarFallback>
                     </Avatar>
                     <div>
-                        <h2 className="text-lg font-semibold">KARMA Product Bot</h2>
+                        <h2 className="text-lg font-semibold">AURA AI Product Bot</h2>
                         <p className="text-sm text-muted-foreground">Listing creation in progress...</p>
                     </div>
                 </div>

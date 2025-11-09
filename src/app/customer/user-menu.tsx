@@ -15,7 +15,7 @@ import { User, Settings, LogOut } from "lucide-react";
 
 export function UserMenu() {
   // In a real app, user data would come from context or a hook.
-  const user = { email: 'customer@karma.com', role: 'customer' };
+  const user = { email: 'customer@aura-ai.com', role: 'customer' };
 
   return (
     <DropdownMenu>

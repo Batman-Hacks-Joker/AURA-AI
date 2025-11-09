@@ -72,7 +72,7 @@ export default function LoginPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
-            <CardDescription>Sign in to access your KARMA account.</CardDescription>
+            <CardDescription>Sign in to access your AURA AI account.</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">

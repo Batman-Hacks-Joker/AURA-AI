@@ -144,7 +144,7 @@ export function Chatbot() {
             </SheetTrigger>
             <SheetContent className="flex flex-col p-0">
                 <SheetHeader className="p-6 pb-4">
-                    <SheetTitle>KARMA Bot</SheetTitle>
+                    <SheetTitle>AURA AI Bot</SheetTitle>
                     <SheetDescription>
                         Your smart AI assistant. Ask about products, services, or anything else.
                     </SheetDescription>
@@ -193,7 +193,7 @@ export function Chatbot() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder={isListening ? 'Listening...' : 'Ask KARMA Bot...'}
+                            placeholder={isListening ? 'Listening...' : 'Ask AURA AI Bot...'}
                             className="pr-28"
                             disabled={isLoading}
                         />

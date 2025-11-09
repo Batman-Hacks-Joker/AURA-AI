@@ -61,7 +61,7 @@ export default function SignupPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
-            <CardDescription>Join KARMA to manage your products or business.</CardDescription>
+            <CardDescription>Join AURA AI to manage your products or business.</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">

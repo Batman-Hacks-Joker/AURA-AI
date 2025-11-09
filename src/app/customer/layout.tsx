@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
@@ -26,19 +27,25 @@ import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 
+function CustomerSidebar({ children }: { children: React.ReactNode }) {
+  const { toggleSidebar, state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
+    if (!isRailClick || !isCollapsed) {
+      toggleSidebar();
+    }
+  };
+
+  return <Sidebar collapsible="icon" onClick={handleClick}>{children}</Sidebar>
+}
+
+
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-        // A bit of a hack to ensure clicking the sidebar rail doesn't trigger a toggle
-        // when the sidebar is collapsed, as the rail has its own toggle logic.
-        const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
-        const isCollapsed = e.currentTarget.getAttribute('data-state') === 'collapsed';
-        if (!isRailClick || !isCollapsed) {
-          const { toggleSidebar } = (e.currentTarget as any)._sidebarContext;
-          if (toggleSidebar) toggleSidebar();
-        }
-      }}>
+      <CustomerSidebar>
         <SidebarHeader className="flex items-center justify-between">
           <Logo />
           <SidebarToggle />
@@ -71,7 +78,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-      </Sidebar>
+      </CustomerSidebar>
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
           <div className="flex items-center gap-2">

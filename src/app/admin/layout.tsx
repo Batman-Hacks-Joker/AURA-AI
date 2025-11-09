@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
@@ -28,19 +29,24 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 
 
+function AdminSidebar({ children }: { children: React.ReactNode }) {
+  const { toggleSidebar, state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
+    if (!isRailClick || !isCollapsed) {
+      toggleSidebar();
+    }
+  };
+
+  return <Sidebar collapsible="icon" onClick={handleClick}>{children}</Sidebar>
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-        // A bit of a hack to ensure clicking the sidebar rail doesn't trigger a toggle
-        // when the sidebar is collapsed, as the rail has its own toggle logic.
-        const isRailClick = (e.target as HTMLElement).closest('[data-sidebar="rail"]');
-        const isCollapsed = e.currentTarget.getAttribute('data-state') === 'collapsed';
-        if (!isRailClick || !isCollapsed) {
-          const { toggleSidebar } = (e.currentTarget as any)._sidebarContext;
-          if (toggleSidebar) toggleSidebar();
-        }
-      }}>
+      <AdminSidebar>
         <SidebarHeader className="flex items-center justify-between">
           <Logo />
           <SidebarToggle />
@@ -48,7 +54,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-                <UserMenu />
+              <div className="group/menu-item relative flex items-center gap-2">
+                  <UserMenu />
+                  <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+                    Hi, Admin!
+                  </span>
+              </div>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Home" className="text-base">
@@ -79,9 +90,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-      </Sidebar>
+      </AdminSidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 items-center justify-center p-4 border-b bg-card gap-4">
+        <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4">
             <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
                 <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <PackagePlus className="h-5 w-5" />

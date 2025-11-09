@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
-  SidebarTrigger,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
@@ -29,11 +29,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarToggle } from "@/components/sidebar-toggle";
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
@@ -65,10 +66,12 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+          <SidebarToggle />
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-between p-4 border-b bg-card">
-          <SidebarTrigger />
+        <header className="flex h-16 items-center justify-end p-4 border-b bg-card">
           <UserMenu />
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">

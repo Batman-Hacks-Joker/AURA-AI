@@ -63,7 +63,7 @@ function CustomerSidebarInner() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Support" className="text-base">
-              <Link href="#">
+              <Link href="/customer/support">
                 <LifeBuoy />
                 <span>Support</span>
               </Link>

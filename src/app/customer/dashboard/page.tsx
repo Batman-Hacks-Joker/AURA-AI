@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Wrench, Palette } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 type Product = {
   id?: string;
@@ -24,6 +25,14 @@ type Product = {
   };
   productFeatures?: string[];
   productBenefits?: string[];
+};
+
+type ServiceTicket = {
+    id: string;
+    productName: string;
+    issue: string;
+    status: 'Open' | 'In Progress' | 'Resolved';
+    requestedDate: string;
 };
 
 const defaultProducts: Product[] = [
@@ -47,6 +56,7 @@ const defaultProducts: Product[] = [
 
 export default function CustomerDashboardPage() {
   const [purchasedProducts, setPurchasedProducts] = useState<Product[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadProducts = () => {
@@ -71,6 +81,27 @@ export default function CustomerDashboardPage() {
       window.removeEventListener('storage', loadProducts);
     };
   }, []);
+
+  const handleScheduleService = (product: Product) => {
+    const productName = product.productName || product.name;
+    const newTicket: ServiceTicket = {
+      id: `TICKET-${Math.floor(1000 + Math.random() * 9000)}`,
+      productName: productName,
+      issue: `Requesting service for ${productName}`,
+      status: 'Open',
+      requestedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    };
+
+    const existingTickets: ServiceTicket[] = JSON.parse(localStorage.getItem('serviceTickets') || '[]');
+    const updatedTickets = [...existingTickets, newTicket];
+    localStorage.setItem('serviceTickets', JSON.stringify(updatedTickets));
+    window.dispatchEvent(new Event('storage'));
+
+    toast({
+        title: "Service Requested",
+        description: `A support ticket has been created for your ${productName}.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -105,7 +136,7 @@ export default function CustomerDashboardPage() {
                   <p className="text-sm text-muted-foreground">{product.purchaseDate}</p>
                 </CardContent>
                 <CardFooter className="gap-2">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => handleScheduleService(product)}>
                     <Wrench className="mr-2 h-4 w-4" /> Schedule Service
                   </Button>
                   <Button className="w-full bg-accent hover:bg-accent/90">

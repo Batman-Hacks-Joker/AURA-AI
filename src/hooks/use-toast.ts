@@ -8,14 +8,16 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 5000 // 5 seconds
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number;
+  onUndo?: () => void;
 }
 
 const actionTypes = {
@@ -58,7 +60,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, duration?: number) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
@@ -69,7 +71,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, duration || TOAST_REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -93,8 +95,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -144,6 +144,7 @@ type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
   const id = genId()
+  const duration = props.duration || TOAST_REMOVE_DELAY;
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -158,11 +159,30 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration,
       onOpenChange: (open) => {
-        if (!open) dismiss()
+        if (!open) {
+            // If the toast is closed by the user (e.g. clicking the 'x'),
+            // we remove it from the queue immediately.
+            const timeout = toastTimeouts.get(id);
+            if (timeout) {
+                clearTimeout(timeout);
+                toastTimeouts.delete(id);
+            }
+            dispatch({
+                type: "REMOVE_TOAST",
+                toastId: id,
+            });
+        }
       },
     },
   })
+  
+  // Auto-dismiss after duration
+  setTimeout(() => {
+    dismiss();
+  }, duration);
+
 
   return {
     id: id,

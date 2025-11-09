@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, ListFilter, MoreHorizontal } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -16,10 +16,20 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-const defaultProducts = [
+type Product = {
+    name: string;
+    sku: string;
+    category: string;
+    price: string;
+    stock: number;
+    status: string;
+    launched?: boolean;
+};
+
+const defaultProducts: Product[] = [
     { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock" },
     { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock" },
     { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock" },
@@ -28,8 +38,9 @@ const defaultProducts = [
 ];
 
 export default function InventoryPage() {
-    const [products, setProducts] = useState<any[]>([]);
-    const { toast } = useToast();
+    const [products, setProducts] = useState<Product[]>([]);
+    const { toast, dismiss } = useToast();
+    const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
 
     useEffect(() => {
         const storedProducts = localStorage.getItem('products');
@@ -53,21 +64,58 @@ export default function InventoryPage() {
             window.removeEventListener('storage', handleStorageChange);
         };
     }, []);
-
-    const handleRemoveProduct = (sku: string) => {
-        const updatedProducts = products.filter(p => p.sku !== sku);
+    
+    const updateLocalStorage = (updatedProducts: Product[]) => {
         setProducts(updatedProducts);
         localStorage.setItem('products', JSON.stringify(updatedProducts));
-        toast({
+    };
+
+    const handleRemoveProduct = (sku: string) => {
+        const productIndex = products.findIndex(p => p.sku === sku);
+        if (productIndex === -1) return;
+
+        const productToRemove = products[productIndex];
+        lastRemovedProduct.current = { product: productToRemove, index: productIndex };
+        
+        const updatedProducts = products.filter(p => p.sku !== sku);
+        updateLocalStorage(updatedProducts);
+
+        const { id } = toast({
             title: "Product Removed",
             description: `Product with SKU ${sku} has been removed.`,
+            duration: 5000,
+            onUndo: () => {
+                if (lastRemovedProduct.current) {
+                    const { product, index } = lastRemovedProduct.current;
+                    const restoredProducts = [
+                        ...products.slice(0, index),
+                        product,
+                        ...products.slice(index)
+                    ];
+                    updateLocalStorage(restoredProducts);
+                    lastRemovedProduct.current = null;
+                    dismiss(id);
+                }
+            },
         });
     }
 
-    const handleLaunchProduct = (productName: string) => {
-        toast({
+    const handleLaunchProduct = (sku: string) => {
+        const productIndex = products.findIndex(p => p.sku === sku);
+        if (productIndex === -1) return;
+        
+        const updatedProducts = products.map(p => p.sku === sku ? { ...p, launched: true } : p);
+        updateLocalStorage(updatedProducts);
+
+        const { id } = toast({
             title: "Product Launched!",
-            description: `${productName} has been launched to the marketplace.`,
+            description: `${products[productIndex].name} has been launched.`,
+            duration: 5000,
+            onUndo: () => {
+                const revertedProducts = products.map(p => p.sku === sku ? { ...p, launched: false } : p);
+                updateLocalStorage(revertedProducts);
+                dismiss(id);
+            },
         });
     }
 
@@ -151,8 +199,8 @@ export default function InventoryPage() {
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
                                     <TableCell>
-                                        <Badge variant={product.status === "In Stock" ? "secondary" : "destructive"}>
-                                            {product.status}
+                                        <Badge variant={product.launched ? "default" : product.status === "In Stock" ? "secondary" : "destructive"}>
+                                            {product.launched ? "Launched" : product.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>${Number(product.price).toLocaleString()}</TableCell>
@@ -167,9 +215,11 @@ export default function InventoryPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleLaunchProduct(product.name)}>Launch Product</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
+                                                    {product.launched ? "Already Launched" : "Launch Product"}
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveProduct(product.sku)}>Remove Product</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>Remove Product</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

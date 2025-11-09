@@ -24,14 +24,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw, Save } from "lucide-react";
-import { useState, useRef } from "react";
+import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw, Save, SquareArrowUp } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateFlashcards } from "../actions/generate-flashcards-action";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useSearchParams, useRouter } from "next/navigation";
 
 
 type Flashcard = {
@@ -39,7 +40,18 @@ type Flashcard = {
     answer: string;
 };
 
+type Agent = {
+    id: string;
+    name: string;
+    knowledgeBase: Flashcard[];
+};
+
 export default function CreateAgentPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const agentIdToEdit = searchParams.get('edit');
+    const [isEditMode, setIsEditMode] = useState(false);
+
     const [agentName, setAgentName] = useState("");
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +64,26 @@ export default function CreateAgentPage() {
     const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
     const [editedQuestion, setEditedQuestion] = useState("");
     const [editedAnswer, setEditedAnswer] = useState("");
+
+    useEffect(() => {
+        if (agentIdToEdit) {
+            setIsEditMode(true);
+            const existingAgents: Agent[] = JSON.parse(localStorage.getItem('serviceAgents') || '[]');
+            const agentToEdit = existingAgents.find(agent => agent.id === agentIdToEdit);
+
+            if (agentToEdit) {
+                setAgentName(agentToEdit.name);
+                setFlashcards(agentToEdit.knowledgeBase);
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Agent Not Found",
+                    description: "The agent you are trying to edit does not exist.",
+                });
+                router.push('/admin/service-center');
+            }
+        }
+    }, [agentIdToEdit, router, toast]);
     
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0];
@@ -127,7 +159,7 @@ export default function CreateAgentPage() {
         updatedFlashcards[index] = { question: editedQuestion, answer: editedAnswer };
         setFlashcards(updatedFlashcards);
         setEditingCard(null);
-        toast({ title: "Agent Response Updated", description: "Your changes have been saved." });
+        toast({ title: "Agent Response Updated", description: "Your changes have been saved locally." });
     };
 
     const handleDelete = () => {
@@ -146,25 +178,28 @@ export default function CreateAgentPage() {
         toast({ variant: "destructive", title: "No Responses", description: "Please generate responses before saving the agent." });
         return;
       }
+      
+      const existingAgents: Agent[] = JSON.parse(localStorage.getItem('serviceAgents') || '[]');
 
-      const newAgent = {
-        id: `agent-${Date.now()}`,
-        name: agentName,
-        knowledgeBase: flashcards,
-      };
-
-      const existingAgents = JSON.parse(localStorage.getItem('serviceAgents') || '[]');
-      const updatedAgents = [...existingAgents, newAgent];
-      localStorage.setItem('serviceAgents', JSON.stringify(updatedAgents));
+      if (isEditMode && agentIdToEdit) {
+          const updatedAgents = existingAgents.map(agent => 
+              agent.id === agentIdToEdit ? { ...agent, name: agentName, knowledgeBase: flashcards } : agent
+          );
+          localStorage.setItem('serviceAgents', JSON.stringify(updatedAgents));
+          toast({ title: "Agent Updated!", description: `The agent "${agentName}" has been successfully updated.` });
+      } else {
+          const newAgent = {
+            id: `agent-${Date.now()}`,
+            name: agentName,
+            knowledgeBase: flashcards,
+          };
+          const updatedAgents = [...existingAgents, newAgent];
+          localStorage.setItem('serviceAgents', JSON.stringify(updatedAgents));
+          toast({ title: "Agent Saved!", description: `The agent "${agentName}" has been saved.` });
+      }
+      
       window.dispatchEvent(new Event('storage'));
-
-      toast({ title: "Agent Saved!", description: `The agent "${agentName}" has been saved.` });
-
-      // Reset form
-      setAgentName("");
-      setFile(null);
-      setFlashcards([]);
-      setFlippedCardIndex(null);
+      router.push('/admin/service-center');
     };
 
     return (
@@ -173,12 +208,15 @@ export default function CreateAgentPage() {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Create Agent</h1>
-                            <p className="text-muted-foreground">Build a new AI agent by providing a name and a knowledge base document.</p>
+                            <h1 className="text-2xl font-bold tracking-tight">{isEditMode ? "Update Agent" : "Create Agent"}</h1>
+                            <p className="text-muted-foreground">
+                                {isEditMode ? `Editing agent: ${agentName}` : "Build a new AI agent by providing a name and a knowledge base document."}
+                            </p>
                         </div>
                         {flashcards.length > 0 && (
                             <Button onClick={handleSaveAgent} className="bg-accent hover:bg-accent/90">
-                                <Save className="mr-2 h-4 w-4" /> Save Agent
+                                {isEditMode ? <SquareArrowUp className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                                {isEditMode ? "Update Agent" : "Save Agent"}
                             </Button>
                         )}
                     </div>
@@ -201,7 +239,9 @@ export default function CreateAgentPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>2. Knowledge Base</CardTitle>
-                            <CardDescription>Upload a user manual or FAQ document to generate Q&amp;A responses for your new agent.</CardDescription>
+                            <CardDescription>
+                                {isEditMode ? "Upload a new document to replace the existing knowledge base, or modify the responses below." : "Upload a user manual or FAQ document to generate Q&A responses for your new agent."}
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg">
@@ -222,7 +262,7 @@ export default function CreateAgentPage() {
                                 {isLoading ? (
                                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
                                 ) : (
-                                    <><BrainCircuit className="mr-2 h-4 w-4" /> Generate Responses</>
+                                    <><BrainCircuit className="mr-2 h-4 w-4" /> {isEditMode ? "Replace & Generate Responses" : "Generate Responses"}</>
                                 )}
                             </Button>
                         </CardContent>
@@ -231,7 +271,7 @@ export default function CreateAgentPage() {
                     {flashcards.length > 0 && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>3. Generated Agent Responses</CardTitle>
+                                <CardTitle>3. {isEditMode ? "Current" : "Generated"} Agent Responses</CardTitle>
                                 <CardDescription>Click a card to flip it. Hover to see edit and delete options.</CardDescription>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -289,7 +329,9 @@ export default function CreateAgentPage() {
                             <DialogClose asChild>
                                 <Button type="button" variant="secondary">Cancel</Button>
                             </DialogClose>
-                            <Button type="submit" onClick={handleSaveEdit}>Save Changes</Button>
+                            <DialogClose asChild>
+                                <Button type="submit" onClick={handleSaveEdit}>Save Changes</Button>
+                            </DialogClose>
                         </DialogFooter>
                     </DialogContent>
 
@@ -310,6 +352,4 @@ export default function CreateAgentPage() {
         </Dialog>
     );
 }
-    
-
     

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Clock, Smile, Wrench, UserPlus, Bot, MoreHorizontal, Link2, Trash2 } from "lucide-react";
+import { Phone, Clock, Smile, Wrench, UserPlus, Bot, MoreHorizontal, Link2, Trash2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +20,7 @@ import {
     DropdownMenuPortal
   } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const metrics = [
     { title: "Inbound Calls Today", value: "1,204", icon: Phone },
@@ -53,6 +54,7 @@ export default function ServiceCenterPage() {
     const [agents, setAgents] = useState<Agent[]>([]);
     const [launchedProducts, setLaunchedProducts] = useState<Product[]>([]);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const loadData = () => {
@@ -104,6 +106,10 @@ export default function ServiceCenterPage() {
             title: "Agent Deleted",
             description: `Agent "${agentToDelete.name}" has been deleted.`,
         });
+    };
+    
+    const handleUpdateAgent = (agentId: string) => {
+        router.push(`/admin/service-center/create-agent?edit=${agentId}`);
     };
 
     return (
@@ -179,6 +185,10 @@ export default function ServiceCenterPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handleUpdateAgent(agent.id)}>
+                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                            <span>Update Agent</span>
+                                                        </DropdownMenuItem>
                                                         <DropdownMenuSub>
                                                             <DropdownMenuSubTrigger>
                                                                 <Link2 className="mr-2 h-4 w-4" />

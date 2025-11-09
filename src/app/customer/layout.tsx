@@ -36,8 +36,9 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader>
+        <SidebarHeader className="flex items-center justify-between">
           <Logo />
+          <SidebarToggle />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -70,10 +71,14 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
-          <SidebarToggle />
+            <div className="flex items-center gap-4">
+              <Logo />
+            </div>
           <div className="flex-1" />
-          <ThemeToggle />
-          <UserMenu />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">
           {children}

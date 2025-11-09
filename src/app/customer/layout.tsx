@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -7,7 +8,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
@@ -67,12 +67,11 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          <SidebarToggle />
-        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
+          <SidebarToggle />
+          <div className="flex-1" />
           <ThemeToggle />
           <UserMenu />
         </header>

@@ -15,7 +15,6 @@ import {
   Home,
   Star,
   LogOut,
-  User,
   PackagePlus,
   Warehouse,
   Store,
@@ -23,14 +22,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -84,9 +75,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
-            <div className="flex items-center gap-2 md:gap-6 text-sm font-medium">
-                <SidebarToggle />
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-4">
+            <SidebarToggle />
+            <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
                 <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <PackagePlus className="h-5 w-5" />
                     <span className="hidden md:inline">Product Creation</span>
@@ -104,43 +95,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span className="hidden md:inline">Service Center</span>
                 </Link>
             </div>
+            <div className="w-9 h-9" />
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">
           {children}
         </main>
       </SidebarInset>
     </SidebarProvider>
-  );
-}
-
-function UserMenu() {
-  return (
-      <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 rounded-full p-0 flex items-center gap-2 w-full justify-start">
-                  <Avatar className="h-10 w-10">
-                      <AvatarImage src="https://picsum.photos/seed/admin/100/100" data-ai-hint="person portrait" alt="@admin" />
-                      <AvatarFallback>AD</AvatarFallback>
-                  </Avatar>
-                  <span className="truncate">Hi, Admin!</span>
-              </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">Admin User</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                          admin@karma.com
-                      </p>
-                  </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem><User className="mr-2" /> Profile</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                  <Link href="/"><LogOut className="mr-2" /> Log out</Link>
-              </DropdownMenuItem>
-          </DropdownMenuContent>
-      </DropdownMenu>
   );
 }

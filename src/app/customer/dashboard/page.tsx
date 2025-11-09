@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,43 +60,39 @@ export default function CustomerDashboardPage() {
   const { toast, dismiss } = useToast();
   const lastRemovedProduct = useRef<{ product: Product; index: number } | null>(null);
 
-
-  const updateLocalStorageAndState = (updatedProducts: Product[]) => {
-      const uniqueProducts = updatedProducts.filter((product, index, self) =>
-        index === self.findIndex((p) => p.sku === product.sku)
-      );
-      setPurchasedProducts(uniqueProducts);
-      localStorage.setItem('purchasedProducts', JSON.stringify(uniqueProducts));
-      window.dispatchEvent(new Event('storage'));
-  };
-
   useEffect(() => {
     const loadData = () => {
-      const storedProductsRaw = localStorage.getItem('purchasedProducts');
-      const storedProducts: Product[] = storedProductsRaw ? JSON.parse(storedProductsRaw) : [];
+        const storedProductsRaw = localStorage.getItem('purchasedProducts');
+        const storedProducts: Product[] = storedProductsRaw ? JSON.parse(storedProductsRaw) : [];
 
-      const combinedProducts = [...defaultProducts, ...storedProducts];
-      
-      const uniqueProducts = combinedProducts.filter((product, index, self) =>
-        index === self.findIndex((p) => (
-          p.sku === product.sku
-        ))
-      );
-      
-      setPurchasedProducts(uniqueProducts);
+        // Combine default products with stored products, ensuring no duplicates from the start.
+        const combinedProducts = [...defaultProducts, ...storedProducts];
+        const uniqueSkus = new Set<string>();
+        const uniqueProducts: Product[] = [];
+        // Iterate backwards to prioritize user-added (purchased) products over default ones
+        for (let i = combinedProducts.length - 1; i >= 0; i--) {
+            const product = combinedProducts[i];
+            if (!uniqueSkus.has(product.sku)) {
+                uniqueSkus.add(product.sku);
+                uniqueProducts.unshift(product);
+            }
+        }
+        
+        setPurchasedProducts(uniqueProducts);
 
-      const storedTicketsRaw = localStorage.getItem('serviceTickets');
-      const storedTickets: ServiceTicket[] = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
-      setServiceTickets(storedTickets);
+        const storedTicketsRaw = localStorage.getItem('serviceTickets');
+        const storedTickets: ServiceTicket[] = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
+        setServiceTickets(storedTickets);
     };
 
     loadData();
     window.addEventListener('storage', loadData);
 
     return () => {
-      window.removeEventListener('storage', loadData);
+        window.removeEventListener('storage', loadData);
     };
-  }, []);
+}, []);
+
 
   const handleScheduleService = (product: Product) => {
     const productName = product.productName || product.name;
@@ -119,57 +114,53 @@ export default function CustomerDashboardPage() {
         description: `A support ticket has been created for your ${productName}.`,
     });
   };
-
-  const handleRemoveProduct = (sku: string) => {
-    const productIndex = purchasedProducts.findIndex((p) => p.sku === sku);
-    if (productIndex === -1) return;
-
-    const productToRemove = purchasedProducts[productIndex];
-    lastRemovedProduct.current = { product: productToRemove, index: productIndex };
-    
-    // We filter from the state, which is the single source of truth for the UI
-    const updatedProducts = purchasedProducts.filter((p) => p.sku !== sku);
-    
-    // We also need to update what's in local storage, but only the non-default products
-    const storedProducts: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
-    const updatedStoredProducts = storedProducts.filter(p => p.sku !== sku);
-    localStorage.setItem('purchasedProducts', JSON.stringify(updatedStoredProducts));
-
-    setPurchasedProducts(updatedProducts);
-    window.dispatchEvent(new Event('storage'));
-
-
-    const { id } = toast({
-        title: "Product Removed",
-        description: `You have removed ${productToRemove.name} from your products.`,
-        duration: 5000,
-        onUndo: () => {
-            if (lastRemovedProduct.current) {
-                const { product, index } = lastRemovedProduct.current;
-                
-                // Add back to the main list in state
-                const restoredProducts = [
-                    ...purchasedProducts.slice(0, index),
-                    product,
-                    ...purchasedProducts.slice(index)
-                ];
-                setPurchasedProducts(restoredProducts);
-
-                // If it was a non-default product, add it back to storage
-                const isDefault = defaultProducts.some(p => p.sku === product.sku);
-                if (!isDefault) {
-                  const currentStored: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
-                  currentStored.push(product);
-                  localStorage.setItem('purchasedProducts', JSON.stringify(currentStored));
-                }
-
-                window.dispatchEvent(new Event('storage'));
-                lastRemovedProduct.current = null;
-                dismiss(id);
-            }
-        },
-    });
-  };
+  
+    const handleRemoveProduct = (sku: string) => {
+      const productIndex = purchasedProducts.findIndex((p) => p.sku === sku);
+      if (productIndex === -1) return;
+  
+      const productToRemove = purchasedProducts[productIndex];
+      lastRemovedProduct.current = { product: productToRemove, index: productIndex };
+  
+      const updatedProducts = purchasedProducts.filter((p) => p.sku !== sku);
+      setPurchasedProducts(updatedProducts);
+  
+      // Update localStorage by filtering out the removed product from the stored list.
+      // This is crucial for products that are NOT in the default list.
+      const storedProducts: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
+      const updatedStoredProducts = storedProducts.filter(p => p.sku !== sku);
+      localStorage.setItem('purchasedProducts', JSON.stringify(updatedStoredProducts));
+  
+      const { id } = toast({
+          title: "Product Removed",
+          description: `You have removed ${productToRemove.name} from your products.`,
+          duration: 5000,
+          onUndo: () => {
+              if (lastRemovedProduct.current) {
+                  const { product, index } = lastRemovedProduct.current;
+                  
+                  // Restore to the UI state
+                  const restoredUiProducts = [
+                      ...updatedProducts.slice(0, index),
+                      product,
+                      ...updatedProducts.slice(index)
+                  ];
+                  setPurchasedProducts(restoredUiProducts);
+  
+                  // Restore to localStorage if it was a non-default product
+                  const isDefault = defaultProducts.some(p => p.sku === product.sku);
+                  if (!isDefault) {
+                    const currentStored: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
+                    const restoredStoredProducts = [...currentStored, product];
+                    localStorage.setItem('purchasedProducts', JSON.stringify(restoredStoredProducts));
+                  }
+                  
+                  lastRemovedProduct.current = null;
+                  dismiss(id);
+              }
+          },
+      });
+    };
 
 
   return (

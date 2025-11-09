@@ -2,9 +2,9 @@
 
 import { smartAiServiceChatbot } from '@/ai/flows/smart-ai-service-chatbot';
 
-export async function getChatbotResponse(query: string) {
+export async function getChatbotResponse(query: string, appContext: string) {
   try {
-    const result = await smartAiServiceChatbot({ query });
+    const result = await smartAiServiceChatbot({ query, appContext });
     return result.response;
   } catch (error) {
     console.error("Chatbot error:", error);

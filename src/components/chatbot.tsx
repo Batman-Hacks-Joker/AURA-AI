@@ -114,7 +114,17 @@ export function Chatbot() {
         // Ensures the user message is rendered and scrolled to before the bot responds
         setTimeout(scrollToBottom, 100);
 
-        const botResponse = await getChatbotResponse(input);
+        // Gather context from localStorage
+        const loggedInUser = localStorage.getItem('loggedInUser');
+        const products = localStorage.getItem('products');
+        const serviceAgents = localStorage.getItem('serviceAgents');
+        const appContext = JSON.stringify({
+            loggedInUser: loggedInUser ? JSON.parse(loggedInUser) : null,
+            products: products ? JSON.parse(products) : [],
+            serviceAgents: serviceAgents ? JSON.parse(serviceAgents) : [],
+        });
+
+        const botResponse = await getChatbotResponse(input, appContext);
         const botMessage: Message = { role: 'bot', text: botResponse };
         setMessages(prev => [...prev, botMessage]);
         setIsLoading(false);

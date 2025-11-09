@@ -9,20 +9,14 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import {
   Home,
-  Store,
-  Warehouse,
-  Wrench,
-  User,
-  LogOut,
-  Settings,
-  ShoppingCart,
-  Sun,
-  Moon,
   Star,
+  LogOut,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -47,7 +41,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
+                <UserMenu />
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Home" className="text-base">
                 <Link href="/">
                   <Home />
@@ -55,7 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Features" className="text-base">
                 <Link href="#">
                   <Star />
@@ -66,8 +63,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <ThemeToggle />
-          <UserMenu />
+            <ThemeToggle />
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Logout" className="text-base">
+                        <Link href="/">
+                            <LogOut />
+                            <span>Log out</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -92,7 +98,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
           <Avatar className="h-10 w-10">
             <AvatarImage src="https://picsum.photos/seed/admin/100/100" data-ai-hint="person portrait" alt="@admin" />
             <AvatarFallback>AD</AvatarFallback>
@@ -110,7 +116,6 @@ function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem><User className="mr-2" /> Profile</DropdownMenuItem>
-        <DropdownMenuItem><Settings className="mr-2" /> Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/"><LogOut className="mr-2" /> Log out</Link>

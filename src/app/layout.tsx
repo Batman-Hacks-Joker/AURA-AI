@@ -5,6 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Chatbot } from '@/components/chatbot';
 import { Navbar } from '@/components/navbar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthenticatedLayout } from './authenticated-layout';
+import React from 'react';
 
 // Metadata needs to be exported from a server component, so we can't define it here.
 // We will move it to the page.tsx files that are server components.
@@ -19,7 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const showNavbar = !pathname.startsWith('/admin') && !pathname.startsWith('/customer');
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/onboarding';
+  const isPublicPage = pathname === '/';
+  
+  const showAuthenticatedLayout = !isAuthPage && !isPublicPage;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -30,15 +35,21 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Source+Code+Pro&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased pt-16">
+      <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {showNavbar && <Navbar />}
-          {children}
+          {isPublicPage && <Navbar />}
+          
+          {showAuthenticatedLayout ? (
+            <AuthenticatedLayout>{children}</AuthenticatedLayout>
+          ) : (
+            <main className={isPublicPage ? 'pt-16' : ''}>{children}</main>
+          )}
+
           <Toaster />
           <Chatbot />
         </ThemeProvider>

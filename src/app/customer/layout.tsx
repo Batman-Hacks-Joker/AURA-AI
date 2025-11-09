@@ -8,7 +8,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
@@ -21,6 +20,7 @@ import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
+import React from "react";
 
 
 function CustomerSidebarInner() {
@@ -75,7 +75,7 @@ function CustomerSidebarInner() {
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
+    <>
       <CustomerSidebarInner />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
@@ -88,6 +88,6 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
           {children}
         </main>
       </SidebarInset>
-    </SidebarProvider>
+    </>
   );
 }

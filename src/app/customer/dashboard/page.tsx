@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Image from "next/image";
-import { Wrench, Palette } from "lucide-react";
+import { Wrench, Palette, CircleDot } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -56,10 +56,11 @@ const defaultProducts: Product[] = [
 
 export default function CustomerDashboardPage() {
   const [purchasedProducts, setPurchasedProducts] = useState<Product[]>([]);
+  const [serviceTickets, setServiceTickets] = useState<ServiceTicket[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadProducts = () => {
+    const loadData = () => {
       const storedProductsRaw = localStorage.getItem('purchasedProducts');
       const storedProducts: Product[] = storedProductsRaw ? JSON.parse(storedProductsRaw) : [];
 
@@ -72,13 +73,17 @@ export default function CustomerDashboardPage() {
       );
       
       setPurchasedProducts(uniqueProducts);
+
+      const storedTicketsRaw = localStorage.getItem('serviceTickets');
+      const storedTickets: ServiceTicket[] = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
+      setServiceTickets(storedTickets);
     };
 
-    loadProducts();
-    window.addEventListener('storage', loadProducts);
+    loadData();
+    window.addEventListener('storage', loadData);
 
     return () => {
-      window.removeEventListener('storage', loadProducts);
+      window.removeEventListener('storage', loadData);
     };
   }, []);
 
@@ -116,6 +121,8 @@ export default function CustomerDashboardPage() {
              const image = product.image || PlaceHolderImages.find(p => p.id === product.id);
              const productName = product.productName || product.name;
              const description = product.description || product.productFeatures?.[0] || 'Your new product.';
+             const isInService = serviceTickets.some(ticket => ticket.productName === productName && ticket.status !== 'Resolved');
+
             return (
               <Card key={product.sku} className="flex flex-col">
                 <CardHeader>
@@ -136,9 +143,15 @@ export default function CustomerDashboardPage() {
                   <p className="text-sm text-muted-foreground">{product.purchaseDate}</p>
                 </CardContent>
                 <CardFooter className="gap-2">
-                  <Button variant="outline" className="w-full" onClick={() => handleScheduleService(product)}>
-                    <Wrench className="mr-2 h-4 w-4" /> Schedule Service
-                  </Button>
+                    {isInService ? (
+                        <Button variant="outline" className="w-full" disabled>
+                            <CircleDot className="mr-2 h-4 w-4 animate-pulse text-destructive" /> In Service
+                        </Button>
+                    ) : (
+                        <Button variant="outline" className="w-full" onClick={() => handleScheduleService(product)}>
+                            <Wrench className="mr-2 h-4 w-4" /> Schedule Service
+                        </Button>
+                    )}
                   <Button className="w-full bg-accent hover:bg-accent/90">
                     <Palette className="mr-2 h-4 w-4" /> Customize
                   </Button>

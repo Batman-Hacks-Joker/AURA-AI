@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,10 @@ export default function SupportPage() {
         const loadTickets = () => {
             const storedTickets = localStorage.getItem('serviceTickets');
             if (storedTickets) {
-                setTickets(JSON.parse(storedTickets));
+                // Sort tickets by date, newest first
+                const parsedTickets: ServiceTicket[] = JSON.parse(storedTickets);
+                parsedTickets.sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
+                setTickets(parsedTickets);
             }
         };
 

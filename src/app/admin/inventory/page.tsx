@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, MoreHorizontal } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -235,10 +235,14 @@ export default function InventoryPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
-                                                    {product.launched ? "Already Launched" : "Launch Product"}
+                                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                    <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>Remove Product</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    <span>Remove Product</span>
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

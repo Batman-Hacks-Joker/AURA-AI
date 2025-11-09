@@ -17,7 +17,7 @@ import {
   } from "@/components/ui/dropdown-menu";
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import data from '@/lib/placeholder-images.json';
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 type Product = {
     name: string;
@@ -36,11 +36,11 @@ type Product = {
 };
 
 const defaultProducts: Product[] = [
-    { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'truck-1')},
-    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'ev-1') },
-    { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock", image: data.placeholderImages.find(p => p.id === 'sedan-1') },
-    { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'suv-1') },
-    { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: data.placeholderImages.find(p => p.id === 'offroad-1') },
+    { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'truck-1')},
+    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'ev-1') },
+    { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock", image: PlaceHolderImages.find(p => p.id === 'sedan-1') },
+    { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'suv-1') },
+    { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'offroad-1') },
 ];
 
 export default function InventoryPage() {
@@ -77,7 +77,7 @@ export default function InventoryPage() {
     };
 
     const handleRemoveProduct = (sku: string) => {
-        const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const currentProducts: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
         const productIndex = currentProducts.findIndex((p: Product) => p.sku === sku);
         if (productIndex === -1) return;
 
@@ -94,10 +94,12 @@ export default function InventoryPage() {
             onUndo: () => {
                 if (lastRemovedProduct.current) {
                     const { product, index } = lastRemovedProduct.current;
+                    // Read the latest state from localStorage to avoid race conditions
+                    const productsFromStorage: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
                     const restoredProducts = [
-                        ...updatedProducts.slice(0, index),
+                        ...productsFromStorage.slice(0, index),
                         product,
-                        ...updatedProducts.slice(index)
+                        ...productsFromStorage.slice(index)
                     ];
                     updateLocalStorage(restoredProducts);
                     lastRemovedProduct.current = null;
@@ -126,6 +128,14 @@ export default function InventoryPage() {
             },
         });
     }
+
+    const imageMap: { [key: string]: any } = {
+        "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
+        "Urban Explorer": PlaceHolderImages.find(p => p.id === 'ev-1'),
+        "City Commuter": PlaceHolderImages.find(p => p.id === 'sedan-1'),
+        "Family Voyager": PlaceHolderImages.find(p => p.id === 'suv-1'),
+        "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
+    };
 
     return (
         <div className="space-y-6">
@@ -172,16 +182,18 @@ export default function InventoryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map((product) => (
+                            {products.map((product) => {
+                                const productImage = product.image || imageMap[product.name];
+                                return (
                                 <TableRow key={product.sku}>
                                     <TableCell className="hidden sm:table-cell">
-                                      {product.image ? (
+                                      {productImage ? (
                                         <Image
                                             alt={product.name}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
-                                            src={product.image.imageUrl}
-                                            data-ai-hint={product.image.imageHint}
+                                            src={productImage.imageUrl}
+                                            data-ai-hint={productImage.imageHint}
                                             width="64"
                                         />
                                       ) : (
@@ -218,11 +230,11 @@ export default function InventoryPage() {
                                         </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>
             </Card>
         </div>
     );
-    
+}

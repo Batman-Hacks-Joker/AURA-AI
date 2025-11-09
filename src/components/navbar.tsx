@@ -47,7 +47,7 @@ export function Navbar({ className }: { className?: string }) {
           </Link>
           <div className="absolute right-0 flex items-center gap-2">
             <ThemeToggle />
-            {user ? <UserMenu user={user} /> : (
+            {!user && (
               <Button asChild variant="outline">
                 <Link href="/login">Login</Link>
               </Button>

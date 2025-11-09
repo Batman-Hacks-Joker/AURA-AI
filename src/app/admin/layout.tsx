@@ -7,7 +7,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
-  SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarToggle } from "@/components/sidebar-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -92,7 +92,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-end p-4 border-b bg-card">
+        <header className="flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
+          <ThemeToggle />
           <UserMenu />
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">

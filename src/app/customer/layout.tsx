@@ -49,7 +49,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
-                <Link href="#">
+                <Link href="/marketplace">
                   <ShoppingCart />
                   <span>Marketplace</span>
                 </Link>

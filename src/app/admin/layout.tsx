@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Marketplace" className="text-base">
-                <Link href="#">
+                <Link href="/marketplace">
                   <ShoppingCart />
                   <span>Marketplace</span>
                 </Link>

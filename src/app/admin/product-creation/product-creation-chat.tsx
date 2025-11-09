@@ -1,6 +1,6 @@
 'use client';
 
-import { Mic, Paperclip, Save, Square } from 'lucide-react';
+import { Mic, Paperclip, Save, Square, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useRef, useState, useEffect } from 'react';
 import { getProductCreationResponse } from './product-creation-actions';
@@ -146,6 +146,10 @@ export function ProductCreationChat() {
         router.push('/admin/inventory');
     };
 
+    const handleClearInput = () => {
+        setInput('');
+    }
+
     return (
         <div className="space-y-6">
             <Card className="flex flex-col">
@@ -169,6 +173,11 @@ export function ProductCreationChat() {
                                {isListening ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                             </Button>
                             <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip className="h-5 w-5" /></Button>
+                            {input && (
+                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={handleClearInput}>
+                                    <X className="h-5 w-5" />
+                                </Button>
+                            )}
                             <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="ml-auto bg-primary hover:bg-primary/90">
                                 {isLoading ? 'Generating...' : 'Generate Details'}
                             </Button>

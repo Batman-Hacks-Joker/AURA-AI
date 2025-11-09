@@ -17,6 +17,8 @@ import {
   User,
   LogOut,
   Settings,
+  ArrowLeftToLine,
+  ArrowRightToLine,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
@@ -63,7 +65,6 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
             <div className="flex items-center gap-4">
-              <Logo />
             </div>
           <div className="flex-1" />
           <div className="flex items-center gap-2">

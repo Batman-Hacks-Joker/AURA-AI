@@ -63,24 +63,16 @@ export default function CustomerDashboardPage() {
   useEffect(() => {
     const loadData = () => {
         const storedProductsRaw = localStorage.getItem('purchasedProducts');
-        const storedProducts: Product[] = storedProductsRaw ? JSON.parse(storedProductsRaw) : [];
+        const storedTicketsRaw = localStorage.getItem('serviceTickets');
 
-        // Combine default products with stored products, ensuring no duplicates from the start.
-        const combinedProducts = [...defaultProducts, ...storedProducts];
-        const uniqueSkus = new Set<string>();
-        const uniqueProducts: Product[] = [];
-        // Iterate backwards to prioritize user-added (purchased) products over default ones
-        for (let i = combinedProducts.length - 1; i >= 0; i--) {
-            const product = combinedProducts[i];
-            if (!uniqueSkus.has(product.sku)) {
-                uniqueSkus.add(product.sku);
-                uniqueProducts.unshift(product);
-            }
+        if (storedProductsRaw) {
+            setPurchasedProducts(JSON.parse(storedProductsRaw));
+        } else {
+            // Only set default products if there's nothing in storage
+            setPurchasedProducts(defaultProducts);
+            localStorage.setItem('purchasedProducts', JSON.stringify(defaultProducts));
         }
         
-        setPurchasedProducts(uniqueProducts);
-
-        const storedTicketsRaw = localStorage.getItem('serviceTickets');
         const storedTickets: ServiceTicket[] = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
         setServiceTickets(storedTickets);
     };
@@ -122,14 +114,10 @@ export default function CustomerDashboardPage() {
     const productToRemove = purchasedProducts[productIndex];
     lastRemovedProduct.current = { product: productToRemove, index: productIndex };
 
-    // Update UI state
+    // Update UI state and localStorage
     const updatedProducts = purchasedProducts.filter((p) => p.sku !== sku);
     setPurchasedProducts(updatedProducts);
-
-    // Update purchased products in localStorage
-    const storedPurchasedProducts: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
-    const updatedStoredProducts = storedPurchasedProducts.filter(p => p.sku !== sku);
-    localStorage.setItem('purchasedProducts', JSON.stringify(updatedStoredProducts));
+    localStorage.setItem('purchasedProducts', JSON.stringify(updatedProducts));
 
     // Remove associated service tickets
     const productName = productToRemove.productName || productToRemove.name;
@@ -140,7 +128,7 @@ export default function CustomerDashboardPage() {
         localStorage.setItem('serviceTickets', JSON.stringify(updatedTickets));
     }
     
-    // Dispatch a storage event to notify other components (like the support page)
+    // Dispatch a storage event to notify other components
     window.dispatchEvent(new Event('storage'));
 
     const { id } = toast({
@@ -151,22 +139,16 @@ export default function CustomerDashboardPage() {
             if (lastRemovedProduct.current) {
                 const { product, index } = lastRemovedProduct.current;
                 
-                // Restore to the UI state
-                const restoredUiProducts = [
-                    ...updatedProducts.slice(0, index),
+                const currentProducts = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
+                const restoredProducts = [
+                    ...currentProducts.slice(0, index),
                     product,
-                    ...updatedProducts.slice(index)
+                    ...currentProducts.slice(index)
                 ];
-                setPurchasedProducts(restoredUiProducts);
-
-                // Restore to localStorage if it was a non-default product
-                const isDefault = defaultProducts.some(p => p.sku === product.sku);
-                if (!isDefault) {
-                  const currentStored: Product[] = JSON.parse(localStorage.getItem('purchasedProducts') || '[]');
-                  const restoredStoredProducts = [...currentStored, product];
-                  localStorage.setItem('purchasedProducts', JSON.stringify(restoredStoredProducts));
-                }
-
+                
+                setPurchasedProducts(restoredProducts);
+                localStorage.setItem('purchasedProducts', JSON.stringify(restoredProducts));
+                
                 // Since we can't easily "undo" the ticket removal without more complex state management,
                 // we'll just re-trigger a storage event so other components can reload.
                 window.dispatchEvent(new Event('storage'));

@@ -1,4 +1,5 @@
 
+
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +16,10 @@ import {
   Star,
   LogOut,
   User,
+  PackagePlus,
+  Warehouse,
+  Store,
+  Wrench
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -40,7 +45,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-                <UserMenu />
+              <Button variant="ghost" className="relative h-10 rounded-full p-0 flex items-center gap-2 w-full justify-start">
+                  <Avatar className="h-10 w-10">
+                      <AvatarImage src="https://picsum.photos/seed/admin/100/100" data-ai-hint="person portrait" alt="@admin" />
+                      <AvatarFallback>AD</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate">Hi, Admin!</span>
+              </Button>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Home" className="text-base">
@@ -73,13 +84,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
-            <div className="flex items-center gap-6 text-sm font-medium">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
+            <div className="flex items-center gap-2 md:gap-6 text-sm font-medium">
                 <SidebarToggle />
-                <Link href="/admin/product-creation" className="text-muted-foreground transition-colors hover:text-foreground">Product Creation</Link>
-                <Link href="/admin/inventory" className="text-muted-foreground transition-colors hover:text-foreground">Inventory</Link>
-                <Link href="/marketplace" className="text-muted-foreground transition-colors hover:text-foreground">Marketplace</Link>
-                <Link href="/admin/service-center" className="text-muted-foreground transition-colors hover:text-foreground">Service Center</Link>
+                <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <PackagePlus className="h-5 w-5" />
+                    <span className="hidden md:inline">Product Creation</span>
+                </Link>
+                <Link href="/admin/inventory" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Warehouse className="h-5 w-5" />
+                    <span className="hidden md:inline">Inventory</span>
+                </Link>
+                <Link href="/marketplace" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Store className="h-5 w-5" />
+                    <span className="hidden md:inline">Marketplace</span>
+                </Link>
+                <Link href="/admin/service-center" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Wrench className="h-5 w-5" />
+                    <span className="hidden md:inline">Service Center</span>
+                </Link>
             </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background">

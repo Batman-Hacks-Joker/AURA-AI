@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw } from "lucide-react";
 import { useState, useRef } from "react";
@@ -250,4 +252,6 @@ export default function KnowledgeBasePage() {
         </div>
     );
 }
+    
+
     

@@ -178,7 +178,7 @@ export function ProductCreationChat() {
                  {(generatedDetails || isLoading) && (
                     <CardFooter>
                        <Button onClick={handleSave} disabled={!generatedDetails || isLoading} className="w-full">
-                           <Save className="mr-2" /> Save & Launch
+                           <Save className="mr-2" /> Add to Inventory
                        </Button>
                    </CardFooter>
                 )}

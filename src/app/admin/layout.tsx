@@ -20,6 +20,7 @@ import {
   Warehouse,
   Store,
   Wrench,
+  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
@@ -93,6 +94,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4">
             <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
+                <Link href="/admin/dashboard" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="hidden md:inline">Dashboard</span>
+                </Link>
                 <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <PackagePlus className="h-5 w-5" />
                     <span className="hidden md:inline">Product Creation</span>

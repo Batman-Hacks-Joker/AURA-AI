@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { User, LayoutDashboard, LogOut } from 'lucide-react';
+import Link from "next/link";
 
 
 export function UserMenu() {

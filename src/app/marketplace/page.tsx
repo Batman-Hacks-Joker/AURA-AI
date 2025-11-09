@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ShoppingCart } from 'lucide-react';
 
 type Product = {
     name: string;
@@ -29,6 +31,36 @@ type Product = {
     productFeatures?: string[];
     productBenefits?: string[];
 };
+
+function BuyNowButton({ product }: { product: Product }) {
+    const [isHovered, setIsHovered] = useState(false);
+    const router = useRouter();
+    const productPrice = product.productPrice || product.price;
+
+    const handleBuyNow = () => {
+        // In a real app, you'd add to a cart state management
+        // For this demo, we'll pass the product SKU to a dedicated cart page
+        router.push(`/customer/cart?sku=${product.sku}`);
+    };
+
+    return (
+        <Button
+            className="w-full bg-accent hover:bg-accent/90"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={handleBuyNow}
+        >
+            {isHovered ? (
+                <>
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Buy Now
+                </>
+            ) : (
+                `$${Number(productPrice).toLocaleString()}`
+            )}
+        </Button>
+    );
+}
 
 export default function MarketplacePage() {
     const [launchedProducts, setLaunchedProducts] = useState<Product[]>([]);
@@ -69,10 +101,11 @@ export default function MarketplacePage() {
                                 <Skeleton className="h-4 w-1/2" />
                             </CardHeader>
                             <CardContent>
-                                <Skeleton className="h-4 w-1/4" />
+                                <Skeleton className="h-4 w-full" />
                             </CardContent>
-                            <CardFooter>
-                                <Skeleton className="h-10 w-full" />
+                            <CardFooter className="gap-2">
+                                <Skeleton className="h-10 w-1/2" />
+                                <Skeleton className="h-10 w-1/2" />
                             </CardFooter>
                         </Card>
                     ))}
@@ -86,13 +119,12 @@ export default function MarketplacePage() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {launchedProducts.map((product) => {
                         const productName = product.productName || product.name;
-                        const productPrice = product.productPrice || product.price;
                         const productImage = product.image || imageMap[productName];
 
                         return (
-                            <Link key={product.sku} href={`/marketplace/${product.sku}`} className="group block">
-                                <Card className="flex flex-col h-full transition-shadow duration-300 group-hover:shadow-lg">
-                                    <CardHeader>
+                            <Card key={product.sku} className="flex flex-col h-full transition-shadow duration-300 hover:shadow-lg">
+                                <CardHeader>
+                                    <Link href={`/marketplace/${product.sku}`} className="group block">
                                         {productImage ? (
                                             <Image
                                                 src={productImage.imageUrl}
@@ -108,18 +140,21 @@ export default function MarketplacePage() {
                                             </div>
                                         )}
                                         <CardTitle className="pt-4 group-hover:text-primary transition-colors">{productName}</CardTitle>
-                                        <CardDescription>${Number(productPrice).toLocaleString()}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow">
-                                        <p className="text-sm text-muted-foreground line-clamp-2">
-                                            {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button className="w-full bg-accent hover:bg-accent/90">View Details</Button>
-                                    </CardFooter>
-                                </Card>
-                            </Link>
+                                    </Link>
+                                    <CardDescription>{product.productCategory || product.category}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                        {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
+                                    </p>
+                                </CardContent>
+                                <CardFooter className="gap-2">
+                                    <Button asChild variant="outline" size="sm" className="w-full">
+                                      <Link href={`/marketplace/${product.sku}`}>View Details</Link>
+                                    </Button>
+                                    <BuyNowButton product={product} />
+                                </CardFooter>
+                            </Card>
                         );
                     })}
                 </div>

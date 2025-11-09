@@ -81,7 +81,10 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     <>
       <CustomerSidebarInner />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 items-center justify-end p-4 border-b bg-card gap-2">
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between p-4 border-b bg-card gap-2">
+            <Link href="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Marketplace
+            </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <UserMenu />

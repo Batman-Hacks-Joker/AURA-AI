@@ -41,10 +41,17 @@ export function Navbar({ className }: { className?: string }) {
           <Link href="/">
             <Logo />
           </Link>
-          {!user && (
-            <Button asChild variant="outline">
-              <Link href="/login">Login</Link>
-            </Button>
+          {!user ? (
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline">
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Sign Up</Link>
+              </Button>
+            </div>
+          ) : (
+            <UserMenu user={user} />
           )}
       </div>
     </header>
@@ -69,34 +76,37 @@ function UserMenu({ user }: { user: LoggedInUser }) {
   const seed = user.role === 'admin' ? 'admin' : 'customer';
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://picsum.photos/seed/${seed}/100/100`} alt={user.email} />
-            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href={`/${user.role}/dashboard`}><LayoutDashboard className="mr-2" /> Dashboard</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled><User className="mr-2" /> Profile</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2" /> Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-4">
+      <ThemeToggle />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={`https://picsum.photos/seed/${seed}/100/100`} alt={user.email} />
+              <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href={`/${user.role}/dashboard`}><LayoutDashboard className="mr-2" /> Dashboard</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled><User className="mr-2" /> Profile</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2" /> Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

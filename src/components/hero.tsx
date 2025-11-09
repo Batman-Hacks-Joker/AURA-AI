@@ -31,6 +31,8 @@ export function Hero() {
   }, []);
   
   const getStartedLink = user ? `/${user.role}/dashboard` : "/signup";
+  const getStartedText = user ? "Go to Dashboard" : "Get Started";
+
 
   return (
     <section className="bg-background text-foreground">
@@ -45,11 +47,13 @@ export function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
-                <Link href={getStartedLink}>Get Started</Link>
+                <Link href={getStartedLink}>{getStartedText}</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="#">Learn More</Link>
-              </Button>
+              {!user && (
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/login">Login</Link>
+                </Button>
+              )}
             </div>
           </div>
           <div>

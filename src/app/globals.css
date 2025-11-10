@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 276 50% 92.2%;
+    --background: 274 67% 98%;
     --foreground: 240 10% 3.9%;
     --card: 276 50% 96%;
     --card-foreground: 240 10% 3.9%;
@@ -29,7 +29,7 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 276 50% 97%;
+    --sidebar-background: 274 67% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 165 100% 30.4%;
     --sidebar-primary-foreground: 165 100% 95%;
@@ -88,9 +88,9 @@
         @apply transition-all duration-300;
     }
     .card:hover {
-        box-shadow: 4px 4px 15px 1px hsl(var(--destructive) / 0.5);
+        box-shadow: 4px 4px 15px 0px hsl(var(--destructive) / 0.5);
     }
     .dark .card:hover {
-        box-shadow: 4px 4px 15px 1px hsl(var(--foreground) / 0.3);
+        box-shadow: 4px 4px 15px 0px hsl(var(--foreground) / 0.3);
     }
 }

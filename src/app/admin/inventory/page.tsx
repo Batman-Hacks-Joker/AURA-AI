@@ -293,7 +293,7 @@ export default function InventoryPage() {
                                                     <Input
                                                         type="number"
                                                         value={stockValue}
-                                                        onChange={(e) => setStockValue(parseInt(e.target.value))}
+                                                        onChange={(e) => setStockValue(e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
                                                         onBlur={() => handleStockUpdate(product.sku)}
                                                         onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(product.sku)}
                                                         autoFocus
@@ -324,5 +324,3 @@ export default function InventoryPage() {
         </div>
     );
 }
-
-    

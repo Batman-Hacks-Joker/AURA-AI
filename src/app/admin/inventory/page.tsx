@@ -18,6 +18,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { cn } from "@/lib/utils";
 
 type Product = {
     name: string;
@@ -37,7 +38,7 @@ type Product = {
 
 const defaultProducts: Product[] = [
     { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'truck-1')},
-    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 15, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'ev-1') },
+    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 5, status: "Need Refill", image: PlaceHolderImages.find(p => p.id === 'ev-1') },
     { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock", image: PlaceHolderImages.find(p => p.id === 'sedan-1') },
     { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'suv-1') },
     { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'offroad-1') },
@@ -57,21 +58,34 @@ export default function InventoryPage() {
     const { toast, dismiss } = useToast();
     const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
 
+    const processProducts = (products: Product[]): Product[] => {
+        return getUniqueProducts(products).map(p => {
+            let status: string;
+            if (p.stock === 0) {
+                status = "Out of Stock";
+            } else if (p.stock <= 10) {
+                status = "Need Refill";
+            } else {
+                status = "In Stock";
+            }
+            return { ...p, status };
+        });
+    }
+
     useEffect(() => {
         const loadProducts = () => {
             const storedProductsRaw = localStorage.getItem('products');
             if (storedProductsRaw) {
                 const storedProducts: Product[] = JSON.parse(storedProductsRaw);
-                const uniqueProducts = getUniqueProducts(storedProducts);
-                setProducts(uniqueProducts);
-                // If duplicates were found, update localStorage with the clean list
-                if (uniqueProducts.length !== storedProducts.length) {
-                    localStorage.setItem('products', JSON.stringify(uniqueProducts));
+                const processed = processProducts(storedProducts);
+                setProducts(processed);
+                if (processed.length !== storedProducts.length) {
+                    localStorage.setItem('products', JSON.stringify(processed));
                 }
             } else {
-                const uniqueDefaultProducts = getUniqueProducts(defaultProducts);
-                setProducts(uniqueDefaultProducts);
-                localStorage.setItem('products', JSON.stringify(uniqueDefaultProducts));
+                const processed = processProducts(defaultProducts);
+                setProducts(processed);
+                localStorage.setItem('products', JSON.stringify(processed));
             }
         };
 
@@ -85,9 +99,9 @@ export default function InventoryPage() {
     }, []);
     
     const updateLocalStorage = (updatedProducts: Product[]) => {
-        const uniqueProducts = getUniqueProducts(updatedProducts);
-        setProducts(uniqueProducts);
-        localStorage.setItem('products', JSON.stringify(uniqueProducts));
+        const processed = processProducts(updatedProducts);
+        setProducts(processed);
+        localStorage.setItem('products', JSON.stringify(processed));
     };
 
     const handleRemoveProduct = (sku: string) => {
@@ -150,6 +164,19 @@ export default function InventoryPage() {
         "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
     };
 
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case "In Stock":
+                return "secondary";
+            case "Need Refill":
+                return "outline";
+            case "Out of Stock":
+                return "destructive";
+            default:
+                return "default";
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -189,9 +216,6 @@ export default function InventoryPage() {
                                 <TableHead>Status</TableHead>
                                 <TableHead>Price</TableHead>
                                 <TableHead className="text-right">Stock</TableHead>
-                                <TableHead>
-                                  <span className="sr-only">Actions</span>
-                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -215,37 +239,47 @@ export default function InventoryPage() {
                                         </div>
                                       )}
                                     </TableCell>
-                                    <TableCell className="font-medium">{product.name}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <div>
+                                                <div>{product.name}</div>
+                                                <div className={cn(
+                                                    "text-xs",
+                                                    product.launched ? "text-primary" : "text-muted-foreground"
+                                                )}>
+                                                    {product.launched ? "Launched" : "Yet to launch"}
+                                                </div>
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
+                                                        <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                        <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Remove Product</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
                                     <TableCell>
-                                        <Badge variant={product.launched ? "default" : product.status === "In Stock" ? "secondary" : "destructive"}>
-                                            {product.launched ? "Launched" : product.status}
+                                        <Badge variant={getStatusBadgeVariant(product.status)}>
+                                            {product.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>${Number(product.price).toLocaleString()}</TableCell>
                                     <TableCell className="text-right">{product.stock}</TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
-                                                    <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                    <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    <span>Remove Product</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
                                 </TableRow>
                             )})}
                         </TableBody>

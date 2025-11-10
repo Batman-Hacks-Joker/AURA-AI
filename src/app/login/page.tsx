@@ -84,19 +84,19 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input id="password" type="password" required placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
+                <div className="flex justify-end">
+                  <Link href="#" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-4 pt-4">
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In</Button>
               <p className="text-xs text-muted-foreground text-center">
                 Don't have an account? <Link href="/signup" className="text-primary hover:underline font-semibold">Sign up</Link>

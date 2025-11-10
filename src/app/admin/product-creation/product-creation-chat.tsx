@@ -293,73 +293,38 @@ export function ProductCreationChat() {
 
     return (
         <div className="grid md:grid-cols-2 gap-8">
-            <Card className="h-fit">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <BrainCircuit className="text-primary" />
-                        AURA AI Input
-                    </CardTitle>
-                    <CardDescription>
-                        Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="e.g., 'A high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
-                        className="min-h-[150px] mb-4"
-                        disabled={isLoading}
-                    />
-                    <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
-                               {isListening ? <Square /> : <Mic />}
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip /></Button>
-                        </div>
-                        <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="bg-accent hover:bg-accent/90">
-                            {isLoading ? <Loader2 className="animate-spin" /> : "Generate Details"}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
             <div className="space-y-8">
-                {isLoading ? (
-                    <Card>
-                        <CardHeader>
-                            <Skeleton className="h-8 w-3/4" />
-                            <Skeleton className="h-4 w-1/2" />
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Skeleton className="h-5 w-1/4" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-5/6" />
-                            <Skeleton className="h-5 w-1/3 mt-4" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-4/5" />
-                        </CardContent>
-                    </Card>
-                ) : generatedDetails && (
-                    <Card>
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle>{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
-                                    <CardDescription>Review and edit the AI-generated details below.</CardDescription>
-                                </div>
-                                <Button variant="outline" size="sm" onClick={handleEditToggle}>
-                                    {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
-                                    {isEditing ? 'Save Changes' : 'Edit'}
+                <Card className="h-fit">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <BrainCircuit className="text-primary" />
+                            AURA AI Input
+                        </CardTitle>
+                        <CardDescription>
+                            Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="e.g., 'A high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
+                            className="min-h-[150px] mb-4"
+                            disabled={isLoading}
+                        />
+                        <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
+                                   {isListening ? <Square /> : <Mic />}
                                 </Button>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip /></Button>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                           {isEditing ? renderEditableFields() : renderStaticDetails()}
-                        </CardContent>
-                    </Card>
-                )}
+                            <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="bg-accent hover:bg-accent/90">
+                                {isLoading ? <Loader2 className="animate-spin" /> : "Generate Details"}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {generatedDetails && !isLoading && (
                     <Card>
@@ -394,6 +359,43 @@ export function ProductCreationChat() {
                                     </div>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+
+            <div className="space-y-8">
+                {isLoading ? (
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-8 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Skeleton className="h-5 w-1/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-5/6" />
+                            <Skeleton className="h-5 w-1/3 mt-4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-4/5" />
+                        </CardContent>
+                    </Card>
+                ) : generatedDetails && (
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
+                                    <CardDescription>Review and edit the AI-generated details below.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handleEditToggle}>
+                                    {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
+                                    {isEditing ? 'Save Changes' : 'Edit'}
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                           {isEditing ? renderEditableFields() : renderStaticDetails()}
                         </CardContent>
                     </Card>
                 )}

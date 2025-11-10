@@ -258,54 +258,54 @@ export default function InventoryPage() {
                                       )}
                                     </TableCell>
                                     <TableCell className="font-medium">
-                                        <div className="flex items-start gap-2">
-                                            <div>
-                                                <div>{product.name}</div>
-                                                <div className={cn(
-                                                    "text-xs",
-                                                    product.launched ? "text-primary" : "text-muted-foreground"
-                                                )}>
-                                                    {product.launched ? "Launched" : "Yet to launch"}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                                    {editingStockSku === product.sku ? (
-                                                        <Input
-                                                            type="number"
-                                                            value={stockValue}
-                                                            onChange={(e) => setStockValue(parseInt(e.target.value))}
-                                                            onBlur={() => handleStockUpdate(product.sku)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(product.sku)}
-                                                            autoFocus
-                                                            className="h-6 w-20"
-                                                        />
-                                                    ) : (
-                                                        <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
-                                                            <span>Stock: {product.stock}</span>
-                                                            <Pencil className="h-3 w-3" />
-                                                        </button>
-                                                    )}
-                                                </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span>{product.name}</span>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
+                                                            <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                            <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <span>Remove Product</span>
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
-                                                        <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                        <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        <span>Remove Product</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <div className={cn(
+                                                "text-xs mt-1",
+                                                product.launched ? "text-primary" : "text-muted-foreground"
+                                            )}>
+                                                {product.launched ? "Launched" : "Yet to launch"}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                                {editingStockSku === product.sku ? (
+                                                    <Input
+                                                        type="number"
+                                                        value={stockValue}
+                                                        onChange={(e) => setStockValue(parseInt(e.target.value))}
+                                                        onBlur={() => handleStockUpdate(product.sku)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(product.sku)}
+                                                        autoFocus
+                                                        className="h-6 w-20"
+                                                    />
+                                                ) : (
+                                                    <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
+                                                        <span>Stock: {product.stock}</span>
+                                                        <Pencil className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku}</TableCell>

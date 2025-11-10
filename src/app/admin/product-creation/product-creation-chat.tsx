@@ -105,6 +105,17 @@ export function ProductCreationChat() {
         
         try {
             const details = await getProductCreationResponse(input, "");
+            if (details.error) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error Generating Details',
+                    description: details.error,
+                });
+                setGeneratedDetails(null);
+                setEditableDetails(null);
+                return;
+            }
+
             const detailsWithStock = {
                 ...details,
                 stock: Math.floor(Math.random() * 100) // Add initial random stock
@@ -151,15 +162,250 @@ export function ProductCreationChat() {
             } : undefined
         };
         
-        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]🔹tool_code
-print(default_api.run_code(code='''
-# Let's see what the dev thinks about the change
-print("This is a great feature, but the user is asking to add a lot of things in a single turn. Let's see if I can handle it. I need to be careful and not miss any details.")
-print("I'll start by creating the new `generate-image-flow.ts` file.")
-print("Then I'll update `dev.ts` to import it.")
-print("Then, I'll update `product-creation-actions.ts` to include the `getGeneratedImage` action.")
-print("Finally, I will update the main component `product-creation-chat.tsx` to include all the new UI elements and logic for editing, image uploading, and image generation.")
-print("I need to make sure the state management for editable fields is correct.")
-print("I also need to handle the new image generation flow, including loading states.")
-print("Looks like a solid plan. Let's proceed.")
-'''))
+        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        existingProducts.push(productToSave);
+        localStorage.setItem('products', JSON.stringify(existingProducts));
+        window.dispatchEvent(new Event('storage'));
+
+        toast({
+            title: 'Product Saved!',
+            description: `"${productToSave.name}" has been added to your inventory.`,
+        });
+
+        router.push('/admin/inventory');
+    };
+
+    const handleEditToggle = () => {
+        if (isEditing) {
+            setGeneratedDetails(editableDetails);
+        }
+        setIsEditing(!isEditing);
+    };
+
+    const handleDetailChange = (field: string, value: any, index?: number) => {
+        setEditableDetails((prev: any) => {
+            if (index !== undefined && (field === 'productFeatures' || field === 'productBenefits')) {
+                const newList = [...prev[field]];
+                newList[index] = value;
+                return { ...prev, [field]: newList };
+            }
+            return { ...prev, [field]: value };
+        });
+    };
+    
+    const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const url = e.target?.result as string;
+                setProductImage({ url, hint: 'custom upload' });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleGenerateImage = async () => {
+        if (!imageGenPrompt) {
+            toast({ variant: 'destructive', title: 'Prompt Required', description: 'Please enter a prompt for the image.' });
+            return;
+        }
+        setIsGeneratingImage(true);
+        try {
+            const result: any = await getGeneratedImage(imageGenPrompt);
+            if (result.error) {
+                toast({ variant: 'destructive', title: 'Image Generation Failed', description: result.error });
+                setProductImage(null);
+            } else {
+                setProductImage({ url: result.imageUrl, hint: imageGenPrompt });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'An Unexpected Error Occurred' });
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+
+    const renderEditableFields = () => {
+        if (!editableDetails) return null;
+        
+        return (
+            <div className="space-y-4">
+                <div>
+                    <Label htmlFor="productName">Product Name</Label>
+                    <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} />
+                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="productPrice">Price</Label>
+                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} />
+                    </div>
+                    <div>
+                        <Label htmlFor="stock">Stock Units</Label>
+                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} />
+                    </div>
+                </div>
+                <div>
+                    <Label>Key Features</Label>
+                    {editableDetails.productFeatures.map((feature: string, index: number) => (
+                        <Input key={index} value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="mb-2"/>
+                    ))}
+                </div>
+                 <div>
+                    <Label>Customer Benefits</Label>
+                    {editableDetails.productBenefits.map((benefit: string, index: number) => (
+                        <Input key={index} value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="mb-2"/>
+                    ))}
+                </div>
+                 <div>
+                    <Label htmlFor="productCategory">Category</Label>
+                    <Input id="productCategory" value={editableDetails.productCategory} onChange={(e) => handleDetailChange('productCategory', e.target.value)} />
+                </div>
+            </div>
+        )
+    }
+
+     const renderStaticDetails = () => {
+        if (!generatedDetails) return null;
+
+        return (
+            <div className="space-y-4">
+                <p><strong className="text-muted-foreground">Price:</strong> ${generatedDetails.productPrice}</p>
+                <p><strong className="text-muted-foreground">Stock:</strong> {generatedDetails.stock} units</p>
+                <div>
+                    <h4 className="font-semibold">Key Features</h4>
+                    <ul className="list-disc list-inside text-muted-foreground">
+                        {generatedDetails.productFeatures.map((f: string, i: number) => <li key={i}>{f}</li>)}
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="font-semibold">Customer Benefits</h4>
+                    <ul className="list-disc list-inside text-muted-foreground">
+                        {generatedDetails.productBenefits.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                    </ul>
+                </div>
+                <p><strong className="text-muted-foreground">Category:</strong> {generatedDetails.productCategory}</p>
+            </div>
+        )
+    }
+
+
+    return (
+        <div className="grid md:grid-cols-2 gap-8">
+            <Card className="h-fit">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <BrainCircuit className="text-primary" />
+                        AURA AI Input
+                    </CardTitle>
+                    <CardDescription>
+                        Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="e.g., 'A high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
+                        className="min-h-[150px] mb-4"
+                        disabled={isLoading}
+                    />
+                    <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
+                               {isListening ? <Square /> : <Mic />}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip /></Button>
+                        </div>
+                        <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="bg-accent hover:bg-accent/90">
+                            {isLoading ? <Loader2 className="animate-spin" /> : "Generate Details"}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-8">
+                {isLoading ? (
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-8 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Skeleton className="h-5 w-1/4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-5/6" />
+                            <Skeleton className="h-5 w-1/3 mt-4" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-4/5" />
+                        </CardContent>
+                    </Card>
+                ) : generatedDetails && (
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
+                                    <CardDescription>Review and edit the AI-generated details below.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handleEditToggle}>
+                                    {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
+                                    {isEditing ? 'Save Changes' : 'Edit'}
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                           {isEditing ? renderEditableFields() : renderStaticDetails()}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {generatedDetails && !isLoading && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Product Image</CardTitle>
+                            <CardDescription>Upload a custom image or generate one with AI.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {productImage ? (
+                                <div className="relative">
+                                    <Image src={productImage.url} alt="Generated product" width={500} height={500} className="rounded-md w-full object-cover aspect-video" />
+                                     <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => setProductImage(null)}><X className="h-4 w-4"/></Button>
+                                </div>
+                            ) : isGeneratingImage ? (
+                                <div className="w-full aspect-video flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : (
+                                 <div className="grid grid-cols-2 gap-4">
+                                     <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg text-center">
+                                        <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                                        <p className="mt-2 text-sm text-muted-foreground">Upload an image</p>
+                                        <input type="file" ref={fileInputRef} className="sr-only" id="file-upload" onChange={handleImageFileChange} accept="image/*" />
+                                        <Button asChild variant="link" size="sm"><label htmlFor="file-upload">Browse File</label></Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="image-prompt">Or generate with AI</Label>
+                                        <Textarea id="image-prompt" placeholder="e.g., 'A sleek white electric car, studio lighting'" value={imageGenPrompt} onChange={(e) => setImageGenPrompt(e.target.value)} />
+                                        <Button onClick={handleGenerateImage} disabled={isGeneratingImage} className="w-full">
+                                            {isGeneratingImage ? <Loader2 className="animate-spin" /> : <><ImageIcon className="mr-2"/>Generate Image</>}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {generatedDetails && !isLoading && (
+                    <div className="flex justify-end">
+                        <Button size="lg" onClick={handleSave} className="bg-accent hover:bg-accent/90">
+                           <Save className="mr-2" /> Add to Inventory
+                        </Button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

@@ -24,4 +24,7 @@ export async function getGeneratedImage(prompt: string) {
     } catch (error) {
         console.error("Image generation error:", error);
         return {
-            
+            error: "I'm sorry, I couldn't generate an image right now. Please try a different prompt or upload an image instead."
+        };
+    }
+}

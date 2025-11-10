@@ -37,4 +37,6 @@ const generateImageFlow = ai.defineFlow(
       throw new Error('Image generation failed to return a data URI.');
     }
 
-    return
+    return { imageUrl };
+  }
+);

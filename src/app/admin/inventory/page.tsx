@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2 } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,12 +19,14 @@ import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 type Product = {
     name: string;
     sku: string;
     category: string;
     price: string;
+
     stock: number;
     status: string;
     launched?: boolean;
@@ -57,6 +59,8 @@ export default function InventoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const { toast, dismiss } = useToast();
     const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
+    const [editingStockSku, setEditingStockSku] = useState<string | null>(null);
+    const [stockValue, setStockValue] = useState(0);
 
     const processProducts = (products: Product[]): Product[] => {
         return getUniqueProducts(products).map(p => {
@@ -72,30 +76,26 @@ export default function InventoryPage() {
         });
     }
 
-    useEffect(() => {
-        const loadProducts = () => {
-            const storedProductsRaw = localStorage.getItem('products');
-            if (storedProductsRaw) {
-                const storedProducts: Product[] = JSON.parse(storedProductsRaw);
-                const processed = processProducts(storedProducts);
-                setProducts(processed);
-                if (processed.length !== storedProducts.length) {
-                    localStorage.setItem('products', JSON.stringify(processed));
-                }
-            } else {
-                const processed = processProducts(defaultProducts);
-                setProducts(processed);
+    const loadProducts = () => {
+        const storedProductsRaw = localStorage.getItem('products');
+        if (storedProductsRaw) {
+            const storedProducts: Product[] = JSON.parse(storedProductsRaw);
+            const processed = processProducts(storedProducts);
+            setProducts(processed);
+            if (processed.length !== storedProducts.length) {
                 localStorage.setItem('products', JSON.stringify(processed));
             }
-        };
+        } else {
+            const processed = processProducts(defaultProducts);
+            setProducts(processed);
+            localStorage.setItem('products', JSON.stringify(processed));
+        }
+    };
 
+    useEffect(() => {
         loadProducts();
-
         window.addEventListener('storage', loadProducts);
-
-        return () => {
-            window.removeEventListener('storage', loadProducts);
-        };
+        return () => window.removeEventListener('storage', loadProducts);
     }, []);
     
     const updateLocalStorage = (updatedProducts: Product[]) => {
@@ -153,6 +153,25 @@ export default function InventoryPage() {
                 updateLocalStorage(revertedProducts);
                 dismiss(id);
             },
+        });
+    }
+
+    const handleStockEdit = (sku: string, currentStock: number) => {
+        setEditingStockSku(sku);
+        setStockValue(currentStock);
+    }
+
+    const handleStockUpdate = (sku: string) => {
+        if (!editingStockSku) return;
+
+        const updatedProducts = products.map(p => 
+            p.sku === sku ? { ...p, stock: stockValue } : p
+        );
+        updateLocalStorage(updatedProducts);
+        setEditingStockSku(null);
+        toast({
+            title: "Stock Updated",
+            description: `Stock for SKU ${sku} has been set to ${stockValue}.`
         });
     }
 
@@ -214,8 +233,7 @@ export default function InventoryPage() {
                                 <TableHead>Name</TableHead>
                                 <TableHead>SKU</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead className="text-right">Stock</TableHead>
+                                <TableHead className="text-right">Price</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -240,7 +258,7 @@ export default function InventoryPage() {
                                       )}
                                     </TableCell>
                                     <TableCell className="font-medium">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-start gap-2">
                                             <div>
                                                 <div>{product.name}</div>
                                                 <div className={cn(
@@ -248,6 +266,24 @@ export default function InventoryPage() {
                                                     product.launched ? "text-primary" : "text-muted-foreground"
                                                 )}>
                                                     {product.launched ? "Launched" : "Yet to launch"}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                                    {editingStockSku === product.sku ? (
+                                                        <Input
+                                                            type="number"
+                                                            value={stockValue}
+                                                            onChange={(e) => setStockValue(parseInt(e.target.value))}
+                                                            onBlur={() => handleStockUpdate(product.sku)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(product.sku)}
+                                                            autoFocus
+                                                            className="h-6 w-20"
+                                                        />
+                                                    ) : (
+                                                        <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
+                                                            <span>Stock: {product.stock}</span>
+                                                            <Pencil className="h-3 w-3" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                             <DropdownMenu>
@@ -278,8 +314,7 @@ export default function InventoryPage() {
                                             {product.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>${Number(product.price).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">{product.stock}</TableCell>
+                                    <TableCell className="text-right">${Number(product.price).toLocaleString()}</TableCell>
                                 </TableRow>
                             )})}
                         </TableBody>

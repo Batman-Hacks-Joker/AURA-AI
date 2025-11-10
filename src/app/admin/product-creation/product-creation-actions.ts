@@ -1,6 +1,7 @@
 'use server';
 
 import { generateProductDetails } from '@/ai/flows/product-detail-prompting';
+import { generateImage } from '@/ai/flows/generate-image-flow';
 
 export async function getProductCreationResponse(productDescription: string, conversationHistory: string) {
   try {
@@ -15,3 +16,12 @@ export async function getProductCreationResponse(productDescription: string, con
     };
   }
 }
+
+export async function getGeneratedImage(prompt: string) {
+    try {
+        const result = await generateImage({ prompt });
+        return result;
+    } catch (error) {
+        console.error("Image generation error:", error);
+        return {
+            

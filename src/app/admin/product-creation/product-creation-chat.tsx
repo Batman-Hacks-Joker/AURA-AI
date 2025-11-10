@@ -1,17 +1,19 @@
 'use client';
 
-import { Mic, Paperclip, Save, Square, X } from 'lucide-react';
+import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useRef, useState, useEffect } from 'react';
-import { getProductCreationResponse } from './product-creation-actions';
+import { getProductCreationResponse, getGeneratedImage } from './product-creation-actions';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Image from 'next/image';
 
-// Define SpeechRecognition type for broader browser support
 interface CustomWindow extends Window {
     SpeechRecognition: typeof SpeechRecognition;
     webkitSpeechRecognition: typeof SpeechRecognition;
@@ -28,6 +30,14 @@ export function ProductCreationChat() {
     const { toast } = useToast();
     const router = useRouter();
 
+    // New states for editing and image generation
+    const [isEditing, setIsEditing] = useState(false);
+    const [editableDetails, setEditableDetails] = useState<any>(null);
+    const [productImage, setProductImage] = useState<{url: string; hint: string} | null>(null);
+    const [imageGenPrompt, setImageGenPrompt] = useState('');
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -42,14 +52,8 @@ export function ProductCreationChat() {
         recognition.lang = 'en-US';
 
 
-        recognition.onstart = () => {
-            setIsListening(true);
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-        
+        recognition.onstart = () => setIsListening(true);
+        recognition.onend = () => setIsListening(false);
         recognition.onerror = (event) => {
             console.error('Speech recognition error', event.error);
             setIsListening(false);
@@ -94,10 +98,19 @@ export function ProductCreationChat() {
         }
         
         setIsLoading(true);
+        setGeneratedDetails(null);
+        setEditableDetails(null);
+        setProductImage(null);
+        setIsEditing(false);
         
         try {
             const details = await getProductCreationResponse(input, "");
-            setGeneratedDetails(details);
+            const detailsWithStock = {
+                ...details,
+                stock: Math.floor(Math.random() * 100) // Add initial random stock
+            }
+            setGeneratedDetails(detailsWithStock);
+            setEditableDetails(detailsWithStock);
         } catch (error) {
             console.error(error);
             toast({
@@ -111,7 +124,8 @@ export function ProductCreationChat() {
     };
 
     const handleSave = () => {
-        if (!generatedDetails) {
+        const detailsToSave = isEditing ? editableDetails : generatedDetails;
+        if (!detailsToSave) {
             toast({
                 variant: 'destructive',
                 title: 'No Details to Save',
@@ -121,125 +135,31 @@ export function ProductCreationChat() {
         }
         
         const productToSave = {
-            ...generatedDetails,
-            name: generatedDetails.productName,
-            price: generatedDetails.productPrice,
-            category: generatedDetails.productCategory,
+            name: detailsToSave.productName,
+            price: detailsToSave.productPrice,
+            category: detailsToSave.productCategory,
+            features: detailsToSave.productFeatures,
+            benefits: detailsToSave.productBenefits,
+            stock: detailsToSave.stock,
             sku: `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-            stock: Math.floor(Math.random() * 100),
-            status: "In Stock"
+            status: detailsToSave.stock > 0 ? "In Stock" : "Out of Stock",
+            image: productImage ? {
+                id: `img-${Date.now()}`,
+                description: `Image for ${detailsToSave.productName}`,
+                imageUrl: productImage.url,
+                imageHint: productImage.hint,
+            } : undefined
         };
         
-        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-        const updatedProducts = [...existingProducts, productToSave];
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
-        window.dispatchEvent(new Event('storage'));
-
-
-        toast({
-            title: 'Product Saved!',
-            description: `${generatedDetails?.productName || 'Your new product'} has been added to the warehouse.`,
-        });
-        
-        setGeneratedDetails(null);
-        setInput('');
-        router.push('/admin/inventory');
-    };
-
-    const handleClearInput = () => {
-        setInput('');
-    }
-
-    return (
-        <div className="space-y-6">
-            <Card className="flex flex-col">
-                <CardHeader>
-                    <CardTitle>Hello, Admin!</CardTitle>
-                    <CardDescription>
-                        Provide initial details for AURA AI Bot to generate a new product listing.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid w-full gap-4">
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Provide details to add new product. For example: 'A rugged, all-terrain electric truck with 500 miles of range, a solar panel roof, and a built-in air compressor.'"
-                            className="min-h-[150px] text-base"
-                            disabled={isLoading}
-                        />
-                        <div className="flex items-center gap-2">
-                             <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
-                               {isListening ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip className="h-5 w-5" /></Button>
-                            {input && (
-                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={handleClearInput}>
-                                    <X className="h-5 w-5" />
-                                </Button>
-                            )}
-                            <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="ml-auto bg-primary hover:bg-primary/90">
-                                {isLoading ? 'Generating...' : 'Generate Details'}
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-                 {(generatedDetails || isLoading) && (
-                    <CardFooter>
-                       <Button onClick={handleSave} disabled={!generatedDetails || isLoading} className="w-full">
-                           <Save className="mr-2" /> Add to Inventory
-                       </Button>
-                   </CardFooter>
-                )}
-            </Card>
-
-            {isLoading && !generatedDetails && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Generating Product Details...</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-8 w-1/2" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                        </div>
-                         <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {generatedDetails && !isLoading && (
-                <Card>
-                    <CardHeader className='flex-row items-center justify-between'>
-                        <div className='space-y-1.5'>
-                            <CardTitle>{generatedDetails.productName}</CardTitle>
-                            <CardDescription>
-                                Category: {generatedDetails.productCategory} | Price: ${generatedDetails.productPrice}
-                            </CardDescription>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="grid gap-6">
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">Key Features</h3>
-                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                                {generatedDetails.productFeatures.map((feature: string, i: number) => <li key={i}>{feature}</li>)}
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">Customer Benefits</h3>
-                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                                {generatedDetails.productBenefits.map((benefit: string, i: number) => <li key={i}>{benefit}</li>)}
-                            </ul>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-    );
-}
+        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]🔹tool_code
+print(default_api.run_code(code='''
+# Let's see what the dev thinks about the change
+print("This is a great feature, but the user is asking to add a lot of things in a single turn. Let's see if I can handle it. I need to be careful and not miss any details.")
+print("I'll start by creating the new `generate-image-flow.ts` file.")
+print("Then I'll update `dev.ts` to import it.")
+print("Then, I'll update `product-creation-actions.ts` to include the `getGeneratedImage` action.")
+print("Finally, I will update the main component `product-creation-chat.tsx` to include all the new UI elements and logic for editing, image uploading, and image generation.")
+print("I need to make sure the state management for editable fields is correct.")
+print("I also need to handle the new image generation flow, including loading states.")
+print("Looks like a solid plan. Let's proceed.")
+'''))

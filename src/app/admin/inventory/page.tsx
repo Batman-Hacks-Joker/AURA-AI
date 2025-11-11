@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -233,7 +234,7 @@ export default function InventoryPage() {
                                 <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>SKU</TableHead>
-                                <TableHead>Status</TableHead>
+                                <TableHead className="text-center">Status</TableHead>
                                 <TableHead className="text-right">Price</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -310,7 +311,7 @@ export default function InventoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         <Badge variant={getStatusBadgeVariant(product.status)}>
                                             {product.status}
                                         </Badge>

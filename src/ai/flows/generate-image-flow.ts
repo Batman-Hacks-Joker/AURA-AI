@@ -30,6 +30,14 @@ const generateImageFlow = ai.defineFlow(
     const { media } = await ai.generate({
         model: 'googleai/imagen-4.0-fast-generate-001',
         prompt: input.prompt,
+        config: {
+          safetySettings: [
+            {
+              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              threshold: 'BLOCK_ONLY_HIGH',
+            }
+          ]
+        }
     });
     
     const imageUrl = media.url;

@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the KARMA platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "googleId": {
+          "type": "string",
+          "description": "Google user ID."
+        },
+        "username": {
+          "type": "string",
+          "description": "Username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "onboardingDate": {
+          "type": "string",
+          "description": "Date when the user onboarded to the platform.",
+          "format": "date-time"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user (e.g., Customer, Admin, SubAdmin)."
+        }
+      },
+      "required": [
+        "id",
+        "googleId",
+        "username",
+        "email",
+        "onboardingDate",
+        "role"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. The 'userId' parameter corresponds to the user's unique ID obtained from Google OAuth. This structure supports authorization independence, making security rules more robust and easier to manage.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user derived from Google OAuth."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "adminRole",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Used to define admin role by existing of the document with userid. The 'userId' parameter corresponds to the user's unique ID obtained from Google OAuth. This structure supports authorization independence, making security rules more robust and easier to manage.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user derived from Google OAuth."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to store user data securely and efficiently. We are storing each user's profile under `/users/{userId}` to ensure that access control is straightforward and that each user's data is isolated. The `userId` is derived from the Google OAuth user ID, ensuring a consistent link between authentication and data storage. The structure prioritizes Authorization Independence, DBAC, and QAPs.\n\n**Authorization Independence**: By storing all user-related data directly under the `/users/{userId}` path, we avoid the need for complex `get()` calls in our security rules. Each document's access control can be determined solely based on the `request.auth.uid` and the document's path, enabling atomic operations and easier debugging.\n\n**DBAC (Database Auth via Content)**: User roles are stored within the user document in the `role` field, enabling role-based access control directly in the database. This eliminates the need for custom claims.\n\n**QAPs (Rules are not Filters)**: The use of a path-based ownership model (`/users/{userId}/...`) ensures that list operations can be securely implemented without the risk of exposing unauthorized data. Security rules can efficiently filter based on the path, preventing the need to filter data within the rules themselves.\n\nThis design adheres to the core design principles, ensuring a secure, scalable, and debuggable Firestore structure."
+  }
+}

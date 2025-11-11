@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon, Trash2, PlusCircle } from 'lucide-react';
@@ -314,70 +313,61 @@ export function ProductCreationChat() {
         }
     };
 
-    const editableFieldClasses = "bg-transparent border-0 border-b-2 border-primary-foreground/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary-foreground placeholder:text-primary-foreground/50";
-
-
     const renderEditableFields = () => {
         if (!editableDetails) return null;
         
-        const SectionContainer = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-            <div className={cn("p-4 rounded-md bg-primary text-primary-foreground", className)}>
-                {children}
-            </div>
-        );
-
         return (
             <div className="space-y-4">
-                <SectionContainer>
+                <div>
                     <Label htmlFor="productName">Product Name</Label>
-                    <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} className={editableFieldClasses} />
-                </SectionContainer>
-                 <div className="grid grid-cols-2 gap-4">
-                    <SectionContainer>
-                        <Label htmlFor="productPrice">Price</Label>
-                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} className={editableFieldClasses} />
-                    </SectionContainer>
-                    <SectionContainer>
-                        <Label htmlFor="stock">Stock Units</Label>
-                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} className={editableFieldClasses} />
-                    </SectionContainer>
+                    <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} />
                 </div>
-                <SectionContainer>
-                    <div className="flex items-center gap-2 mb-2">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="productPrice">Price</Label>
+                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} />
+                    </div>
+                    <div>
+                        <Label htmlFor="stock">Stock Units</Label>
+                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} />
+                    </div>
+                </div>
+                <div>
+                     <div className="flex items-center gap-2 mb-2">
                          <Label>Key Features</Label>
-                         <Button size="icon" variant="ghost" className="h-6 w-6 text-primary-foreground" onClick={() => handleAddListItem('productFeatures')}>
+                         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productFeatures')}>
                             <PlusCircle className="h-4 w-4" />
                          </Button>
                     </div>
                     {(editableDetails.productFeatures || []).map((feature: string, index: number) => (
-                        <div key={index} className="relative group/item flex items-center">
-                            <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100 text-primary-foreground" onClick={() => handleRemoveListItem('productFeatures', index)}>
-                                <Trash2 className="h-4 w-4"/>
+                        <div key={index} className="relative group/item flex items-center mb-2">
+                            <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="pr-8"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100" onClick={() => handleRemoveListItem('productFeatures', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
                             </Button>
                         </div>
                     ))}
-                </SectionContainer>
-                 <SectionContainer>
+                </div>
+                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <Label>Customer Benefits</Label>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 text-primary-foreground" onClick={() => handleAddListItem('productBenefits')}>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productBenefits')}>
                            <PlusCircle className="h-4 w-4" />
                         </Button>
                     </div>
                     {(editableDetails.productBenefits || []).map((benefit: string, index: number) => (
-                        <div key={index} className="relative group/item flex items-center">
-                            <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100 text-primary-foreground" onClick={() => handleRemoveListItem('productBenefits', index)}>
-                                <Trash2 className="h-4 w-4"/>
+                        <div key={index} className="relative group/item flex items-center mb-2">
+                            <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="pr-8"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100" onClick={() => handleRemoveListItem('productBenefits', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
                             </Button>
                         </div>
                     ))}
-                </SectionContainer>
-                 <SectionContainer>
+                </div>
+                 <div>
                     <Label htmlFor="productCategory">Category</Label>
                     <Select value={editableDetails.productCategory} onValueChange={(value) => handleDetailChange('productCategory', value)}>
-                        <SelectTrigger id="productCategory" className={cn(editableFieldClasses, "focus:bg-primary-foreground/10")}>
+                        <SelectTrigger id="productCategory">
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -388,7 +378,7 @@ export function ProductCreationChat() {
                             <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                     </Select>
-                </SectionContainer>
+                </div>
             </div>
         )
     }

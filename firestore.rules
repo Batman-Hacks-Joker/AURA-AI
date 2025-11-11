@@ -29,7 +29,7 @@ service cloud.firestore {
     /**
      * @description Secure user profile data under /users/{userId}.
      * @path /users/{userId}
-     * @allow (create) User 'user_abc' can create their profile if request.auth.uid == 'user_abc' and the 'id' field matches.
+     * @allow (create) User 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
      * @allow (get) User 'user_abc' can read their profile if request.auth.uid == 'user_abc'. Admin can read any profile
      * @allow (update) User 'user_abc' can update their profile if request.auth.uid == 'user_abc'. Admin can update any profile
      * @allow (delete) User 'user_abc' can delete their profile if request.auth.uid == 'user_abc'. Admin can delete any profile
@@ -37,14 +37,14 @@ service cloud.firestore {
      * @deny (get) User 'user_xyz' cannot read the profile at /users/user_abc unless they are an admin.
      * @deny (update) User 'user_xyz' cannot update the profile at /users/user_abc unless they are an admin.
      * @deny (delete) User 'user_xyz' cannot delete the profile at /users/user_abc unless they are an admin.
-     * @principle Enforces document ownership for reads and writes. Validates that the user ID in the path matches the authenticated user's ID and the 'id' field in the document.
+     * @principle Enforces document ownership for reads and writes. Validates that the user ID in the path matches the authenticated user's ID.
      */
     match /users/{userId} {
       allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow list: if false;
 
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && isExistingOwner(userId) && (request.resource.data.id == resource.data.id);
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && isExistingOwner(userId);
       allow delete: if isSignedIn() && (isOwner(userId) || isAdmin()) && isExistingOwner(userId);
     }
 

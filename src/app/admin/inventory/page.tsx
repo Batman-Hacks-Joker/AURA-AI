@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil, CheckCircle2, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -285,10 +285,11 @@ export default function InventoryPage() {
                                                 </DropdownMenu>
                                             </div>
                                             <div className={cn(
-                                                "text-xs mt-1",
-                                                product.launched ? "text-primary" : "text-muted-foreground"
+                                                "text-xs mt-1 flex items-center gap-1",
+                                                product.launched ? "text-green-600" : "text-muted-foreground"
                                             )}>
-                                                {product.launched ? "Launched" : "Yet to launch"}
+                                                {product.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                                <span>{product.launched ? "Launched" : "Yet to launch"}</span>
                                             </div>
                                             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
                                                 {editingStockSku === product.sku ? (

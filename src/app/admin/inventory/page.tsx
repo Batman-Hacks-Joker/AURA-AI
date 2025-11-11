@@ -187,9 +187,9 @@ export default function InventoryPage() {
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {
             case "In Stock":
-                return "secondary";
+                return "success";
             case "Need Refill":
-                return "outline";
+                return "warning";
             case "Out of Stock":
                 return "destructive";
             default:

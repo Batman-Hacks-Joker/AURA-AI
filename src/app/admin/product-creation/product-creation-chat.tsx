@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon, Trash2, PlusCircle } from 'lucide-react';
@@ -14,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CustomWindow extends Window {
     SpeechRecognition: typeof SpeechRecognition;
@@ -186,8 +188,8 @@ export function ProductCreationChat() {
         }
         
         // Filter out empty features and benefits before saving
-        const finalFeatures = detailsToSave.productFeatures.filter((f: string) => f.trim() !== '');
-        const finalBenefits = detailsToSave.productBenefits.filter((b: string) => b.trim() !== '');
+        const finalFeatures = (detailsToSave.productFeatures || []).filter((f: string) => f.trim() !== '');
+        const finalBenefits = (detailsToSave.productBenefits || []).filter((b: string) => b.trim() !== '');
 
         const productToSave = {
             name: detailsToSave.productName,
@@ -251,8 +253,8 @@ export function ProductCreationChat() {
             // Filter out empty fields when "saving" edits locally
             const cleanDetails = {
                 ...editableDetails,
-                productFeatures: editableDetails.productFeatures.filter((f: string) => f.trim() !== ''),
-                productBenefits: editableDetails.productBenefits.filter((b: string) => b.trim() !== '')
+                productFeatures: (editableDetails.productFeatures || []).filter((f: string) => f.trim() !== ''),
+                productBenefits: (editableDetails.productBenefits || []).filter((b: string) => b.trim() !== '')
             };
             setEditableDetails(cleanDetails);
             setGeneratedDetails(cleanDetails);
@@ -263,7 +265,7 @@ export function ProductCreationChat() {
     const handleDetailChange = (field: string, value: any, index?: number) => {
         setEditableDetails((prev: any) => {
             if (index !== undefined && (field === 'productFeatures' || field === 'productBenefits')) {
-                const newList = [...prev[field]];
+                const newList = [...(prev[field] || [])];
                 newList[index] = value;
                 return { ...prev, [field]: newList };
             }
@@ -274,14 +276,14 @@ export function ProductCreationChat() {
     const handleAddListItem = (field: 'productFeatures' | 'productBenefits') => {
         setEditableDetails((prev: any) => ({
             ...prev,
-            [field]: [...prev[field], '']
+            [field]: [...(prev[field] || []), '']
         }));
     };
 
     const handleRemoveListItem = (field: 'productFeatures' | 'productBenefits', index: number) => {
         setEditableDetails((prev: any) => ({
             ...prev,
-            [field]: prev[field].filter((_: any, i: number) => i !== index)
+            [field]: (prev[field] || []).filter((_: any, i: number) => i !== index)
         }));
     };
 
@@ -345,7 +347,7 @@ export function ProductCreationChat() {
                             <PlusCircle className="h-4 w-4" />
                          </Button>
                     </div>
-                    {editableDetails.productFeatures.map((feature: string, index: number) => (
+                    {(editableDetails.productFeatures || []).map((feature: string, index: number) => (
                         <div key={index} className="relative group flex items-center">
                             <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="mb-2 pr-8"/>
                             <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productFeatures', index)}>
@@ -361,7 +363,7 @@ export function ProductCreationChat() {
                            <PlusCircle className="h-4 w-4" />
                         </Button>
                     </div>
-                    {editableDetails.productBenefits.map((benefit: string, index: number) => (
+                    {(editableDetails.productBenefits || []).map((benefit: string, index: number) => (
                         <div key={index} className="relative group flex items-center">
                             <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="mb-2 pr-8"/>
                             <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productBenefits', index)}>
@@ -372,7 +374,18 @@ export function ProductCreationChat() {
                 </div>
                  <div>
                     <Label htmlFor="productCategory">Category</Label>
-                    <Input id="productCategory" value={editableDetails.productCategory} onChange={(e) => handleDetailChange('productCategory', e.target.value)} />
+                    <Select value={editableDetails.productCategory} onValueChange={(value) => handleDetailChange('productCategory', value)}>
+                        <SelectTrigger id="productCategory">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Automotive">Automotive</SelectItem>
+                            <SelectItem value="Electronics">Electronics</SelectItem>
+                            <SelectItem value="Home Goods">Home Goods</SelectItem>
+                            <SelectItem value="Tools">Tools</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
         )
@@ -388,13 +401,13 @@ export function ProductCreationChat() {
                 <div>
                     <h4 className="font-semibold">Key Features</h4>
                     <ul className="list-disc list-inside text-muted-foreground">
-                        {generatedDetails.productFeatures.map((f: string, i: number) => <li key={i}>{f}</li>)}
+                        {(generatedDetails.productFeatures || []).map((f: string, i: number) => <li key={i}>{f}</li>)}
                     </ul>
                 </div>
                 <div>
                     <h4 className="font-semibold">Customer Benefits</h4>
                     <ul className="list-disc list-inside text-muted-foreground">
-                        {generatedDetails.productBenefits.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                        {(generatedDetails.productBenefits || []).map((b: string, i: number) => <li key={i}>{b}</li>)}
                     </ul>
                 </div>
                 <p><strong className="text-muted-foreground">Category:</strong> {generatedDetails.productCategory}</p>

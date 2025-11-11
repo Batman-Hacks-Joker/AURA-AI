@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,9 +9,10 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Car, Wrench } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type Product = {
     name: string;
@@ -33,6 +35,15 @@ type Product = {
     productBenefits?: string[];
 };
 
+const categoryIcons: { [key: string]: React.ElementType } = {
+    'Automotive': Car,
+    'Sedan': Car,
+    'SUV': Car,
+    'Trucks': Car,
+    'EV': Car,
+    'Off-Road': Car,
+    'Tools': Wrench,
+};
 
 export default function ProductDetailPage() {
     const { sku } = useParams();
@@ -116,6 +127,7 @@ export default function ProductDetailPage() {
     const productPrice = product.productPrice || product.price;
     const productCategory = product.productCategory || product.category;
     const productImage = product.image || imageMap[productName];
+    const CategoryIcon = categoryIcons[productCategory];
 
     return (
         <div className="max-w-6xl mx-auto py-8 px-4">
@@ -138,8 +150,11 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="space-y-6">
                     <div>
-                        <Badge variant="outline" className="mb-2">{productCategory}</Badge>
                         <h1 className="text-3xl lg:text-4xl font-bold tracking-tighter">{productName}</h1>
+                        <div className={cn("flex items-center gap-2 mt-2", CategoryIcon ? "text-muted-foreground" : "")}>
+                           {CategoryIcon && <CategoryIcon className="h-5 w-5" />}
+                           <p className="font-medium">{productCategory}</p>
+                        </div>
                         <p className="text-3xl font-semibold text-primary mt-2">${Number(productPrice).toLocaleString()}</p>
                     </div>
 

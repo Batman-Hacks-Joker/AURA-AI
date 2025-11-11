@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useRef, useState, useEffect } from 'react';
 import { getProductCreationResponse, getGeneratedImage } from './product-creation-actions';
@@ -184,13 +184,15 @@ export function ProductCreationChat() {
             });
             return;
         }
+        
+        // Filter out empty features and benefits before saving
+        const finalFeatures = detailsToSave.productFeatures.filter((f: string) => f.trim() !== '');
+        const finalBenefits = detailsToSave.productBenefits.filter((b: string) => b.trim() !== '');
 
         const productToSave = {
             name: detailsToSave.productName,
             price: detailsToSave.productPrice,
             category: detailsToSave.productCategory,
-            features: detailsToSave.productFeatures,
-            benefits: detailsToSave.productBenefits,
             stock: detailsToSave.stock,
             sku: originalSku || `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
             status: detailsToSave.stock > 0 ? "In Stock" : "Out of Stock",
@@ -205,8 +207,8 @@ export function ProductCreationChat() {
             productName: detailsToSave.productName,
             productPrice: detailsToSave.productPrice,
             productCategory: detailsToSave.productCategory,
-            productFeatures: detailsToSave.productFeatures,
-            productBenefits: detailsToSave.productBenefits,
+            productFeatures: finalFeatures,
+            productBenefits: finalBenefits,
         };
 
         let existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
@@ -246,7 +248,14 @@ export function ProductCreationChat() {
 
     const handleEditToggle = () => {
         if (isEditing) {
-            setGeneratedDetails(editableDetails);
+            // Filter out empty fields when "saving" edits locally
+            const cleanDetails = {
+                ...editableDetails,
+                productFeatures: editableDetails.productFeatures.filter((f: string) => f.trim() !== ''),
+                productBenefits: editableDetails.productBenefits.filter((b: string) => b.trim() !== '')
+            };
+            setEditableDetails(cleanDetails);
+            setGeneratedDetails(cleanDetails);
         }
         setIsEditing(!isEditing);
     };
@@ -262,6 +271,20 @@ export function ProductCreationChat() {
         });
     };
     
+    const handleAddListItem = (field: 'productFeatures' | 'productBenefits') => {
+        setEditableDetails((prev: any) => ({
+            ...prev,
+            [field]: [...prev[field], '']
+        }));
+    };
+
+    const handleRemoveListItem = (field: 'productFeatures' | 'productBenefits', index: number) => {
+        setEditableDetails((prev: any) => ({
+            ...prev,
+            [field]: prev[field].filter((_: any, i: number) => i !== index)
+        }));
+    };
+
     const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -316,15 +339,35 @@ export function ProductCreationChat() {
                     </div>
                 </div>
                 <div>
-                    <Label>Key Features</Label>
+                    <div className="flex items-center gap-2 mb-2">
+                         <Label>Key Features</Label>
+                         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productFeatures')}>
+                            <PlusCircle className="h-4 w-4" />
+                         </Button>
+                    </div>
                     {editableDetails.productFeatures.map((feature: string, index: number) => (
-                        <Input key={index} value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="mb-2"/>
+                        <div key={index} className="relative group flex items-center">
+                            <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="mb-2 pr-8"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productFeatures', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            </Button>
+                        </div>
                     ))}
                 </div>
                  <div>
-                    <Label>Customer Benefits</Label>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Label>Customer Benefits</Label>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productBenefits')}>
+                           <PlusCircle className="h-4 w-4" />
+                        </Button>
+                    </div>
                     {editableDetails.productBenefits.map((benefit: string, index: number) => (
-                        <Input key={index} value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="mb-2"/>
+                        <div key={index} className="relative group flex items-center">
+                            <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="mb-2 pr-8"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productBenefits', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            </Button>
+                        </div>
                     ))}
                 </div>
                  <div>
@@ -492,3 +535,5 @@ export function ProductCreationChat() {
         </div>
     );
 }
+
+    

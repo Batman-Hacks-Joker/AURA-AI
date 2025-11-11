@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil, CheckCircle2, XCircle } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil, CheckCircle2, XCircle, Search, SlidersHorizontal, ArrowUp, ArrowDown, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,8 +16,12 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+    DropdownMenuPortal
   } from "@/components/ui/dropdown-menu";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
@@ -29,7 +33,6 @@ type Product = {
     sku: string;
     category: string;
     price: string;
-
     stock: number;
     status: string;
     launched?: boolean;
@@ -45,6 +48,11 @@ type Product = {
     productFeatures?: string[];
     productBenefits?: string[];
 };
+
+type SortConfig = {
+    key: 'price' | 'stock';
+    direction: 'asc' | 'desc';
+} | null;
 
 const defaultProducts: Product[] = [
     { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'truck-1')},
@@ -64,12 +72,18 @@ const getUniqueProducts = (products: Product[]): Product[] => {
 };
 
 export default function InventoryPage() {
-    const [products, setProducts] = useState<Product[]>([]);
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
     const { toast, dismiss } = useToast();
     const router = useRouter();
     const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
     const [editingStockSku, setEditingStockSku] = useState<string | null>(null);
     const [stockValue, setStockValue] = useState(0);
+
+    // Search and Filter States
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+    const [showLaunchedFirst, setShowLaunchedFirst] = useState(false);
 
     const processProducts = (products: Product[]): Product[] => {
         return getUniqueProducts(products).map(p => {
@@ -87,29 +101,79 @@ export default function InventoryPage() {
 
     const loadProducts = () => {
         const storedProductsRaw = localStorage.getItem('products');
+        let productsToLoad: Product[];
         if (storedProductsRaw) {
             const storedProducts: Product[] = JSON.parse(storedProductsRaw);
-            const processed = processProducts(storedProducts);
-            setProducts(processed);
-            if (processed.length !== storedProducts.length) {
-                localStorage.setItem('products', JSON.stringify(processed));
+            productsToLoad = processProducts(storedProducts);
+            if (productsToLoad.length !== storedProducts.length) {
+                localStorage.setItem('products', JSON.stringify(productsToLoad));
             }
         } else {
-            const processed = processProducts(defaultProducts);
-            setProducts(processed);
-            localStorage.setItem('products', JSON.stringify(processed));
+            productsToLoad = processProducts(defaultProducts);
+            localStorage.setItem('products', JSON.stringify(productsToLoad));
         }
+        setAllProducts(productsToLoad);
+        setDisplayedProducts(productsToLoad);
     };
-
+    
     useEffect(() => {
         loadProducts();
         window.addEventListener('storage', loadProducts);
         return () => window.removeEventListener('storage', loadProducts);
     }, []);
-    
+
+    // Effect for Search and Filtering
+    useEffect(() => {
+        let filtered = [...allProducts];
+
+        // Apply search
+        if (searchTerm.length > 0) {
+            const lowercasedTerm = searchTerm.toLowerCase();
+            filtered = filtered.filter(p =>
+                (p.productName || p.name).toLowerCase().includes(lowercasedTerm) ||
+                p.sku.toLowerCase().includes(lowercasedTerm) ||
+                p.stock.toString().includes(lowercasedTerm)
+            ).sort((a, b) => {
+                const aName = a.productName || a.name;
+                const aMatch = aName.toLowerCase().includes(lowercasedTerm) || a.sku.toLowerCase().includes(lowercasedTerm) || a.stock.toString().includes(lowercasedTerm);
+                const bName = b.productName || b.name;
+                const bMatch = bName.toLowerCase().includes(lowercasedTerm) || b.sku.toLowerCase().includes(lowercasedTerm) || b.stock.toString().includes(lowercasedTerm);
+                if (aMatch && !bMatch) return -1;
+                if (!aMatch && bMatch) return 1;
+                return 0;
+            });
+        }
+        
+        // Apply sorting
+        if (sortConfig !== null) {
+            filtered.sort((a, b) => {
+                const aValue = sortConfig.key === 'price' ? (a.productPrice || Number(a.price)) : a.stock;
+                const bValue = sortConfig.key === 'price' ? (b.productPrice || Number(b.price)) : b.stock;
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        // Apply "Launched First" filter
+        if (showLaunchedFirst) {
+            filtered.sort((a, b) => {
+                if (a.launched && !b.launched) return -1;
+                if (!a.launched && b.launched) return 1;
+                return 0;
+            });
+        }
+
+        setDisplayedProducts(filtered);
+    }, [searchTerm, sortConfig, showLaunchedFirst, allProducts]);
+
     const updateLocalStorage = (updatedProducts: Product[]) => {
         const processed = processProducts(updatedProducts);
-        setProducts(processed);
+        setAllProducts(processed);
         localStorage.setItem('products', JSON.stringify(processed));
     };
 
@@ -172,7 +236,7 @@ export default function InventoryPage() {
     const handleStockUpdate = (sku: string) => {
         if (!editingStockSku) return;
 
-        const updatedProducts = products.map(p => 
+        const updatedProducts = allProducts.map(p => 
             p.sku === sku ? { ...p, stock: stockValue } : p
         );
         updateLocalStorage(updatedProducts);
@@ -182,6 +246,32 @@ export default function InventoryPage() {
             description: `Stock for SKU ${sku} has been set to ${stockValue}.`
         });
     }
+    
+    const resetFilters = () => {
+        setSortConfig(null);
+        setShowLaunchedFirst(false);
+    }
+    
+    const Highlight = ({ text, highlight }: { text: string; highlight: string }) => {
+        if (!highlight.trim()) {
+            return <span>{text}</span>;
+        }
+        const regex = new RegExp(`(${highlight})`, 'gi');
+        const parts = text.split(regex);
+        return (
+            <span>
+                {parts.map((part, i) =>
+                    regex.test(part) ? (
+                        <span key={i} className="bg-teal-300/50 text-black rounded px-1">
+                            {part}
+                        </span>
+                    ) : (
+                        part
+                    )
+                )}
+            </span>
+        );
+    };
 
     const imageMap: { [key: string]: any } = {
         "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
@@ -230,8 +320,74 @@ export default function InventoryPage() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Products</CardTitle>
-                    <CardDescription>A list of all products in your main warehouse.</CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Products</CardTitle>
+                            <CardDescription>A list of all products in your main warehouse.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search products..."
+                                    className="pl-10 sm:w-[300px] h-9"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-9 gap-1">
+                                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                                        <span className="sr-only sm:not-sr-only">Filter</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Filter & Sort</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>Sort by Price</DropdownMenuSubTrigger>
+                                        <DropdownMenuPortal>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'asc' })}>
+                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'desc' })}>
+                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                                </DropdownMenuItem>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>Sort by Stock</DropdownMenuSubTrigger>
+                                        <DropdownMenuPortal>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'asc' })}>
+                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'desc' })}>
+                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                                </DropdownMenuItem>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => setShowLaunchedFirst(!showLaunchedFirst)}>
+                                        {showLaunchedFirst ? '✓ Show Launched First' : 'Show Launched First'}
+                                    </DropdownMenuItem>
+                                    {(sortConfig || showLaunchedFirst) && (
+                                        <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={resetFilters} className="text-destructive focus:text-destructive">
+                                            <X className="mr-2 h-4 w-4" /> Reset Filters
+                                        </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -245,7 +401,7 @@ export default function InventoryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map((product) => {
+                            {displayedProducts.map((product) => {
                                 const productName = product.productName || product.name;
                                 const productPrice = product.productPrice || product.price;
                                 const productImage = product.image || imageMap[product.name];
@@ -270,7 +426,7 @@ export default function InventoryPage() {
                                     <TableCell className="font-medium">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span>{productName}</span>
+                                                <span><Highlight text={productName} highlight={searchTerm} /></span>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -282,7 +438,7 @@ export default function InventoryPage() {
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem 
                                                             onClick={() => handleEditProduct(product)}
-                                                            className="focus:bg-primary/90 focus:text-primary-foreground"
+                                                            className="focus:bg-blue-500 focus:text-white"
                                                         >
                                                             <Pencil className="mr-2 h-4 w-4" />
                                                             <span>Edit Product</span>
@@ -319,7 +475,7 @@ export default function InventoryPage() {
                                                     />
                                                 ) : (
                                                     <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
-                                                        <span>Stock: {product.stock}</span>
+                                                        <span>Stock: <Highlight text={product.stock.toString()} highlight={searchTerm} /></span>
                                                         <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </button>
                                                 )}
@@ -332,7 +488,7 @@ export default function InventoryPage() {
                                             {product.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
+                                    <TableCell className="hidden md:table-cell"><Highlight text={product.sku} highlight={searchTerm} /></TableCell>
                                 </TableRow>
                             )})}
                         </TableBody>
@@ -342,3 +498,5 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    

@@ -94,8 +94,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <>
         <AdminSidebarInner />
-        <SidebarInset>
-          <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4">
+        <SidebarInset className="flex flex-col">
+          <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4 shrink-0">
               <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
                   <Link href="/admin/dashboard" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                       <LayoutDashboard className="h-5 w-5" />
@@ -119,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </Link>
               </div>
           </header>
-          <main className="p-4 sm:p-6 lg:p-8 bg-background">
+          <main className="p-4 sm:p-6 lg:p-8 bg-background flex-1 overflow-y-auto">
             {children}
           </main>
         </SidebarInset>

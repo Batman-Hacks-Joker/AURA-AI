@@ -24,6 +24,8 @@ import {
 } from 'react';
 import { useFirebase, useFirestore } from '@/firebase';
 import { useDoc } from '@/firebase/firestore/use-doc';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 // Define the shape of the user profile data
 export interface UserProfile {
@@ -60,21 +62,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
       if (user) {
-        // Create user profile if it doesn't exist
         const userRef = doc(firestore, 'users', user.uid);
-        await setDoc(
-          userRef,
-          {
-            displayName: user.displayName || 'Anonymous',
-            email: user.email || '',
-            createdAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
+        const profileData = {
+          displayName: user.displayName || 'Anonymous',
+          email: user.email || '',
+          createdAt: serverTimestamp(),
+        };
+
+        // Use non-blocking setDoc with error handling
+        setDoc(userRef, profileData, { merge: true })
+          .catch(error => {
+            const permissionError = new FirestorePermissionError({
+              path: userRef.path,
+              operation: 'write',
+              requestResourceData: profileData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          });
       }
     });
 

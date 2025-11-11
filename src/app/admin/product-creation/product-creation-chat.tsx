@@ -1,6 +1,7 @@
+
 'use client';
 
-import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Mic, Paperclip, Save, Square, X, Pencil, UploadCloud, FileText, BrainCircuit, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useRef, useState, useEffect } from 'react';
 import { getProductCreationResponse, getGeneratedImage } from './product-creation-actions';
@@ -37,9 +38,35 @@ export function ProductCreationChat() {
     const [imageGenPrompt, setImageGenPrompt] = useState('');
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [originalSku, setOriginalSku] = useState<string | null>(null);
 
     useEffect(() => {
+        const editingProductRaw = localStorage.getItem('editingProduct');
+        if (editingProductRaw) {
+            const product = JSON.parse(editingProductRaw);
+            setIsEditMode(true);
+            setOriginalSku(product.sku);
+
+            const details = {
+                productName: product.productName || product.name,
+                productPrice: product.productPrice || product.price,
+                productCategory: product.productCategory || product.category,
+                productFeatures: product.productFeatures || [],
+                productBenefits: product.productBenefits || [],
+                stock: product.stock,
+            };
+
+            setGeneratedDetails(details);
+            setEditableDetails(details);
+            if (product.image) {
+                setProductImage({ url: product.image.imageUrl, hint: product.image.imageHint });
+            }
+            
+            // Clean up localStorage
+            localStorage.removeItem('editingProduct');
+        }
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             console.warn("Speech Recognition is not supported in this browser.");
@@ -50,7 +77,6 @@ export function ProductCreationChat() {
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
-
 
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => setIsListening(false);
@@ -76,8 +102,8 @@ export function ProductCreationChat() {
         return () => {
             recognitionRef.current?.abort();
         };
-
     }, []);
+
 
     const handleMicClick = () => {
         if (isListening) {
@@ -85,6 +111,20 @@ export function ProductCreationChat() {
         } else {
             setInput('');
             recognitionRef.current?.start();
+        }
+    };
+
+    const handleClear = () => {
+        setInput('');
+        setIsLoading(false);
+        setGeneratedDetails(null);
+        setEditableDetails(null);
+        setProductImage(null);
+        setIsEditing(false);
+        setIsEditMode(false);
+        setOriginalSku(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
         }
     };
 
@@ -118,7 +158,7 @@ export function ProductCreationChat() {
 
             const detailsWithStock = {
                 ...details,
-                stock: Math.floor(Math.random() * 100) // Add initial random stock
+                stock: Math.floor(Math.random() * 100)
             }
             setGeneratedDetails(detailsWithStock);
             setEditableDetails(detailsWithStock);
@@ -144,7 +184,7 @@ export function ProductCreationChat() {
             });
             return;
         }
-        
+
         const productToSave = {
             name: detailsToSave.productName,
             price: detailsToSave.productPrice,
@@ -152,25 +192,54 @@ export function ProductCreationChat() {
             features: detailsToSave.productFeatures,
             benefits: detailsToSave.productBenefits,
             stock: detailsToSave.stock,
-            sku: `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+            sku: originalSku || `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
             status: detailsToSave.stock > 0 ? "In Stock" : "Out of Stock",
             image: productImage ? {
                 id: `img-${Date.now()}`,
                 description: `Image for ${detailsToSave.productName}`,
                 imageUrl: productImage.url,
                 imageHint: productImage.hint,
-            } : undefined
+            } : undefined,
+            launched: false, // Default to not launched
+            // Preserving original naming convention for compatibility
+            productName: detailsToSave.productName,
+            productPrice: detailsToSave.productPrice,
+            productCategory: detailsToSave.productCategory,
+            productFeatures: detailsToSave.productFeatures,
+            productBenefits: detailsToSave.productBenefits,
         };
+
+        let existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+
+        if (isEditMode && originalSku) {
+            // Find and update the existing product
+            const productIndex = existingProducts.findIndex((p: any) => p.sku === originalSku);
+            if (productIndex > -1) {
+                // Preserve launched status
+                productToSave.launched = existingProducts[productIndex].launched;
+                existingProducts[productIndex] = productToSave;
+                toast({
+                    title: 'Product Updated!',
+                    description: `"${productToSave.name}" has been updated in your inventory.`,
+                });
+            } else {
+                 existingProducts.push(productToSave); // Fallback to add if not found
+                 toast({
+                    title: 'Product Saved!',
+                    description: `"${productToSave.name}" has been added to your inventory.`,
+                });
+            }
+        } else {
+            // Add a new product
+            existingProducts.push(productToSave);
+            toast({
+                title: 'Product Saved!',
+                description: `"${productToSave.name}" has been added to your inventory.`,
+            });
+        }
         
-        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-        existingProducts.push(productToSave);
         localStorage.setItem('products', JSON.stringify(existingProducts));
         window.dispatchEvent(new Event('storage'));
-
-        toast({
-            title: 'Product Saved!',
-            description: `"${productToSave.name}" has been added to your inventory.`,
-        });
 
         router.push('/admin/inventory');
     };
@@ -294,36 +363,48 @@ export function ProductCreationChat() {
     return (
         <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-8">
-                <Card className="h-fit">
+                 <Card className="h-fit">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <BrainCircuit className="text-primary" />
-                            AURA AI Input
-                        </CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2">
+                                <BrainCircuit className="text-primary" />
+                                {isEditMode ? 'Update Product' : 'AURA AI Input'}
+                            </CardTitle>
+                            {(generatedDetails || input) && (
+                                <Button variant="ghost" size="icon" onClick={handleClear}>
+                                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                </Button>
+                            )}
+                        </div>
                         <CardDescription>
-                            Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document.
+                            {isEditMode 
+                                ? "Modify the product details below or generate new ones."
+                                : "Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document."
+                            }
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="e.g., 'A high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
-                            className="min-h-[150px] mb-4"
-                            disabled={isLoading}
-                        />
-                        <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
-                                   {isListening ? <Square /> : <Mic />}
+                    {!isEditMode && (
+                        <CardContent>
+                            <Textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="e.g., 'A high-performance electric SUV with a 300-mile range and advanced autonomous driving features.'"
+                                className="min-h-[150px] mb-4"
+                                disabled={isLoading || isEditMode}
+                            />
+                            <div className="flex items-center justify-between">
+                                 <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" className={cn("text-muted-foreground", isListening && "text-destructive animate-pulse")} onClick={handleMicClick}>
+                                       {isListening ? <Square /> : <Mic />}
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip /></Button>
+                                </div>
+                                <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="bg-accent hover:bg-accent/90">
+                                    {isLoading ? <Loader2 className="animate-spin" /> : "Generate Details"}
                                 </Button>
-                                <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip /></Button>
                             </div>
-                            <Button onClick={handleGenerate} disabled={isLoading || !input.trim()} className="bg-accent hover:bg-accent/90">
-                                {isLoading ? <Loader2 className="animate-spin" /> : "Generate Details"}
-                            </Button>
-                        </div>
-                    </CardContent>
+                        </CardContent>
+                    )}
                 </Card>
 
                 {generatedDetails && !isLoading && (
@@ -395,7 +476,7 @@ export function ProductCreationChat() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                           {isEditing ? renderEditableFields() : renderStaticDetails()}
+                           {isEditing || isEditMode ? renderEditableFields() : renderStaticDetails()}
                         </CardContent>
                     </Card>
                 )}
@@ -403,7 +484,7 @@ export function ProductCreationChat() {
                 {generatedDetails && !isLoading && (
                     <div className="flex justify-end">
                         <Button size="lg" onClick={handleSave} className="bg-accent hover:bg-accent/90">
-                           <Save className="mr-2" /> Add to Inventory
+                           <Save className="mr-2" /> {isEditMode ? 'Update Product' : 'Add to Inventory'}
                         </Button>
                     </div>
                 )}

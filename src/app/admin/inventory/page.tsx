@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 type Product = {
     name: string;
@@ -38,6 +39,11 @@ type Product = {
         imageUrl: string;
         imageHint: string;
     };
+    productName?: string;
+    productCategory?: string;
+    productPrice?: number;
+    productFeatures?: string[];
+    productBenefits?: string[];
 };
 
 const defaultProducts: Product[] = [
@@ -60,6 +66,7 @@ const getUniqueProducts = (products: Product[]): Product[] => {
 export default function InventoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const { toast, dismiss } = useToast();
+    const router = useRouter();
     const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
     const [editingStockSku, setEditingStockSku] = useState<string | null>(null);
     const [stockValue, setStockValue] = useState(0);
@@ -143,20 +150,19 @@ export default function InventoryPage() {
         const productIndex = currentProducts.findIndex(p => p.sku === sku);
         if (productIndex === -1) return;
         
-        const updatedProducts = currentProducts.map(p => p.sku === sku ? { ...p, launched: true } : p);
+        const updatedProducts = currentProducts.map(p => p.sku === sku ? { ...p, launched: !p.launched } : p);
         updateLocalStorage(updatedProducts);
 
-        const { id } = toast({
-            title: "Product Launched!",
-            description: `${currentProducts[productIndex].name} has been launched.`,
-            duration: 5000,
-            onUndo: () => {
-                const revertedProducts = updatedProducts.map(p => p.sku === sku ? { ...p, launched: false } : p);
-                updateLocalStorage(revertedProducts);
-                dismiss(id);
-            },
+        toast({
+            title: `Product ${updatedProducts[productIndex].launched ? "Launched" : "Un-launched"}!`,
+            description: `${currentProducts[productIndex].name} has been ${updatedProducts[productIndex].launched ? "launched" : "removed from the marketplace"}.`,
         });
     }
+
+    const handleEditProduct = (product: Product) => {
+        localStorage.setItem('editingProduct', JSON.stringify(product));
+        router.push('/admin/product-creation');
+    };
 
     const handleStockEdit = (sku: string, currentStock: number) => {
         setEditingStockSku(sku);
@@ -240,13 +246,15 @@ export default function InventoryPage() {
                         </TableHeader>
                         <TableBody>
                             {products.map((product) => {
+                                const productName = product.productName || product.name;
+                                const productPrice = product.productPrice || product.price;
                                 const productImage = product.image || imageMap[product.name];
                                 return (
                                 <TableRow key={product.sku}>
                                     <TableCell className="hidden sm:table-cell">
                                       {productImage ? (
                                         <Image
-                                            alt={product.name}
+                                            alt={productName}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
                                             src={productImage.imageUrl}
@@ -262,7 +270,7 @@ export default function InventoryPage() {
                                     <TableCell className="font-medium">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span>{product.name}</span>
+                                                <span>{productName}</span>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -272,9 +280,13 @@ export default function InventoryPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)} disabled={product.launched}>
+                                                        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                            <span>Edit Product</span>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)}>
                                                             <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                            <span>{product.launched ? "Already Launched" : "Launch Product"}</span>
+                                                            <span>{product.launched ? "Un-launch Product" : "Launch Product"}</span>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
@@ -311,7 +323,7 @@ export default function InventoryPage() {
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">${Number(product.price).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">${Number(productPrice).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant={getStatusBadgeVariant(product.status)}>
                                             {product.status}

@@ -1,3 +1,4 @@
+
 'use client';
 import {
   GoogleAuthProvider,
@@ -18,6 +19,7 @@ import {
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { useFirebase, useFirestore } from '@/firebase';
@@ -50,9 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const userDocRef = user
-    ? (doc(firestore, `users/${user.uid}`) as DocumentReference<UserProfile>)
-    : null;
+  const userDocRef = useMemo(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `users/${user.uid}`) as DocumentReference<UserProfile>;
+  }, [user, firestore]);
 
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 

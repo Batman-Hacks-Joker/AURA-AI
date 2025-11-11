@@ -233,9 +233,9 @@ export default function InventoryPage() {
                             <TableRow>
                                 <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
                                 <TableHead>Name</TableHead>
-                                <TableHead>SKU</TableHead>
-                                <TableHead className="text-center">Status</TableHead>
                                 <TableHead className="text-right">Price</TableHead>
+                                <TableHead className="text-center">Status</TableHead>
+                                <TableHead>SKU</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -310,13 +310,13 @@ export default function InventoryPage() {
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
+                                    <TableCell className="text-right">${Number(product.price).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant={getStatusBadgeVariant(product.status)}>
                                             {product.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right">${Number(product.price).toLocaleString()}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{product.sku}</TableCell>
                                 </TableRow>
                             )})}
                         </TableBody>

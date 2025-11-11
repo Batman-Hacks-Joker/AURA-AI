@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -70,35 +71,34 @@ const getUniqueProducts = (products: Product[]): Product[] => {
     });
 };
 
-const ConfettiPiece = ({ id, side }: { id: number, side: 'left' | 'right' }) => {
+const ConfettiPiece = ({ id }: { id: number }) => {
     const style = {
-        top: `${Math.random() * 100}%`,
-        animationDuration: `${Math.random() * 3 + 2}s`, // 2s to 5s duration
-        animationDelay: `${Math.random() * 0.5}s`,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * -100}px`,
+        animationDuration: `${Math.random() * 3 + 2}s`,
+        animationDelay: `${Math.random() * 2}s`,
         backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
-        animationName: side === 'left' ? 'burst-left' : 'burst-right',
     };
-    return <div key={id} className="absolute w-2 h-4 animate-confetti" style={style}></div>;
+    return <div key={id} className="absolute w-2 h-4 animate-fall" style={style}></div>;
 };
 
-const LaunchAnimation = ({ product }: { product: Product }) => {
+const LaunchAnimation = ({ product, onDismiss }: { product: Product, onDismiss: () => void }) => {
     if (!product) return null;
     const productName = product.productName || product.name;
     const productImage = product.image || imageMap[productName];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in overflow-hidden">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in overflow-hidden"
+            onClick={onDismiss}
+        >
              <style>{`
-                @keyframes burst-left {
-                    0% { transform: translateX(-10vw) rotate(0deg); opacity: 1; }
-                    100% { transform: translateX(calc(50vw - 50%)) translateY(10vh) rotate(720deg); opacity: 0; }
+                @keyframes fall {
+                    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
                 }
-                @keyframes burst-right {
-                    0% { transform: translateX(100vw) rotate(0deg); opacity: 1; }
-                    100% { transform: translateX(calc(50vw - 50%)) translateY(10vh) rotate(720deg); opacity: 0; }
-                }
-                .animate-confetti { animation-timing-function: cubic-bezier(0.1, 0.5, 0.5, 1); animation-fill-mode: forwards; }
-
+                .animate-fall { animation: fall linear forwards; }
+                
                 @keyframes fade-in {
                     from { opacity: 0; }
                     to { opacity: 1; }
@@ -112,10 +112,12 @@ const LaunchAnimation = ({ product }: { product: Product }) => {
                 }
                 .animate-zoom-in-pop { animation: zoom-in-pop 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
              `}</style>
-            {Array.from({ length: 50 }).map((_, i) => <ConfettiPiece key={`left-${i}`} id={i} side="left" />)}
-            {Array.from({ length: 50 }).map((_, i) => <ConfettiPiece key={`right-${i}`} id={i} side="right" />)}
-
-            <div className="text-center p-8 bg-background/80 rounded-2xl shadow-2xl animate-zoom-in-pop">
+            {Array.from({ length: 100 }).map((_, i) => <ConfettiPiece key={i} id={i} />)}
+            
+            <div 
+                className="text-center p-8 bg-background/80 rounded-2xl shadow-2xl animate-zoom-in-pop"
+                onClick={(e) => e.stopPropagation()} // Prevents click from closing the modal
+            >
                 {productImage && (
                     <Image
                         src={productImage.imageUrl}
@@ -136,6 +138,7 @@ const LaunchAnimation = ({ product }: { product: Product }) => {
         </div>
     );
 };
+
 
 const imageMap: { [key: string]: any } = {
     "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
@@ -378,7 +381,7 @@ export default function InventoryPage() {
 
     return (
         <div className="space-y-6">
-            {launchingProduct && <LaunchAnimation product={launchingProduct} />}
+            {launchingProduct && <LaunchAnimation product={launchingProduct} onDismiss={() => setLaunchingProduct(null)} />}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
@@ -581,6 +584,8 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    
 
     
 

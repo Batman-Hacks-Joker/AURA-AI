@@ -319,22 +319,22 @@ export function ProductCreationChat() {
         return (
             <div className="space-y-4">
                 <div>
-                    <Label htmlFor="productName">Product Name</Label>
+                    <Label htmlFor="productName" className="font-bold text-md">Product Name</Label>
                     <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="productPrice">Price</Label>
+                        <Label htmlFor="productPrice" className="font-bold text-md">Price</Label>
                         <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} />
                     </div>
                     <div>
-                        <Label htmlFor="stock">Stock Units</Label>
+                        <Label htmlFor="stock" className="font-bold text-md">Stock Units</Label>
                         <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} />
                     </div>
                 </div>
                 <div>
                      <div className="flex items-center gap-2 mb-2">
-                         <Label>Key Features</Label>
+                         <Label className="font-bold text-md">Key Features</Label>
                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productFeatures')}>
                             <PlusCircle className="h-4 w-4" />
                          </Button>
@@ -350,7 +350,7 @@ export function ProductCreationChat() {
                 </div>
                  <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <Label>Customer Benefits</Label>
+                        <Label className="font-bold text-md">Customer Benefits</Label>
                         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productBenefits')}>
                            <PlusCircle className="h-4 w-4" />
                         </Button>
@@ -365,7 +365,7 @@ export function ProductCreationChat() {
                     ))}
                 </div>
                  <div>
-                    <Label htmlFor="productCategory">Category</Label>
+                    <Label htmlFor="productCategory" className="font-bold text-md">Category</Label>
                     <Select value={editableDetails.productCategory} onValueChange={(value) => handleDetailChange('productCategory', value)}>
                         <SelectTrigger id="productCategory">
                             <SelectValue placeholder="Select a category" />
@@ -388,21 +388,21 @@ export function ProductCreationChat() {
 
         return (
             <div className="space-y-4">
-                <p><strong className="text-muted-foreground">Price:</strong> ${generatedDetails.productPrice}</p>
-                <p><strong className="text-muted-foreground">Stock:</strong> {generatedDetails.stock} units</p>
+                <p><strong className="text-muted-foreground font-bold text-md">Price:</strong> ${generatedDetails.productPrice}</p>
+                <p><strong className="text-muted-foreground font-bold text-md">Stock:</strong> {generatedDetails.stock} units</p>
                 <div>
-                    <h4 className="font-semibold">Key Features</h4>
+                    <h4 className="font-bold text-md">Key Features</h4>
                     <ul className="list-disc list-inside text-muted-foreground">
                         {(generatedDetails.productFeatures || []).map((f: string, i: number) => <li key={i}>{f}</li>)}
                     </ul>
                 </div>
                 <div>
-                    <h4 className="font-semibold">Customer Benefits</h4>
+                    <h4 className="font-bold text-md">Customer Benefits</h4>
                     <ul className="list-disc list-inside text-muted-foreground">
                         {(generatedDetails.productBenefits || []).map((b: string, i: number) => <li key={i}>{b}</li>)}
                     </ul>
                 </div>
-                <p><strong className="text-muted-foreground">Category:</strong> {generatedDetails.productCategory}</p>
+                <p><strong className="text-muted-foreground font-bold text-md">Category:</strong> {generatedDetails.productCategory}</p>
             </div>
         )
     }
@@ -520,9 +520,9 @@ export function ProductCreationChat() {
                                     <CardDescription>Review and edit the AI-generated details below.</CardDescription>
                                 </div>
                                 <Button 
-                                    variant="outline" 
                                     size="sm" 
                                     onClick={handleEditToggle}
+                                    className={isEditing ? '' : 'bg-accent hover:bg-accent/90'}
                                 >
                                     {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
                                     {isEditing ? 'Save Changes' : 'Edit'}

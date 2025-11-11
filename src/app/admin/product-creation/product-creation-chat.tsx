@@ -26,7 +26,7 @@ declare const window: CustomWindow;
 export function ProductCreationChat() {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isListening, setIsListening] = useState(false);
+    const [isListening, setIsListening] = useState(isListening);
     const [generatedDetails, setGeneratedDetails] = useState<any>(null);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const { toast } = useToast();
@@ -325,11 +325,11 @@ export function ProductCreationChat() {
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="productPrice" className="font-bold text-md">Price</Label>
-                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} />
+                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', e.target.value === '' ? 0 : parseFloat(e.target.value))} />
                     </div>
                     <div>
                         <Label htmlFor="stock" className="font-bold text-md">Stock Units</Label>
-                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} />
+                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} />
                     </div>
                 </div>
                 <div>
@@ -522,7 +522,7 @@ export function ProductCreationChat() {
                                 <Button 
                                     size="sm" 
                                     onClick={handleEditToggle}
-                                    className={isEditing ? '' : 'bg-accent hover:bg-accent/90'}
+                                    className={cn(isEditing ? '' : 'bg-accent hover:bg-accent/90')}
                                 >
                                     {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
                                     {isEditing ? 'Save Changes' : 'Edit'}
@@ -546,3 +546,5 @@ export function ProductCreationChat() {
         </div>
     );
 }
+
+    

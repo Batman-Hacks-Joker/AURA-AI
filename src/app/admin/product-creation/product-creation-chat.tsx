@@ -262,6 +262,10 @@ export function ProductCreationChat() {
                 newList[index] = value;
                 return { ...prev, [field]: newList };
             }
+            if (field === 'productPrice') {
+                const price = parseFloat(value);
+                return { ...prev, [field]: price < 0 ? 0 : value };
+            }
             return { ...prev, [field]: value };
         });
     };
@@ -325,7 +329,7 @@ export function ProductCreationChat() {
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="productPrice" className="font-bold text-md">Price</Label>
-                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', e.target.value === '' ? 0 : parseFloat(e.target.value))} />
+                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', e.target.value === '' ? 0 : e.target.value)} />
                     </div>
                     <div>
                         <Label htmlFor="stock" className="font-bold text-md">Stock Units</Label>

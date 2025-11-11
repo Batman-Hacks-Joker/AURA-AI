@@ -26,7 +26,7 @@ declare const window: CustomWindow;
 export function ProductCreationChat() {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isListening, setIsListening] = useState(isListening);
+    const [isListening, setIsListening] = useState(false);
     const [generatedDetails, setGeneratedDetails] = useState<any>(null);
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const { toast } = useToast();
@@ -546,5 +546,3 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    

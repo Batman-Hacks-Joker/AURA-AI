@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -288,7 +289,7 @@ export default function InventoryPage() {
                                             )}>
                                                 {product.launched ? "Launched" : "Yet to launch"}
                                             </div>
-                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
                                                 {editingStockSku === product.sku ? (
                                                     <Input
                                                         type="number"
@@ -302,7 +303,7 @@ export default function InventoryPage() {
                                                 ) : (
                                                     <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
                                                         <span>Stock: {product.stock}</span>
-                                                        <Pencil className="h-3 w-3" />
+                                                        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </button>
                                                 )}
                                             </div>

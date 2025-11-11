@@ -320,7 +320,7 @@ export function ProductCreationChat() {
         }
     };
 
-    const editableFieldClasses = "bg-transparent border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 group-hover:bg-primary group-hover:text-primary-foreground group-hover:placeholder:text-primary-foreground";
+    const editableFieldClasses = "bg-transparent border-0 border-b-2 border-input rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 group-hover:bg-primary group-hover:text-primary-foreground group-hover:placeholder:text-primary-foreground";
 
 
     const renderEditableFields = () => {
@@ -328,22 +328,22 @@ export function ProductCreationChat() {
         
         return (
             <div className="space-y-4">
-                <div className="group space-y-1">
+                <div className="group space-y-1 p-2 rounded-md transition-colors hover:bg-primary">
                     <Label htmlFor="productName" className="group-hover:text-primary-foreground">Product Name</Label>
                     <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} className={editableFieldClasses} />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
-                    <div className="group space-y-1">
+                    <div className="group space-y-1 p-2 rounded-md transition-colors hover:bg-primary">
                         <Label htmlFor="productPrice" className="group-hover:text-primary-foreground">Price</Label>
                         <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} className={editableFieldClasses} />
                     </div>
-                    <div className="group space-y-1">
+                    <div className="group space-y-1 p-2 rounded-md transition-colors hover:bg-primary">
                         <Label htmlFor="stock" className="group-hover:text-primary-foreground">Stock Units</Label>
                         <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} className={editableFieldClasses} />
                     </div>
                 </div>
-                <div>
-                    <div className="flex items-center gap-2 mb-2 group">
+                <div className="p-2 rounded-md transition-colors group hover:bg-primary">
+                    <div className="flex items-center gap-2 mb-2">
                          <Label className="group-hover:text-primary-foreground">Key Features</Label>
                          <Button size="icon" variant="ghost" className="h-6 w-6 group-hover:text-primary-foreground" onClick={() => handleAddListItem('productFeatures')}>
                             <PlusCircle className="h-4 w-4" />
@@ -352,14 +352,14 @@ export function ProductCreationChat() {
                     {(editableDetails.productFeatures || []).map((feature: string, index: number) => (
                         <div key={index} className="relative group/item flex items-center">
                             <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary-foreground" onClick={() => handleRemoveListItem('productFeatures', index)}>
-                                <Trash2 className="h-4 w-4 text-destructive group-hover/item:text-red-400"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100" onClick={() => handleRemoveListItem('productFeatures', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive "/>
                             </Button>
                         </div>
                     ))}
                 </div>
-                 <div>
-                    <div className="flex items-center gap-2 mb-2 group">
+                 <div className="p-2 rounded-md transition-colors group hover:bg-primary">
+                    <div className="flex items-center gap-2 mb-2">
                         <Label className="group-hover:text-primary-foreground">Customer Benefits</Label>
                         <Button size="icon" variant="ghost" className="h-6 w-6 group-hover:text-primary-foreground" onClick={() => handleAddListItem('productBenefits')}>
                            <PlusCircle className="h-4 w-4" />
@@ -368,13 +368,13 @@ export function ProductCreationChat() {
                     {(editableDetails.productBenefits || []).map((benefit: string, index: number) => (
                         <div key={index} className="relative group/item flex items-center">
                             <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary-foreground" onClick={() => handleRemoveListItem('productBenefits', index)}>
-                                <Trash2 className="h-4 w-4 text-destructive group-hover/item:text-red-400"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover/item:opacity-100" onClick={() => handleRemoveListItem('productBenefits', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive "/>
                             </Button>
                         </div>
                     ))}
                 </div>
-                 <div className="group space-y-1">
+                 <div className="group space-y-1 p-2 rounded-md transition-colors hover:bg-primary">
                     <Label htmlFor="productCategory" className="group-hover:text-primary-foreground">Category</Label>
                     <Select value={editableDetails.productCategory} onValueChange={(value) => handleDetailChange('productCategory', value)}>
                         <SelectTrigger id="productCategory" className={editableFieldClasses}>
@@ -523,17 +523,14 @@ export function ProductCreationChat() {
                     <Card>
                         <CardHeader>
                             <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="group">
-                                        <CardTitle className="group-hover:text-primary-foreground">{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
-                                        <CardDescription className="group-hover:text-primary-foreground/80">Review and edit the AI-generated details below.</CardDescription>
-                                    </div>
+                                <div className="group p-2 rounded-md transition-colors hover:bg-primary">
+                                    <CardTitle className="group-hover:text-primary-foreground">{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
+                                    <CardDescription className="group-hover:text-primary-foreground/80">Review and edit the AI-generated details below.</CardDescription>
                                 </div>
                                 <Button 
                                     variant="outline" 
                                     size="sm" 
                                     onClick={handleEditToggle}
-                                    className="group-hover:bg-primary-foreground group-hover:text-primary"
                                 >
                                     {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
                                     {isEditing ? 'Save Changes' : 'Edit'}
@@ -557,6 +554,3 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    
-

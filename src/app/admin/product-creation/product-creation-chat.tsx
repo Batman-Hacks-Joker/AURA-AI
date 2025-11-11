@@ -320,6 +320,8 @@ export function ProductCreationChat() {
         }
     };
 
+    const editableFieldClasses = "bg-transparent border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 group-hover/editable-card:text-primary-foreground group-hover/editable-card:placeholder:text-primary-foreground group-hover/editable-card:border-primary-foreground";
+
 
     const renderEditableFields = () => {
         if (!editableDetails) return null;
@@ -327,55 +329,55 @@ export function ProductCreationChat() {
         return (
             <div className="space-y-4">
                 <div>
-                    <Label htmlFor="productName">Product Name</Label>
-                    <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} />
+                    <Label htmlFor="productName" className="group-hover/editable-card:text-primary-foreground">Product Name</Label>
+                    <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} className={editableFieldClasses} />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="productPrice">Price</Label>
-                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} />
+                        <Label htmlFor="productPrice" className="group-hover/editable-card:text-primary-foreground">Price</Label>
+                        <Input id="productPrice" type="number" value={editableDetails.productPrice} onChange={(e) => handleDetailChange('productPrice', parseFloat(e.target.value))} className={editableFieldClasses} />
                     </div>
                     <div>
-                        <Label htmlFor="stock">Stock Units</Label>
-                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} />
+                        <Label htmlFor="stock" className="group-hover/editable-card:text-primary-foreground">Stock Units</Label>
+                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', parseInt(e.target.value, 10))} className={editableFieldClasses} />
                     </div>
                 </div>
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                         <Label>Key Features</Label>
-                         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productFeatures')}>
+                         <Label className="group-hover/editable-card:text-primary-foreground">Key Features</Label>
+                         <Button size="icon" variant="ghost" className="h-6 w-6 group-hover/editable-card:text-primary-foreground" onClick={() => handleAddListItem('productFeatures')}>
                             <PlusCircle className="h-4 w-4" />
                          </Button>
                     </div>
                     {(editableDetails.productFeatures || []).map((feature: string, index: number) => (
                         <div key={index} className="relative group flex items-center">
-                            <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className="mb-2 pr-8"/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productFeatures', index)}>
-                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            <Input value={feature} onChange={(e) => handleDetailChange('productFeatures', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100 group-hover/editable-card:text-primary-foreground" onClick={() => handleRemoveListItem('productFeatures', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive group-hover/editable-card:text-red-400"/>
                             </Button>
                         </div>
                     ))}
                 </div>
                  <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <Label>Customer Benefits</Label>
-                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddListItem('productBenefits')}>
+                        <Label className="group-hover/editable-card:text-primary-foreground">Customer Benefits</Label>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 group-hover/editable-card:text-primary-foreground" onClick={() => handleAddListItem('productBenefits')}>
                            <PlusCircle className="h-4 w-4" />
                         </Button>
                     </div>
                     {(editableDetails.productBenefits || []).map((benefit: string, index: number) => (
                         <div key={index} className="relative group flex items-center">
-                            <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className="mb-2 pr-8"/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveListItem('productBenefits', index)}>
-                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            <Input value={benefit} onChange={(e) => handleDetailChange('productBenefits', e.target.value, index)} className={cn(editableFieldClasses, "mb-2 pr-8")}/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 h-7 w-7 opacity-0 group-hover:opacity-100 group-hover/editable-card:text-primary-foreground" onClick={() => handleRemoveListItem('productBenefits', index)}>
+                                <Trash2 className="h-4 w-4 text-destructive group-hover/editable-card:text-red-400"/>
                             </Button>
                         </div>
                     ))}
                 </div>
                  <div>
-                    <Label htmlFor="productCategory">Category</Label>
+                    <Label htmlFor="productCategory" className="group-hover/editable-card:text-primary-foreground">Category</Label>
                     <Select value={editableDetails.productCategory} onValueChange={(value) => handleDetailChange('productCategory', value)}>
-                        <SelectTrigger id="productCategory">
+                        <SelectTrigger id="productCategory" className={editableFieldClasses}>
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -518,14 +520,21 @@ export function ProductCreationChat() {
                         </CardContent>
                     </Card>
                 ) : generatedDetails && (
-                    <Card>
+                    <Card className={cn(
+                        (isEditing || isEditMode) && "group/editable-card hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
+                    )}>
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle>{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
-                                    <CardDescription>Review and edit the AI-generated details below.</CardDescription>
+                                    <CardTitle className="group-hover/editable-card:text-primary-foreground">{isEditing ? "Editing:" : ""} {editableDetails?.productName || generatedDetails.productName}</CardTitle>
+                                    <CardDescription className="group-hover/editable-card:text-primary-foreground/80">Review and edit the AI-generated details below.</CardDescription>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={handleEditToggle}>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleEditToggle}
+                                    className="group-hover/editable-card:bg-primary-foreground group-hover/editable-card:text-primary"
+                                >
                                     {isEditing ? <Save className="mr-2 h-4 w-4"/> : <Pencil className="mr-2 h-4 w-4" />}
                                     {isEditing ? 'Save Changes' : 'Edit'}
                                 </Button>

@@ -3,34 +3,16 @@ import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-
-type LoggedInUser = {
-  email: string;
-  role: 'admin' | 'customer';
-};
+import { useAuth } from "@/firebase/auth/use-auth";
 
 export function Hero() {
   const speakerImage = PlaceHolderImages.find(p => p.id === 'product-1');
-  const [user, setUser] = useState<LoggedInUser | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    setUser(storedUser ? JSON.parse(storedUser) : null);
-
-    const handleStorageChange = () => {
-      const storedUser = localStorage.getItem('loggedInUser');
-      setUser(storedUser ? JSON.parse(storedUser) : null);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  const { user } = useAuth();
   
-  const getStartedLink = user ? `/${user.role}/dashboard` : "/signup";
+  // This is a placeholder role. In a real app, you'd fetch this from your database.
+  const role = user ? 'customer' : null;
+
+  const getStartedLink = user && role ? `/${role}/dashboard` : "/login";
   const getStartedText = user ? "Go to Dashboard" : "Get Started";
 
 

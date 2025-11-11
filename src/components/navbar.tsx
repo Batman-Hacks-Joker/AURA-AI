@@ -6,35 +6,15 @@ import { Logo } from './logo';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
-import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { LogOut, User, LayoutDashboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/firebase/auth/use-auth';
 
-
-type LoggedInUser = {
-  email: string;
-  role: 'admin' | 'customer';
-};
 
 export function Navbar({ className }: { className?: string }) {
-  const [user, setUser] = useState<LoggedInUser | null>(null);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const storedUser = localStorage.getItem('loggedInUser');
-      setUser(storedUser ? JSON.parse(storedUser) : null);
-    };
-
-    handleStorageChange(); // Check on initial load
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  const { user, userProfile } = useAuth();
 
   return (
     <header className={cn("fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm", className)}>
@@ -50,11 +30,11 @@ export function Navbar({ className }: { className?: string }) {
                   <Link href="/login">Login</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
+                  <Link href="/login">Sign Up</Link>
                 </Button>
               </>
             ) : (
-              <UserMenu user={user} />
+              <UserMenu />
             )}
           </div>
       </div>
@@ -63,48 +43,47 @@ export function Navbar({ className }: { className?: string }) {
 }
 
 
-function UserMenu({ user }: { user: LoggedInUser }) {
+function UserMenu() {
+  const { user, userProfile, signOut } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('loggedInUser');
-    window.dispatchEvent(new Event("storage"));
-    router.push('/login');
-  };
+  if (!user || !userProfile) {
+    return null;
+  }
+  
+  // This is a placeholder. In a real app, you'd fetch roles from your database.
+  const role = 'customer'; 
 
-  const getInitials = (email: string) => {
-    const name = email.split('@')[0];
-    return name.substring(0, 2).toUpperCase();
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('');
   };
   
-  const seed = user.role === 'admin' ? 'admin' : 'customer';
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={`https://picsum.photos/seed/${seed}/100/100`} alt={user.email} />
-            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+            {user.photoURL && <AvatarImage src={user.photoURL} alt={userProfile.displayName} />}
+            <AvatarFallback>{getInitials(userProfile.displayName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+            <p className="text-sm font-medium leading-none">{userProfile.displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {userProfile.email}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/${user.role}/dashboard`}><LayoutDashboard className="mr-2" /> Dashboard</Link>
+          <Link href={`/${role}/dashboard`}><LayoutDashboard className="mr-2" /> Dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuItem disabled><User className="mr-2" /> Profile</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={signOut}>
           <LogOut className="mr-2" /> Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

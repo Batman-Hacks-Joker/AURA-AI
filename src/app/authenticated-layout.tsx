@@ -1,48 +1,42 @@
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import AdminLayout from './admin/layout';
 import CustomerLayout from './customer/layout';
 import { usePathname, useRouter } from 'next/navigation';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useAuth } from '@/firebase/auth/use-auth';
 
-type LoggedInUser = {
-  email: string;
-  role: 'admin' | 'customer';
-};
 
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<LoggedInUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, userProfile, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      
-      // Redirect if user is on the wrong dashboard
-      if (pathname.startsWith('/admin') && parsedUser.role !== 'admin') {
-        router.replace('/customer/dashboard');
-      } else if (pathname.startsWith('/customer') && parsedUser.role !== 'customer') {
-        router.replace('/admin/dashboard');
-      }
-
-    } else {
+  React.useEffect(() => {
+    if (!loading && !user) {
       router.replace('/login');
     }
-    setIsLoading(false);
-  }, [pathname, router]);
-
-  if (isLoading || !user) {
+  }, [user, loading, router]);
+  
+  if (loading || !user) {
     // You can render a loading spinner here
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
+  
+  // This is a placeholder, in a real app you would fetch the user's role from your database
+  const role = 'customer'; 
 
-  const LayoutComponent = user.role === 'admin' ? AdminLayout : CustomerLayout;
+  // Redirect if user is on the wrong dashboard
+  if (pathname.startsWith('/admin') && role !== 'admin') {
+    router.replace('/customer/dashboard');
+    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
+  } else if (pathname.startsWith('/customer') && role !== 'customer') {
+    router.replace('/admin/dashboard');
+    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
+  }
+
+  const LayoutComponent = role === 'admin' ? AdminLayout : CustomerLayout;
 
   return (
     <SidebarProvider>

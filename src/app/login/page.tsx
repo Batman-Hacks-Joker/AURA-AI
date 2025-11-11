@@ -2,68 +2,38 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { Mail, KeyRound } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/firebase/auth/use-auth';
 
-// The original test users are kept as a fallback.
-const TEST_USERS = {
-  admin: { email: 'admintest@email.com', pass: 'admin' },
-  customer: { email: 'ctest@email.com', pass: 'ctest' },
-};
+function GoogleIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
+      <path fill="#4285F4" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+      <path fill="#34A853" d="M43.611,20.083L43.595,20L24,20v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+      <path fill="#FBBC05" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+      <path fill="#EA4335" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.223,0-9.657-3.341-11.303-7.918l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+    </svg>
+  )
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { user, signIn, loading } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    let role: string | null = null;
-    let userEmail: string | null = null;
-
-    // Check for original test users first
-    if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.pass) {
-      role = 'admin';
-      userEmail = TEST_USERS.admin.email;
-    } else if (email === TEST_USERS.customer.email && password === TEST_USERS.customer.pass) {
-      role = 'customer';
-      userEmail = TEST_USERS.customer.email;
-    } else {
-      // Check for users created via signup flow (stored in localStorage)
-      const storedPassword = localStorage.getItem(email);
-      const storedRole = localStorage.getItem(`${email}-role`);
-      if (storedPassword && storedPassword === password && storedRole) {
-        role = storedRole;
-        userEmail = email;
-      }
+  useEffect(() => {
+    if (!loading && user) {
+      // Assuming role is stored or determined elsewhere, defaulting to customer
+      router.push('/customer/dashboard'); 
     }
+  }, [user, loading, router]);
 
-    if (role && userEmail) {
-      localStorage.setItem('loggedInUser', JSON.stringify({ email: userEmail, role }));
-      window.dispatchEvent(new Event("storage")); // Notify other components of storage change
-      router.push(`/${role}/dashboard`);
-      return;
-    }
-
-    toast({
-      variant: "destructive",
-      title: "Invalid Credentials",
-      description: "Please check your email and password and try again.",
-    });
-  };
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-sm space-y-6">
         <div className="flex justify-center">
           <Link href="/">
             <Logo />
@@ -74,35 +44,12 @@ export default function LoginPage() {
             <CardTitle className="font-headline text-2xl">Sign In</CardTitle>
             <CardDescription>Sign in to access your AURA AI account.</CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="name@example.com" required className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" required placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <div className="flex justify-end">
-                  <Link href="#" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
+              <Button onClick={signIn} className="w-full" disabled={loading}>
+                <GoogleIcon />
+                <span>Sign in with Google</span>
+              </Button>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 pt-4">
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In</Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Don't have an account? <Link href="/signup" className="text-primary hover:underline font-semibold">Sign up</Link>
-              </p>
-            </CardFooter>
-          </form>
         </Card>
       </div>
     </main>

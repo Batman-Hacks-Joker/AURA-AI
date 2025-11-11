@@ -7,6 +7,8 @@ import { Navbar } from '@/components/navbar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthenticatedLayout } from './authenticated-layout';
 import React from 'react';
+import { AuthProvider } from '@/firebase/auth/use-auth';
+import { FirebaseClientProvider } from '@/firebase';
 
 // Metadata needs to be exported from a server component, so we can't define it here.
 // We will move it to the page.tsx files that are server components.
@@ -21,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/onboarding';
+  const isAuthPage = pathname === '/login';
   const isPublicPage = pathname === '/';
   
   const showAuthenticatedLayout = !isAuthPage && !isPublicPage;
@@ -36,23 +38,27 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Source+Code+Pro&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {isPublicPage && <Navbar />}
-          
-          {showAuthenticatedLayout ? (
-            <AuthenticatedLayout>{children}</AuthenticatedLayout>
-          ) : (
-            <main className={isPublicPage ? 'pt-16' : ''}>{children}</main>
-          )}
+        <FirebaseClientProvider>
+          <AuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {isPublicPage && <Navbar />}
+              
+              {showAuthenticatedLayout ? (
+                <AuthenticatedLayout>{children}</AuthenticatedLayout>
+              ) : (
+                <main className={isPublicPage ? 'pt-16' : ''}>{children}</main>
+              )}
 
-          <Toaster />
-          <Chatbot />
-        </ThemeProvider>
+              <Toaster />
+              <Chatbot />
+            </ThemeProvider>
+          </AuthProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

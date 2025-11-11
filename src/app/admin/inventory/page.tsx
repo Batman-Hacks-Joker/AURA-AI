@@ -70,14 +70,15 @@ const getUniqueProducts = (products: Product[]): Product[] => {
     });
 };
 
-const ConfettiPiece = ({ id }: { id: number }) => {
+const ConfettiPiece = ({ id, side }: { id: number, side: 'left' | 'right' }) => {
     const style = {
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${Math.random() * 2 + 3}s`,
-        animationDelay: `${Math.random() * 2}s`,
+        top: `${Math.random() * 100}%`,
+        animationDuration: `${Math.random() * 3 + 2}s`, // 2s to 5s duration
+        animationDelay: `${Math.random() * 0.5}s`,
         backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        animationName: side === 'left' ? 'burst-left' : 'burst-right',
     };
-    return <div key={id} className="absolute top-[-10px] w-2 h-4 animate-fall" style={style}></div>;
+    return <div key={id} className="absolute w-2 h-4 animate-confetti" style={style}></div>;
 };
 
 const LaunchAnimation = ({ product }: { product: Product }) => {
@@ -86,13 +87,17 @@ const LaunchAnimation = ({ product }: { product: Product }) => {
     const productImage = product.image || imageMap[productName];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in overflow-hidden">
              <style>{`
-                @keyframes fall {
-                    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+                @keyframes burst-left {
+                    0% { transform: translateX(-10vw) rotate(0deg); opacity: 1; }
+                    100% { transform: translateX(calc(50vw - 50%)) translateY(10vh) rotate(720deg); opacity: 0; }
                 }
-                .animate-fall { animation: fall linear forwards; }
+                @keyframes burst-right {
+                    0% { transform: translateX(100vw) rotate(0deg); opacity: 1; }
+                    100% { transform: translateX(calc(50vw - 50%)) translateY(10vh) rotate(720deg); opacity: 0; }
+                }
+                .animate-confetti { animation-timing-function: cubic-bezier(0.1, 0.5, 0.5, 1); animation-fill-mode: forwards; }
 
                 @keyframes fade-in {
                     from { opacity: 0; }
@@ -107,7 +112,9 @@ const LaunchAnimation = ({ product }: { product: Product }) => {
                 }
                 .animate-zoom-in-pop { animation: zoom-in-pop 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
              `}</style>
-            {Array.from({ length: 100 }).map((_, i) => <ConfettiPiece key={i} id={i} />)}
+            {Array.from({ length: 50 }).map((_, i) => <ConfettiPiece key={`left-${i}`} id={i} side="left" />)}
+            {Array.from({ length: 50 }).map((_, i) => <ConfettiPiece key={`right-${i}`} id={i} side="right" />)}
+
             <div className="text-center p-8 bg-background/80 rounded-2xl shadow-2xl animate-zoom-in-pop">
                 {productImage && (
                     <Image
@@ -297,7 +304,7 @@ export default function InventoryPage() {
             setLaunchingProduct(productToLaunch);
             setTimeout(() => {
                 setLaunchingProduct(null);
-            }, 3000); // Hide animation after 3 seconds
+            }, 5000); // Hide animation after 5 seconds
         }
 
         toast({
@@ -574,6 +581,8 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    
 
     
 

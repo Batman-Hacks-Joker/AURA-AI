@@ -1,12 +1,11 @@
 
-
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil, CheckCircle2, XCircle, Search, SlidersHorizontal, ArrowUp, ArrowDown, X } from "lucide-react";
+import { PlusCircle, File, MoreHorizontal, ArrowUpRight, Trash2, Pencil, CheckCircle2, XCircle, Search, SlidersHorizontal, ArrowUp, ArrowDown, X, PartyPopper } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -71,6 +70,75 @@ const getUniqueProducts = (products: Product[]): Product[] => {
     });
 };
 
+const ConfettiPiece = ({ id }: { id: number }) => {
+    const style = {
+        left: `${Math.random() * 100}%`,
+        animationDuration: `${Math.random() * 2 + 3}s`,
+        animationDelay: `${Math.random() * 2}s`,
+        backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+    };
+    return <div key={id} className="absolute top-[-10px] w-2 h-4 animate-fall" style={style}></div>;
+};
+
+const LaunchAnimation = ({ product }: { product: Product }) => {
+    if (!product) return null;
+    const productName = product.productName || product.name;
+    const productImage = product.image || imageMap[productName];
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+             <style>{`
+                @keyframes fall {
+                    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+                }
+                .animate-fall { animation: fall linear forwards; }
+
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                .animate-fade-in { animation: fade-in 0.3s ease-out; }
+
+                @keyframes zoom-in-pop {
+                    0% { transform: scale(0.5); opacity: 0; }
+                    80% { transform: scale(1.05); opacity: 1; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                .animate-zoom-in-pop { animation: zoom-in-pop 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+             `}</style>
+            {Array.from({ length: 100 }).map((_, i) => <ConfettiPiece key={i} id={i} />)}
+            <div className="text-center p-8 bg-background/80 rounded-2xl shadow-2xl animate-zoom-in-pop">
+                {productImage && (
+                    <Image
+                        src={productImage.imageUrl}
+                        alt={productName}
+                        width={400}
+                        height={400}
+                        data-ai-hint={productImage.imageHint}
+                        className="rounded-lg aspect-square object-cover mx-auto mb-4"
+                    />
+                )}
+                <h2 className="text-3xl font-bold">{productName}</h2>
+                <p className="text-lg text-muted-foreground mt-2 flex items-center justify-center gap-2">
+                    <PartyPopper className="text-yellow-500" />
+                    Launched Successfully!
+                    <PartyPopper className="text-yellow-500" />
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const imageMap: { [key: string]: any } = {
+    "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
+    "Urban Explorer": PlaceHolderImages.find(p => p.id === 'ev-1'),
+    "City Commuter": PlaceHolderImages.find(p => p.id === 'sedan-1'),
+    "Family Voyager": PlaceHolderImages.find(p => p.id === 'suv-1'),
+    "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
+};
+
+
 export default function InventoryPage() {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -84,6 +152,9 @@ export default function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [showLaunchedFirst, setShowLaunchedFirst] = useState(false);
+    
+    // Launch Animation State
+    const [launchingProduct, setLaunchingProduct] = useState<Product | null>(null);
 
     const processProducts = (products: Product[]): Product[] => {
         return getUniqueProducts(products).map(p => {
@@ -213,13 +284,25 @@ export default function InventoryPage() {
         const currentProducts: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
         const productIndex = currentProducts.findIndex(p => p.sku === sku);
         if (productIndex === -1) return;
+
+        const productToLaunch = currentProducts[productIndex];
         
         const updatedProducts = currentProducts.map(p => p.sku === sku ? { ...p, launched: !p.launched } : p);
         updateLocalStorage(updatedProducts);
+        
+        const isNowLaunched = updatedProducts[productIndex].launched;
+        
+        // Trigger animation only when launching
+        if (isNowLaunched) {
+            setLaunchingProduct(productToLaunch);
+            setTimeout(() => {
+                setLaunchingProduct(null);
+            }, 3000); // Hide animation after 3 seconds
+        }
 
         toast({
-            title: `Product ${updatedProducts[productIndex].launched ? "Launched" : "Un-launched"}!`,
-            description: `${currentProducts[productIndex].name} has been ${updatedProducts[productIndex].launched ? "launched" : "removed from the marketplace"}.`,
+            title: `Product ${isNowLaunched ? "Launched" : "Un-launched"}!`,
+            description: `${productToLaunch.name} has been ${isNowLaunched ? "launched" : "removed from the marketplace"}.`,
         });
     }
 
@@ -273,14 +356,6 @@ export default function InventoryPage() {
         );
     };
 
-    const imageMap: { [key: string]: any } = {
-        "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
-        "Urban Explorer": PlaceHolderImages.find(p => p.id === 'ev-1'),
-        "City Commuter": PlaceHolderImages.find(p => p.id === 'sedan-1'),
-        "Family Voyager": PlaceHolderImages.find(p => p.id === 'suv-1'),
-        "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
-    };
-
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {
             case "In Stock":
@@ -296,6 +371,7 @@ export default function InventoryPage() {
 
     return (
         <div className="space-y-6">
+            {launchingProduct && <LaunchAnimation product={launchingProduct} />}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
@@ -498,5 +574,7 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    
 
     

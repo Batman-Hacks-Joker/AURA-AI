@@ -280,7 +280,10 @@ export default function InventoryPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => handleEditProduct(product)}
+                                                            className="focus:bg-primary/90 focus:text-primary-foreground"
+                                                        >
                                                             <Pencil className="mr-2 h-4 w-4" />
                                                             <span>Edit Product</span>
                                                         </DropdownMenuItem>

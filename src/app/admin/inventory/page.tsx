@@ -163,14 +163,15 @@ export default function InventoryPage() {
     const processItems = (items: Item[]): Item[] => {
         return items.map(p => {
             let status: string;
-            if (p.stock === 0) {
+            const stock = p.stock ?? 0;
+            if (stock === 0) {
                 status = "Out of Stock";
-            } else if (p.stock <= 10) {
+            } else if (stock <= 10) {
                 status = "Need Refill";
             } else {
                 status = "In Stock";
             }
-            return { ...p, status, launched: p.isLaunched };
+            return { ...p, stock, status, launched: p.isLaunched };
         });
     }
     
@@ -437,6 +438,7 @@ export default function InventoryPage() {
                                     const itemName = item.productName || item.name;
                                     const itemPrice = item.productPrice || item.price;
                                     const itemImage = item.image || imageMap[item.name];
+                                    const itemStock = item.stock ?? 0;
                                     return (
                                     <TableRow key={item.sku}>
                                         <TableCell>
@@ -458,7 +460,7 @@ export default function InventoryPage() {
                                         <TableCell className="font-medium">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <Link href={`/marketplace/${item.sku}`} className="hover:underline">
+                                                    <Link href={`/marketplace/${item.id}`} className="hover:underline">
                                                         <Highlight text={itemName} highlight={searchTerm} />
                                                     </Link>
                                                     <DropdownMenu>
@@ -508,8 +510,8 @@ export default function InventoryPage() {
                                                             className="h-6 w-20"
                                                         />
                                                     ) : (
-                                                        <button onClick={() => handleStockEdit(item.sku, item.stock)} className="flex items-center gap-1 hover:text-primary">
-                                                            <span>Stock: <Highlight text={item.stock.toString()} highlight={searchTerm} /></span>
+                                                        <button onClick={() => handleStockEdit(item.sku, itemStock)} className="flex items-center gap-1 hover:text-primary">
+                                                            <span>Stock: <Highlight text={itemStock.toString()} highlight={searchTerm} /></span>
                                                             <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         </button>
                                                     )}

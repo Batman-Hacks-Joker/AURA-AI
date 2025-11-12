@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Headset, X } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase/auth/use-auth';
@@ -230,12 +231,12 @@ export default function MarketplacePage() {
                                             )}
                                     </CardHeader>
                                     <div className="p-4 flex flex-col flex-grow">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex justify-between items-start">
                                             <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
-                                            <button onClick={(e) => handleAgentIconClick(e, assignedAgent)}>
-                                                <Headset className={cn(
+                                            <button onClick={(e) => handleAgentIconClick(e, assignedAgent)} className="flex-shrink-0">
+                                                <Bot className={cn(
                                                     "h-5 w-5",
-                                                    assignedAgent ? "text-green-500 cursor-pointer" : "text-muted-foreground"
+                                                    assignedAgent ? "text-green-500 cursor-pointer" : "text-muted-foreground/50"
                                                 )} />
                                             </button>
                                         </div>
@@ -275,7 +276,7 @@ export default function MarketplacePage() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                                <Headset className="text-primary" />
+                                <Bot className="text-primary" />
                                 Assigned Service Agent
                             </DialogTitle>
                             <DialogDescription>

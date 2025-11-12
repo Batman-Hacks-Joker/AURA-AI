@@ -7,7 +7,7 @@ import { useAuth } from "@/firebase/auth/use-auth";
 
 export function Hero() {
   const speakerImage = PlaceHolderImages.find(p => p.id === 'product-1');
-  const { user, role } = useAuth();
+  const { user, role, signOut } = useAuth();
 
   const getStartedLink = user && role ? `/${role}/dashboard` : "/login";
   const getStartedText = user ? "Go to Dashboard" : "Get Started";
@@ -28,7 +28,11 @@ export function Hero() {
               <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
                 <Link href={getStartedLink}>{getStartedText}</Link>
               </Button>
-              {!user && (
+              {user ? (
+                <Button onClick={signOut} size="lg" variant="outline">
+                  Logout
+                </Button>
+              ) : (
                 <Button asChild size="lg" variant="outline">
                   <Link href="/login">Login</Link>
                 </Button>

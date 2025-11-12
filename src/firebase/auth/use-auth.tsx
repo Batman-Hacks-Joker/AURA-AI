@@ -21,7 +21,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useFirebase, useFirestore } from '@/firebase';
+import { useFirebaseAuth, useFirestore } from '@/firebase/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -50,7 +50,7 @@ const AuthContext = createContext<AuthContextState | undefined>(undefined);
 
 // AuthProvider component
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { auth } = useFirebase();
+  const auth = useFirebaseAuth();
   const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

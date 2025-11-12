@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot, Headset } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -299,5 +299,3 @@ export default function MarketplacePage() {
         </div>
     );
 }
-
-    

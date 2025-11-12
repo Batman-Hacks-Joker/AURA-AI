@@ -26,9 +26,8 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { useAuth, useFirebase, useCollection, useMemoFirebase } from "@/firebase";
+import { useAuth, useFirebase, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc, writeBatch } from "firebase/firestore";
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 
 type Item = {
     id: string;
@@ -138,7 +137,7 @@ const imageMap: { [key: string]: any } = {
 
 
 export default function InventoryPage() {
-    const { user, userProfile } = useAuth();
+    const { user } = useAuth();
     const { firestore } = useFirebase();
     const router = useRouter();
 
@@ -561,4 +560,3 @@ export default function InventoryPage() {
     );
 }
 
-    

@@ -17,7 +17,7 @@ import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProductDetailsOutput } from '@/ai/flows/product-detail-prompting';
 import { useAuth, useFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc, collection, writeBatch } from 'firebase/firestore';
+import { doc, collection } from 'firebase/firestore';
 
 
 interface CustomWindow extends Window {
@@ -544,5 +544,3 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    

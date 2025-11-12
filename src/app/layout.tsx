@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login';
+  const isAuthPage = pathname.startsWith('/login');
   const isPublicPage = pathname === '/';
   
   const showAuthenticatedLayout = !isAuthPage && !isPublicPage;

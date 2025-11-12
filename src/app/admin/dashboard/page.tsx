@@ -50,8 +50,9 @@ export default function AdminDashboardPage() {
       setInputValue(storedName);
     } else if (userProfile) {
       // Default to user's display name if no company name is set
-      setCompanyName(userProfile.displayName);
-      setInputValue(userProfile.displayName);
+      const defaultName = userProfile.displayName;
+      setCompanyName(defaultName);
+      setInputValue(defaultName);
     }
   }, [userProfile]);
 
@@ -83,12 +84,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome, {displayName}!</h1>
-          <p className="text-muted-foreground">Here's a snapshot of your business today.</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Welcome, {displayName}!</h1>
+        <p className="text-muted-foreground">Here's a snapshot of your business today.</p>
+      </div>
+
+      <Card>
+        <CardHeader className="items-center">
             {isEditing ? (
               <div className="flex gap-2 items-center">
                 <Input 
@@ -104,48 +106,49 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-lg">{companyName || 'Your company name'}</p>
+                <CardTitle className="text-2xl">{companyName || 'Your company name'}</CardTitle>
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleEdit}>
                   <Pencil className="h-4 w-4" />
                 </Button>
               </div>
             )}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Activity feed will be displayed here.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Performance charts will be displayed here.</p>
-          </CardContent>
-        </Card>
-      </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {stats.map((stat) => (
+                <Card key={stat.title}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                    <stat.icon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground">{stat.change}</p>
+                    </CardContent>
+                </Card>
+                ))}
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Activity feed will be displayed here.</p>
+                </CardContent>
+                </Card>
+                <Card>
+                <CardHeader>
+                    <CardTitle>Performance Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Performance charts will be displayed here.</p>
+                </CardContent>
+                </Card>
+            </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

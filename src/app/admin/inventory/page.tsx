@@ -390,9 +390,27 @@ export default function InventoryPage() {
             {launchingItem && <LaunchAnimation item={launchingItem} onDismiss={() => setLaunchingItem(null)} />}
             <Card>
                 <CardHeader>
-                    <div className="text-center mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
                         <CardTitle>{companyName} Inventory</CardTitle>
                         <CardDescription>A list of all items in your main warehouse.</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" className="h-8 gap-1">
+                            <File className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                Export
+                            </span>
+                        </Button>
+                        <Button size="sm" asChild className="h-8 gap-1 bg-accent hover:bg-accent/90">
+                            <Link href="/admin/product-creation">
+                              <PlusCircle className="h-3.5 w-3.5" />
+                              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                  Add Item
+                              </span>
+                            </Link>
+                        </Button>
+                      </div>
                     </div>
                      <div className="flex items-center justify-between gap-2 pt-4">
                         <div className="flex items-center gap-2">
@@ -456,22 +474,6 @@ export default function InventoryPage() {
                                     )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="h-8 gap-1">
-                                <File className="h-3.5 w-3.5" />
-                                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                    Export
-                                </span>
-                            </Button>
-                            <Button size="sm" asChild className="h-8 gap-1 bg-accent hover:bg-accent/90">
-                                <Link href="/admin/product-creation">
-                                  <PlusCircle className="h-3.5 w-3.5" />
-                                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                      Add Item
-                                  </span>
-                                </Link>
-                            </Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -594,11 +596,3 @@ export default function InventoryPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
-
-    

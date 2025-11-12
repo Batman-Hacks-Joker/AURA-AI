@@ -9,10 +9,11 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Heart, Car, Wrench } from 'lucide-react';
+import { ShoppingCart, Heart, Car, Wrench, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/firebase/auth/use-auth';
 
 type Product = {
     name: string;
@@ -51,6 +52,7 @@ export default function ProductDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
+    const { role } = useAuth();
     
     useEffect(() => {
         if (sku) {
@@ -88,6 +90,12 @@ export default function ProductDetailPage() {
         }
     };
     
+    const handleEditProduct = () => {
+        if (!product) return;
+        localStorage.setItem('editingProduct', JSON.stringify(product));
+        router.push('/admin/product-creation');
+    };
+
     const imageMap: { [key: string]: any } = {
         "Off-Road Beast": PlaceHolderImages.find(p => p.id === 'truck-1'),
         "Urban Explorer": PlaceHolderImages.find(p => p.id === 'ev-1'),
@@ -179,13 +187,21 @@ export default function ProductDetailPage() {
                     )}
 
                     <div className="flex items-center gap-2 pt-4">
-                        <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleAddToCart}>
-                           <ShoppingCart className="mr-2" /> Add to Cart
-                        </Button>
-                        <Button size="lg" variant="outline">
-                            <Heart />
-                            <span className="sr-only">Add to Wishlist</span>
-                        </Button>
+                        {role === 'admin' ? (
+                            <Button size="lg" className="w-full" onClick={handleEditProduct}>
+                                <Pencil className="mr-2" /> Edit Product
+                            </Button>
+                        ) : (
+                            <>
+                                <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleAddToCart}>
+                                   <ShoppingCart className="mr-2" /> Add to Cart
+                                </Button>
+                                <Button size="lg" variant="outline">
+                                    <Heart />
+                                    <span className="sr-only">Add to Wishlist</span>
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     <p className="text-sm text-muted-foreground text-center">

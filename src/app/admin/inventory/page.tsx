@@ -476,119 +476,123 @@ export default function InventoryPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="text-right">Price</TableHead>
-                                <TableHead className="text-center">Status</TableHead>
-                                <TableHead>SKU</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {displayedItems.length > 0 ? displayedItems.map((item) => {
-                                const itemName = item.productName || item.name;
-                                const itemPrice = item.productPrice || item.price;
-                                const itemImage = item.image || imageMap[item.name];
-                                return (
-                                <TableRow key={item.sku}>
-                                    <TableCell className="hidden sm:table-cell">
-                                      {itemImage ? (
-                                        <Image
-                                            alt={itemName}
-                                            className="aspect-square rounded-md object-cover"
-                                            height="64"
-                                            src={itemImage.imageUrl}
-                                            data-ai-hint={itemImage.imageHint}
-                                            width="64"
-                                        />
-                                      ) : (
-                                        <div className="aspect-square rounded-md bg-muted flex items-center justify-center h-16 w-16">
-                                          <span className="text-xs text-muted-foreground">No Image</span>
-                                        </div>
-                                      )}
-                                    </TableCell>
-                                    <TableCell className="font-medium">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span><Highlight text={itemName} highlight={searchTerm} /></span>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem 
-                                                            onClick={() => handleEditItem(item)}
-                                                            className="focus:bg-blue-500 focus:text-white"
-                                                        >
-                                                            <Pencil className="mr-2 h-4 w-4" />
-                                                            <span>Edit Item</span>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleLaunchItem(item.sku)}>
-                                                            <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                            <span>{item.launched ? "Un-launch Item" : "Launch Item"}</span>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveItem(item.sku)}>
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            <span>Remove Item</span>
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                            <div className={cn(
-                                                "text-xs mt-1 flex items-center gap-1",
-                                                item.launched ? "text-green-600" : "text-muted-foreground"
-                                            )}>
-                                                {item.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                                <span>{item.launched ? "Launched" : "Yet to launch"}</span>
-                                            </div>
-                                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
-                                                {editingStockSku === item.sku ? (
-                                                    <Input
-                                                        type="number"
-                                                        value={stockValue}
-                                                        onChange={(e) => setStockValue(e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
-                                                        onBlur={() => handleStockUpdate(item.sku)}
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(item.sku)}
-                                                        autoFocus
-                                                        className="h-6 w-20"
-                                                    />
-                                                ) : (
-                                                    <button onClick={() => handleStockEdit(item.sku, item.stock)} className="flex items-center gap-1 hover:text-primary">
-                                                        <span>Stock: <Highlight text={item.stock.toString()} highlight={searchTerm} /></span>
-                                                        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">${Number(itemPrice).toLocaleString()}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant={getStatusBadgeVariant(item.status)}>
-                                            {item.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell"><Highlight text={item.sku} highlight={searchTerm} /></TableCell>
-                                </TableRow>
-                            )}) : (
+                    <div className="relative w-full overflow-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        No items found. Start by adding a new item.
-                                    </TableCell>
+                                    <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead className="text-right">Price</TableHead>
+                                    <TableHead className="text-center">Status</TableHead>
+                                    <TableHead>SKU</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {displayedItems.length > 0 ? displayedItems.map((item) => {
+                                    const itemName = item.productName || item.name;
+                                    const itemPrice = item.productPrice || item.price;
+                                    const itemImage = item.image || imageMap[item.name];
+                                    return (
+                                    <TableRow key={item.sku}>
+                                        <TableCell className="hidden sm:table-cell">
+                                        {itemImage ? (
+                                            <Image
+                                                alt={itemName}
+                                                className="aspect-square rounded-md object-cover"
+                                                height="64"
+                                                src={itemImage.imageUrl}
+                                                data-ai-hint={itemImage.imageHint}
+                                                width="64"
+                                            />
+                                        ) : (
+                                            <div className="aspect-square rounded-md bg-muted flex items-center justify-center h-16 w-16">
+                                            <span className="text-xs text-muted-foreground">No Image</span>
+                                            </div>
+                                        )}
+                                        </TableCell>
+                                        <TableCell className="font-medium">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span><Highlight text={itemName} highlight={searchTerm} /></span>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleEditItem(item)}
+                                                                className="focus:bg-blue-500 focus:text-white"
+                                                            >
+                                                                <Pencil className="mr-2 h-4 w-4" />
+                                                                <span>Edit Item</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleLaunchItem(item.sku)}>
+                                                                <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                                <span>{item.launched ? "Un-launch Item" : "Launch Item"}</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveItem(item.sku)}>
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Remove Item</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                                <div className={cn(
+                                                    "text-xs mt-1 flex items-center gap-1",
+                                                    item.launched ? "text-green-600" : "text-muted-foreground"
+                                                )}>
+                                                    {item.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                                    <span>{item.launched ? "Launched" : "Yet to launch"}</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
+                                                    {editingStockSku === item.sku ? (
+                                                        <Input
+                                                            type="number"
+                                                            value={stockValue}
+                                                            onChange={(e) => setStockValue(e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
+                                                            onBlur={() => handleStockUpdate(item.sku)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(item.sku)}
+                                                            autoFocus
+                                                            className="h-6 w-20"
+                                                        />
+                                                    ) : (
+                                                        <button onClick={() => handleStockEdit(item.sku, item.stock)} className="flex items-center gap-1 hover:text-primary">
+                                                            <span>Stock: <Highlight text={item.stock.toString()} highlight={searchTerm} /></span>
+                                                            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">${Number(itemPrice).toLocaleString()}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={getStatusBadgeVariant(item.status)}>
+                                                {item.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell"><Highlight text={item.sku} highlight={searchTerm} /></TableCell>
+                                    </TableRow>
+                                )}) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            No items found. Start by adding a new item.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
     );
 }
+
+    
 
     

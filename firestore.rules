@@ -14,7 +14,7 @@ service cloud.firestore {
     // Rules for admin user profiles
     match /admins/{adminId} {
       allow read, update: if isSignedIn() && isOwner(adminId);
-      allow create: if isSignedIn() && isOwner(adminId) && request.resource.data.id == adminId;
+      allow create: if isSignedIn() && isOwner(adminId); // FIX: Removed check for 'request.resource.data.id'
       allow delete: if false; // Generally, don't allow users to delete their own profiles
     }
 

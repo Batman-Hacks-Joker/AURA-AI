@@ -188,6 +188,22 @@ export function ProductCreationChat() {
         const finalBenefits = (detailsToSave.productBenefits || []).filter((b: string) => b && b.trim() !== '');
 
         const productId = editingProductId || doc(collection(firestore, `users/${user.uid}/products_inventory`)).id;
+        
+        // Prepare the image data, replacing base64 with a placeholder if needed.
+        let imageToSave = null;
+        if (productImage) {
+            const imageUrl = productImage.url.startsWith('data:image') 
+                ? `https://picsum.photos/seed/${productId}/600/400`
+                : productImage.url;
+
+            imageToSave = {
+                id: `img-${Date.now()}`,
+                description: `Image for ${detailsToSave.productName}`,
+                imageUrl: imageUrl,
+                imageHint: productImage.hint,
+            };
+        }
+
 
         const productToSave = {
             id: productId,
@@ -206,12 +222,7 @@ export function ProductCreationChat() {
             productFeatures: finalFeatures,
             productBenefits: finalBenefits,
             stock: detailsToSave.stock,
-            image: productImage ? {
-                id: `img-${Date.now()}`,
-                description: `Image for ${detailsToSave.productName}`,
-                imageUrl: productImage.url,
-                imageHint: productImage.hint,
-            } : null,
+            image: imageToSave,
         };
 
         const docRef = doc(firestore, `users/${user.uid}/products_inventory`, productId);
@@ -450,7 +461,6 @@ export function ProductCreationChat() {
                         </CardContent>
                     )}
                 </Card>
-
                 {isLoading ? (
                     <Card>
                         <CardHeader>
@@ -494,7 +504,6 @@ export function ProductCreationChat() {
                     </Card>
                 )}
             </div>
-
             <div className="space-y-8">
                 {generatedDetails && !isLoading && (
                     <Card>
@@ -532,7 +541,6 @@ export function ProductCreationChat() {
                         </CardContent>
                     </Card>
                 )}
-
                 {generatedDetails && !isLoading && (
                     <div className="flex justify-end">
                         <Button size="lg" onClick={handleSave} className="bg-accent hover:bg-accent/90">
@@ -544,7 +552,5 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    
 
     

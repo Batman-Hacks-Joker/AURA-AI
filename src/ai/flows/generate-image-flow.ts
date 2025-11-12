@@ -28,7 +28,7 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     const { media } = await ai.generate({
-        model: 'googleai/gemini-pro-vision',
+        model: 'googleai/imagen-4.0-fast-generate-001',
         prompt: input.prompt,
         config: {
           safetySettings: [
@@ -40,11 +40,10 @@ const generateImageFlow = ai.defineFlow(
         }
     });
     
-    const imageUrl = media.url;
-    if (!imageUrl) {
+    if (!media.url) {
       throw new Error('Image generation failed to return a data URI.');
     }
 
-    return { imageUrl };
+    return { imageUrl: media.url };
   }
 );

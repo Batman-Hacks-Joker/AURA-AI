@@ -35,25 +35,6 @@ type ServiceTicket = {
     requestedDate: string;
 };
 
-const defaultProducts: Product[] = [
-  {
-    id: "product-1",
-    sku: "spk-x1-2024",
-    name: "Smart Speaker X1",
-    description: "Your AI-powered home assistant.",
-    purchaseDate: "Purchased on Jan 15, 2024",
-    image: PlaceHolderImages.find(p => p.id === 'product-1')
-  },
-  {
-    id: "product-2",
-    sku: "hdph-w-2024",
-    name: "Wireless Headphones",
-    description: "Immersive sound, all day long.",
-    purchaseDate: "Purchased on Mar 22, 2024",
-    image: PlaceHolderImages.find(p => p.id === 'product-2')
-  },
-];
-
 export default function CustomerDashboardPage() {
   const [purchasedProducts, setPurchasedProducts] = useState<Product[]>([]);
   const [serviceTickets, setServiceTickets] = useState<ServiceTicket[]>([]);
@@ -68,9 +49,7 @@ export default function CustomerDashboardPage() {
         if (storedProductsRaw) {
             setPurchasedProducts(JSON.parse(storedProductsRaw));
         } else {
-            // Only set default products if there's nothing in storage
-            setPurchasedProducts(defaultProducts);
-            localStorage.setItem('purchasedProducts', JSON.stringify(defaultProducts));
+            setPurchasedProducts([]);
         }
         
         const storedTickets: ServiceTicket[] = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];

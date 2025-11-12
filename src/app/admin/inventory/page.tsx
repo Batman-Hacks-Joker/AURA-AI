@@ -513,7 +513,9 @@ export default function InventoryPage() {
                                         <TableCell className="font-medium">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <span><Highlight text={itemName} highlight={searchTerm} /></span>
+                                                    <Link href={`/marketplace/${item.sku}`} className="hover:underline">
+                                                        <Highlight text={itemName} highlight={searchTerm} />
+                                                    </Link>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -592,6 +594,8 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    
 
     
 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,25 +52,33 @@ export default function AdminDashboardPage() {
   }, [user, firestore]);
 
   useEffect(() => {
-    if (userProfile) {
-        const name = userProfile.companyName || userProfile.displayName;
-        setCompanyName(name);
-        setInputValue(name);
+    if (userProfile && (userProfile.companyName || userProfile.displayName)) {
+      const name = userProfile.companyName || userProfile.displayName;
+      setCompanyName(name);
+      setInputValue(name);
     }
   }, [userProfile]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (inputValue.trim() && adminDocRef) {
       const newName = inputValue.trim();
-      setDocumentNonBlocking(adminDocRef, { companyName: newName }, { merge: true });
-      
-      setCompanyName(newName);
-      setIsEditing(false);
-      
-      toast({
-        title: "Company Name Saved!",
-        description: `Your company name has been set to "${newName}".`,
-      });
+      try {
+        await setDocumentNonBlocking(adminDocRef, { companyName: newName }, { merge: true });
+        setCompanyName(newName);
+        setIsEditing(false);
+        
+        toast({
+          title: "Company Name Saved!",
+          description: `Your company name has been set to "${newName}".`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error Saving Company Name",
+          description: "There was an issue saving the company name. Please try again.",
+        });
+        console.error("Error updating company name:", error);
+      }
     } else {
       toast({
         variant: "destructive",
@@ -82,11 +89,22 @@ export default function AdminDashboardPage() {
   };
   
   const handleEdit = () => {
-    setInputValue(companyName);
+    setInputValue(companyName.trim());  // Trim any extra spaces
     setIsEditing(true);
   }
 
-  const displayName = userProfile ? userProfile.displayName.split(' ')[0] : 'Admin';
+  const displayName = userProfile && userProfile.displayName ? userProfile.displayName.split(' ')[0] : 'Admin';
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();  // Prevent form submission if part of a form
+      handleSave();
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
 
   return (
     <div className="space-y-6">
@@ -102,8 +120,8 @@ export default function AdminDashboardPage() {
                 <Input 
                   placeholder="Your company name"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-48 h-9"
                 />
                 <Button size="icon" className="h-9 w-9" onClick={handleSave}>
@@ -112,7 +130,9 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <CardTitle className="text-2xl">{companyName || 'Your company name'}</CardTitle>
+                <CardTitle className="text-2xl">
+                  {companyName || 'Set your company name'}
+                </CardTitle>
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleEdit}>
                   <Pencil className="h-4 w-4" />
                 </Button>

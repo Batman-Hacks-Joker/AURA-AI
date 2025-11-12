@@ -140,12 +140,12 @@ export function ProductCreationChat() {
         setIsEditing(false);
         
         try {
-            const details = await getProductCreationResponse(input, "");
-            if ('error' in details) {
+            const result = await getProductCreationResponse(input, "");
+            if ('error' in result) {
                 toast({
                     variant: 'destructive',
                     title: 'Error Generating Details',
-                    description: details.error,
+                    description: result.error,
                 });
                 setGeneratedDetails(null);
                 setEditableDetails(null);
@@ -153,7 +153,7 @@ export function ProductCreationChat() {
             }
 
             const detailsWithStock = {
-                ...details,
+                ...result,
                 stock: Math.floor(Math.random() * 100)
             }
             setGeneratedDetails(detailsWithStock);
@@ -312,6 +312,14 @@ export function ProductCreationChat() {
         }
     };
 
+    const handleMicClick = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+        } else {
+            recognitionRef.current?.start();
+        }
+    };
+
     const renderEditableFields = () => {
         if (!editableDetails) return null;
         
@@ -417,9 +425,10 @@ export function ProductCreationChat() {
                                 <BrainCircuit className="text-primary" />
                                 {isEditMode ? 'Update Item' : 'AURA AI Input'}
                             </CardTitle>
-                            {(generatedDetails || input) && !isEditMode && (
-                                <Button variant="ghost" size="icon" onClick={handleClear}>
-                                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            {isEditMode && (
+                                <Button variant="destructive" size="sm" onClick={handleClear}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remove Item
                                 </Button>
                             )}
                         </div>
@@ -519,12 +528,6 @@ export function ProductCreationChat() {
                                     <CardDescription>Review and edit the AI-generated details below.</CardDescription>
                                 </div>
                                 <div className="flex gap-2">
-                                    {isEditMode && (
-                                        <Button variant="destructive" size="sm" onClick={handleClear}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Remove Item
-                                        </Button>
-                                    )}
                                     <Button 
                                         size="sm" 
                                         onClick={handleEditToggle}

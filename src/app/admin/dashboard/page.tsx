@@ -2,11 +2,12 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Wrench, Package, Building, Pencil, Save } from "lucide-react";
+import { DollarSign, Users, Wrench, Package, Building, Pencil, Save, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/firebase/auth/use-auth";
 
 const stats = [
   {
@@ -36,6 +37,7 @@ const stats = [
 ];
 
 export default function AdminDashboardPage() {
+  const { userProfile } = useAuth();
   const [companyName, setCompanyName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -46,19 +48,22 @@ export default function AdminDashboardPage() {
     if (storedName) {
       setCompanyName(storedName);
       setInputValue(storedName);
-    } else {
-      setIsEditing(true);
+    } else if (userProfile) {
+      // Default to user's display name if no company name is set
+      setCompanyName(userProfile.displayName);
+      setInputValue(userProfile.displayName);
     }
-  }, []);
+  }, [userProfile]);
 
   const handleSave = () => {
     if (inputValue.trim()) {
-      localStorage.setItem('companyName', inputValue.trim());
-      setCompanyName(inputValue.trim());
+      const newName = inputValue.trim();
+      localStorage.setItem('companyName', newName);
+      setCompanyName(newName);
       setIsEditing(false);
       toast({
         title: "Company Name Saved!",
-        description: `Your company name has been set to "${inputValue.trim()}".`,
+        description: `Your company name has been set to "${newName}".`,
       });
     } else {
       toast({
@@ -68,44 +73,44 @@ export default function AdminDashboardPage() {
       });
     }
   };
+  
+  const handleEdit = () => {
+    setInputValue(companyName);
+    setIsEditing(true);
+  }
+
+  const displayName = userProfile ? userProfile.displayName.split(' ')[0] : 'Admin';
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back, Admin!</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome, {displayName}!</h1>
           <p className="text-muted-foreground">Here's a snapshot of your business today.</p>
         </div>
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Building className="h-5 w-5 text-primary" />
-              Company Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="flex items-center gap-2">
             {isEditing ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Input 
-                  placeholder="Enter your company name"
+                  placeholder="Your company name"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                  className="w-48 h-9"
                 />
-                <Button size="icon" onClick={handleSave}>
-                  <Save className="h-4 w-4" />
+                <Button size="icon" className="h-9 w-9" onClick={handleSave}>
+                  <Check className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-lg">{companyName}</p>
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-lg">{companyName || 'Your company name'}</p>
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleEdit}>
                   <Pencil className="h-4 w-4" />
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

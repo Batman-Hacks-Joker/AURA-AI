@@ -28,10 +28,11 @@ import { UserMenu } from "./user-menu";
 import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/firebase/auth/use-auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function AdminSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const isCollapsed = state === 'collapsed';
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -45,6 +46,11 @@ function AdminSidebarInner() {
   };
   
   const displayName = userProfile ? userProfile.displayName.split(' ')[0] : 'Admin';
+  
+  const getInitials = (name: string) => {
+    if (!name) return 'A';
+    return name.split(' ').map(n => n[0]).join('');
+  };
 
   return (
     <Sidebar collapsible="icon" onClick={handleClick}>
@@ -58,10 +64,19 @@ function AdminSidebarInner() {
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="group/menu-item relative flex items-center gap-2">
-                <UserMenu />
-                <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-                  Hi, {displayName}!
-                </span>
+                {isCollapsed ? (
+                    <UserMenu />
+                ) : userProfile && (
+                    <>
+                        <Avatar className="h-10 w-10">
+                          {user?.photoURL && <AvatarImage src={user.photoURL} alt={userProfile.displayName} />}
+                          <AvatarFallback>{getInitials(userProfile.displayName)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+                          Hi, {displayName}!
+                        </span>
+                    </>
+                )}
             </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -104,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <>
         <AdminSidebarInner />
-        <SidebarInset className="flex flex-col h-screen">
+        <SidebarInset className="flex flex-col max-h-screen">
           {!isDashboard && (
             <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4 shrink-0">
                 <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">

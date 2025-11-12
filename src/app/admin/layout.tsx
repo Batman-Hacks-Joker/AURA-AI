@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </Link>
                   <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                       <PackagePlus className="h-5 w-5" />
-                      <span className="hidden md:inline">Product Creation</span>
+                      <span className="hidden md:inline">Item Creation</span>
                   </Link>
                   <Link href="/admin/inventory" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                       <Warehouse className="h-5 w-5" />

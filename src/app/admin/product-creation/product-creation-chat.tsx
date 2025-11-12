@@ -181,7 +181,7 @@ export function ProductCreationChat() {
             toast({
                 variant: 'destructive',
                 title: 'No Details to Save',
-                description: "Please generate product details before saving.",
+                description: "Please generate item details before saving.",
             });
             return;
         }
@@ -218,20 +218,20 @@ export function ProductCreationChat() {
                 productToSave.launched = existingProducts[productIndex].launched;
                 existingProducts[productIndex] = productToSave;
                 toast({
-                    title: 'Product Updated!',
+                    title: 'Item Updated!',
                     description: `"${productToSave.name}" has been updated in your inventory.`,
                 });
             } else {
                  existingProducts.push(productToSave);
                  toast({
-                    title: 'Product Saved!',
+                    title: 'Item Saved!',
                     description: `"${productToSave.name}" has been added to your inventory.`,
                 });
             }
         } else {
             existingProducts.push(productToSave);
             toast({
-                title: 'Product Saved!',
+                title: 'Item Saved!',
                 description: `"${productToSave.name}" has been added to your inventory.`,
             });
         }
@@ -323,7 +323,7 @@ export function ProductCreationChat() {
         return (
             <div className="space-y-4">
                 <div>
-                    <Label htmlFor="productName" className="font-bold text-md">Product Name</Label>
+                    <Label htmlFor="productName" className="font-bold text-md">Item Name</Label>
                     <Input id="productName" value={editableDetails.productName} onChange={(e) => handleDetailChange('productName', e.target.value)} />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
@@ -420,7 +420,7 @@ export function ProductCreationChat() {
                         <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-2">
                                 <BrainCircuit className="text-primary" />
-                                {isEditMode ? 'Update Product' : 'AURA AI Input'}
+                                {isEditMode ? 'Update Item' : 'AURA AI Input'}
                             </CardTitle>
                             {(generatedDetails || input) && (
                                 <Button variant="ghost" size="icon" onClick={handleClear}>
@@ -430,8 +430,8 @@ export function ProductCreationChat() {
                         </div>
                         <CardDescription>
                             {isEditMode 
-                                ? "Modify the product details below or generate new ones."
-                                : "Describe your product, and AURA will create a listing. You can use your voice, type, or upload a document."
+                                ? "Modify the item details below or generate new ones."
+                                : "Describe your item, and AURA will create a listing. You can use your voice, type, or upload a document."
                             }
                         </CardDescription>
                     </CardHeader>
@@ -462,7 +462,7 @@ export function ProductCreationChat() {
                 {generatedDetails && !isLoading && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Product Image</CardTitle>
+                            <CardTitle>Item Image</CardTitle>
                             <CardDescription>Upload a custom image or generate one with AI.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -542,7 +542,7 @@ export function ProductCreationChat() {
                 {generatedDetails && !isLoading && (
                     <div className="flex justify-end">
                         <Button size="lg" onClick={handleSave} className="bg-accent hover:bg-accent/90">
-                           <Save className="mr-2" /> {isEditMode ? 'Update Product' : 'Add to Inventory'}
+                           <Save className="mr-2" /> {isEditMode ? 'Update Item' : 'Add to Inventory'}
                         </Button>
                     </div>
                 )}

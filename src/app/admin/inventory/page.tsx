@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +26,9 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/firebase/auth/use-auth";
 
-type Product = {
+type Item = {
     name: string;
     sku: string;
     category: string;
@@ -54,13 +54,13 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
-const defaultProducts: Product[] = [];
+const defaultItems: Item[] = [];
 
-const getUniqueProducts = (products: Product[]): Product[] => {
+const getUniqueItems = (items: Item[]): Item[] => {
     const seen = new Set<string>();
-    return products.filter(product => {
-        const duplicate = seen.has(product.sku);
-        seen.add(product.sku);
+    return items.filter(item => {
+        const duplicate = seen.has(item.sku);
+        seen.add(item.sku);
         return !duplicate;
     });
 };
@@ -76,10 +76,10 @@ const ConfettiPiece = ({ id }: { id: number }) => {
     return <div key={id} className="absolute w-2 h-4 animate-fall" style={style}></div>;
 };
 
-const LaunchAnimation = ({ product, onDismiss }: { product: Product, onDismiss: () => void }) => {
-    if (!product) return null;
-    const productName = product.productName || product.name;
-    const productImage = product.image || imageMap[productName];
+const LaunchAnimation = ({ item, onDismiss }: { item: Item, onDismiss: () => void }) => {
+    if (!item) return null;
+    const itemName = item.productName || item.name;
+    const itemImage = item.image || imageMap[itemName];
 
     return (
         <div 
@@ -112,17 +112,17 @@ const LaunchAnimation = ({ product, onDismiss }: { product: Product, onDismiss: 
                 className="text-center p-8 bg-background/80 rounded-2xl shadow-2xl animate-zoom-in-pop"
                 onClick={(e) => e.stopPropagation()} // Prevents click from closing the modal
             >
-                {productImage && (
+                {itemImage && (
                     <Image
-                        src={productImage.imageUrl}
-                        alt={productName}
+                        src={itemImage.imageUrl}
+                        alt={itemName}
                         width={400}
                         height={400}
-                        data-ai-hint={productImage.imageHint}
+                        data-ai-hint={itemImage.imageHint}
                         className="rounded-lg aspect-square object-cover mx-auto mb-4"
                     />
                 )}
-                <h2 className="text-3xl font-bold">{productName}</h2>
+                <h2 className="text-3xl font-bold">{itemName}</h2>
                 <p className="text-lg text-muted-foreground mt-2 flex items-center justify-center gap-2">
                     <PartyPopper className="text-yellow-500" />
                     Launched Successfully!
@@ -144,11 +144,13 @@ const imageMap: { [key: string]: any } = {
 
 
 export default function InventoryPage() {
-    const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+    const { userProfile } = useAuth();
+    const [companyName, setCompanyName] = useState('');
+    const [allItems, setAllItems] = useState<Item[]>([]);
+    const [displayedItems, setDisplayedItems] = useState<Item[]>([]);
     const { toast, dismiss } = useToast();
     const router = useRouter();
-    const lastRemovedProduct = useRef<{ product: Product, index: number } | null>(null);
+    const lastRemovedItem = useRef<{ item: Item, index: number } | null>(null);
     const [editingStockSku, setEditingStockSku] = useState<string | null>(null);
     const [stockValue, setStockValue] = useState(0);
 
@@ -158,10 +160,20 @@ export default function InventoryPage() {
     const [showLaunchedFirst, setShowLaunchedFirst] = useState(false);
     
     // Launch Animation State
-    const [launchingProduct, setLaunchingProduct] = useState<Product | null>(null);
+    const [launchingItem, setLaunchingItem] = useState<Item | null>(null);
 
-    const processProducts = (products: Product[]): Product[] => {
-        return getUniqueProducts(products).map(p => {
+    useEffect(() => {
+        const storedName = localStorage.getItem('companyName');
+        if (storedName) {
+          setCompanyName(storedName);
+        } else if (userProfile) {
+          const defaultName = userProfile.displayName;
+          setCompanyName(defaultName);
+        }
+      }, [userProfile]);
+
+    const processItems = (items: Item[]): Item[] => {
+        return getUniqueItems(items).map(p => {
             let status: string;
             if (p.stock === 0) {
                 status = "Out of Stock";
@@ -174,32 +186,32 @@ export default function InventoryPage() {
         });
     }
 
-    const loadProducts = () => {
-        const storedProductsRaw = localStorage.getItem('products');
-        let productsToLoad: Product[];
-        if (storedProductsRaw) {
-            const storedProducts: Product[] = JSON.parse(storedProductsRaw);
-            productsToLoad = processProducts(storedProducts);
-            if (productsToLoad.length !== storedProducts.length) {
-                localStorage.setItem('products', JSON.stringify(productsToLoad));
+    const loadItems = () => {
+        const storedItemsRaw = localStorage.getItem('products');
+        let itemsToLoad: Item[];
+        if (storedItemsRaw) {
+            const storedItems: Item[] = JSON.parse(storedItemsRaw);
+            itemsToLoad = processItems(storedItems);
+            if (itemsToLoad.length !== storedItems.length) {
+                localStorage.setItem('products', JSON.stringify(itemsToLoad));
             }
         } else {
-            productsToLoad = processProducts(defaultProducts);
-            localStorage.setItem('products', JSON.stringify(productsToLoad));
+            itemsToLoad = processItems(defaultItems);
+            localStorage.setItem('products', JSON.stringify(itemsToLoad));
         }
-        setAllProducts(productsToLoad);
-        setDisplayedProducts(productsToLoad);
+        setAllItems(itemsToLoad);
+        setDisplayedItems(itemsToLoad);
     };
     
     useEffect(() => {
-        loadProducts();
-        window.addEventListener('storage', loadProducts);
-        return () => window.removeEventListener('storage', loadProducts);
+        loadItems();
+        window.addEventListener('storage', loadItems);
+        return () => window.removeEventListener('storage', loadItems);
     }, []);
 
     // Effect for Search and Filtering
     useEffect(() => {
-        let filtered = [...allProducts];
+        let filtered = [...allItems];
 
         // Apply search
         if (searchTerm.length > 0) {
@@ -243,75 +255,75 @@ export default function InventoryPage() {
             });
         }
 
-        setDisplayedProducts(filtered);
-    }, [searchTerm, sortConfig, showLaunchedFirst, allProducts]);
+        setDisplayedItems(filtered);
+    }, [searchTerm, sortConfig, showLaunchedFirst, allItems]);
 
-    const updateLocalStorage = (updatedProducts: Product[]) => {
-        const processed = processProducts(updatedProducts);
-        setAllProducts(processed);
+    const updateLocalStorage = (updatedItems: Item[]) => {
+        const processed = processItems(updatedItems);
+        setAllItems(processed);
         localStorage.setItem('products', JSON.stringify(processed));
     };
 
-    const handleRemoveProduct = (sku: string) => {
-        const currentProducts: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
-        const productIndex = currentProducts.findIndex((p: Product) => p.sku === sku);
-        if (productIndex === -1) return;
+    const handleRemoveItem = (sku: string) => {
+        const currentItems: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
+        const itemIndex = currentItems.findIndex((p: Item) => p.sku === sku);
+        if (itemIndex === -1) return;
 
-        const productToRemove = currentProducts[productIndex];
-        lastRemovedProduct.current = { product: productToRemove, index: productIndex };
+        const itemToRemove = currentItems[itemIndex];
+        lastRemovedItem.current = { item: itemToRemove, index: itemIndex };
         
-        const updatedProducts = currentProducts.filter((p: Product) => p.sku !== sku);
-        updateLocalStorage(updatedProducts);
+        const updatedItems = currentItems.filter((p: Item) => p.sku !== sku);
+        updateLocalStorage(updatedItems);
 
         const { id } = toast({
-            title: "Product Removed",
-            description: `Product with SKU ${sku} has been removed.`,
+            title: "Item Removed",
+            description: `Item with SKU ${sku} has been removed.`,
             duration: 5000,
             onUndo: () => {
-                if (lastRemovedProduct.current) {
-                    const { product, index } = lastRemovedProduct.current;
-                    const productsFromStorage: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
-                    const restoredProducts = [
-                        ...productsFromStorage.slice(0, index),
-                        product,
-                        ...productsFromStorage.slice(index)
+                if (lastRemovedItem.current) {
+                    const { item, index } = lastRemovedItem.current;
+                    const itemsFromStorage: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
+                    const restoredItems = [
+                        ...itemsFromStorage.slice(0, index),
+                        item,
+                        ...itemsFromStorage.slice(index)
                     ];
-                    updateLocalStorage(restoredProducts);
-                    lastRemovedProduct.current = null;
+                    updateLocalStorage(restoredItems);
+                    lastRemovedItem.current = null;
                     dismiss(id);
                 }
             },
         });
     }
 
-    const handleLaunchProduct = (sku: string) => {
-        const currentProducts: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
-        const productIndex = currentProducts.findIndex(p => p.sku === sku);
-        if (productIndex === -1) return;
+    const handleLaunchItem = (sku: string) => {
+        const currentItems: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
+        const itemIndex = currentItems.findIndex(p => p.sku === sku);
+        if (itemIndex === -1) return;
 
-        const productToLaunch = currentProducts[productIndex];
+        const itemToLaunch = currentItems[itemIndex];
         
-        const updatedProducts = currentProducts.map(p => p.sku === sku ? { ...p, launched: !p.launched } : p);
-        updateLocalStorage(updatedProducts);
+        const updatedItems = currentItems.map(p => p.sku === sku ? { ...p, launched: !p.launched } : p);
+        updateLocalStorage(updatedItems);
         
-        const isNowLaunched = updatedProducts[productIndex].launched;
+        const isNowLaunched = updatedItems[itemIndex].launched;
         
         // Trigger animation only when launching
         if (isNowLaunched) {
-            setLaunchingProduct(productToLaunch);
+            setLaunchingItem(itemToLaunch);
             setTimeout(() => {
-                setLaunchingProduct(null);
+                setLaunchingItem(null);
             }, 5000); // Hide animation after 5 seconds
         }
 
         toast({
-            title: `Product ${isNowLaunched ? "Launched" : "Un-launched"}!`,
-            description: `${productToLaunch.name} has been ${isNowLaunched ? "launched" : "removed from the marketplace"}.`,
+            title: `Item ${isNowLaunched ? "Launched" : "Un-launched"}!`,
+            description: `${itemToLaunch.name} has been ${isNowLaunched ? "launched" : "removed from the marketplace"}.`,
         });
     }
 
-    const handleEditProduct = (product: Product) => {
-        localStorage.setItem('editingProduct', JSON.stringify(product));
+    const handleEditItem = (item: Item) => {
+        localStorage.setItem('editingProduct', JSON.stringify(item));
         router.push('/admin/product-creation');
     };
 
@@ -323,10 +335,10 @@ export default function InventoryPage() {
     const handleStockUpdate = (sku: string) => {
         if (!editingStockSku) return;
 
-        const updatedProducts = allProducts.map(p => 
+        const updatedItems = allItems.map(p => 
             p.sku === sku ? { ...p, stock: stockValue } : p
         );
-        updateLocalStorage(updatedProducts);
+        updateLocalStorage(updatedItems);
         setEditingStockSku(null);
         toast({
             title: "Stock Updated",
@@ -375,11 +387,11 @@ export default function InventoryPage() {
 
     return (
         <div className="space-y-6">
-            {launchingProduct && <LaunchAnimation product={launchingProduct} onDismiss={() => setLaunchingProduct(null)} />}
+            {launchingItem && <LaunchAnimation item={launchingItem} onDismiss={() => setLaunchingItem(null)} />}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
-                    <p className="text-muted-foreground">Manage products, parts, and stock levels for your warehouses.</p>
+                    <p className="text-muted-foreground">Manage items, parts, and stock levels for your warehouses.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -392,7 +404,7 @@ export default function InventoryPage() {
                         <Link href="/admin/product-creation">
                           <PlusCircle className="h-3.5 w-3.5" />
                           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                              Add Product
+                              Add Item
                           </span>
                         </Link>
                     </Button>
@@ -401,72 +413,72 @@ export default function InventoryPage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Products</CardTitle>
-                            <CardDescription>A list of all products in your main warehouse.</CardDescription>
+                         <div className="text-center flex-1">
+                            <CardTitle>{companyName} Inventory</CardTitle>
+                            <CardDescription>A list of all items in your main warehouse.</CardDescription>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    type="search"
-                                    placeholder="Search products..."
-                                    className="pl-10 sm:w-[300px] h-9"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-9 gap-1">
-                                        <SlidersHorizontal className="h-3.5 w-3.5" />
-                                        <span className="sr-only sm:not-sr-only">Filter</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Filter & Sort</DropdownMenuLabel>
+                    </div>
+                     <div className="flex items-center justify-end gap-2 pt-4">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search items..."
+                                className="pl-10 sm:w-[300px] h-9"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-9 gap-1">
+                                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                                    <span className="sr-only sm:not-sr-only">Filter</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Filter & Sort</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>Sort by Price</DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'asc' })}>
+                                                <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'desc' })}>
+                                                <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                            </DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>Sort by Stock</DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'asc' })}>
+                                                <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'desc' })}>
+                                                <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                            </DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setShowLaunchedFirst(!showLaunchedFirst)}>
+                                    {showLaunchedFirst ? '✓ Show Launched First' : 'Show Launched First'}
+                                </DropdownMenuItem>
+                                {(sortConfig || showLaunchedFirst) && (
+                                    <>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>Sort by Price</DropdownMenuSubTrigger>
-                                        <DropdownMenuPortal>
-                                            <DropdownMenuSubContent>
-                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'asc' })}>
-                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'desc' })}>
-                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
-                                                </DropdownMenuItem>
-                                            </DropdownMenuSubContent>
-                                        </DropdownMenuPortal>
-                                    </DropdownMenuSub>
-                                    <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>Sort by Stock</DropdownMenuSubTrigger>
-                                        <DropdownMenuPortal>
-                                            <DropdownMenuSubContent>
-                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'asc' })}>
-                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'desc' })}>
-                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
-                                                </DropdownMenuItem>
-                                            </DropdownMenuSubContent>
-                                        </DropdownMenuPortal>
-                                    </DropdownMenuSub>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => setShowLaunchedFirst(!showLaunchedFirst)}>
-                                        {showLaunchedFirst ? '✓ Show Launched First' : 'Show Launched First'}
+                                    <DropdownMenuItem onClick={resetFilters} className="text-destructive focus:text-destructive">
+                                        <X className="mr-2 h-4 w-4" /> Reset Filters
                                     </DropdownMenuItem>
-                                    {(sortConfig || showLaunchedFirst) && (
-                                        <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={resetFilters} className="text-destructive focus:text-destructive">
-                                            <X className="mr-2 h-4 w-4" /> Reset Filters
-                                        </DropdownMenuItem>
-                                        </>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -481,20 +493,20 @@ export default function InventoryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {displayedProducts.length > 0 ? displayedProducts.map((product) => {
-                                const productName = product.productName || product.name;
-                                const productPrice = product.productPrice || product.price;
-                                const productImage = product.image || imageMap[product.name];
+                            {displayedItems.length > 0 ? displayedItems.map((item) => {
+                                const itemName = item.productName || item.name;
+                                const itemPrice = item.productPrice || item.price;
+                                const itemImage = item.image || imageMap[item.name];
                                 return (
-                                <TableRow key={product.sku}>
+                                <TableRow key={item.sku}>
                                     <TableCell className="hidden sm:table-cell">
-                                      {productImage ? (
+                                      {itemImage ? (
                                         <Image
-                                            alt={productName}
+                                            alt={itemName}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
-                                            src={productImage.imageUrl}
-                                            data-ai-hint={productImage.imageHint}
+                                            src={itemImage.imageUrl}
+                                            data-ai-hint={itemImage.imageHint}
                                             width="64"
                                         />
                                       ) : (
@@ -506,7 +518,7 @@ export default function InventoryPage() {
                                     <TableCell className="font-medium">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span><Highlight text={productName} highlight={searchTerm} /></span>
+                                                <span><Highlight text={itemName} highlight={searchTerm} /></span>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -517,63 +529,63 @@ export default function InventoryPage() {
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem 
-                                                            onClick={() => handleEditProduct(product)}
+                                                            onClick={() => handleEditItem(item)}
                                                             className="focus:bg-blue-500 focus:text-white"
                                                         >
                                                             <Pencil className="mr-2 h-4 w-4" />
-                                                            <span>Edit Product</span>
+                                                            <span>Edit Item</span>
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleLaunchProduct(product.sku)}>
+                                                        <DropdownMenuItem onClick={() => handleLaunchItem(item.sku)}>
                                                             <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                            <span>{product.launched ? "Un-launch Product" : "Launch Product"}</span>
+                                                            <span>{item.launched ? "Un-launch Item" : "Launch Item"}</span>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveProduct(product.sku)}>
+                                                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveItem(item.sku)}>
                                                             <Trash2 className="mr-2 h-4 w-4" />
-                                                            <span>Remove Product</span>
+                                                            <span>Remove Item</span>
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </div>
                                             <div className={cn(
                                                 "text-xs mt-1 flex items-center gap-1",
-                                                product.launched ? "text-green-600" : "text-muted-foreground"
+                                                item.launched ? "text-green-600" : "text-muted-foreground"
                                             )}>
-                                                {product.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                                <span>{product.launched ? "Launched" : "Yet to launch"}</span>
+                                                {item.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                                <span>{item.launched ? "Launched" : "Yet to launch"}</span>
                                             </div>
                                             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
-                                                {editingStockSku === product.sku ? (
+                                                {editingStockSku === item.sku ? (
                                                     <Input
                                                         type="number"
                                                         value={stockValue}
                                                         onChange={(e) => setStockValue(e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
-                                                        onBlur={() => handleStockUpdate(product.sku)}
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(product.sku)}
+                                                        onBlur={() => handleStockUpdate(item.sku)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(item.sku)}
                                                         autoFocus
                                                         className="h-6 w-20"
                                                     />
                                                 ) : (
-                                                    <button onClick={() => handleStockEdit(product.sku, product.stock)} className="flex items-center gap-1 hover:text-primary">
-                                                        <span>Stock: <Highlight text={product.stock.toString()} highlight={searchTerm} /></span>
+                                                    <button onClick={() => handleStockEdit(item.sku, item.stock)} className="flex items-center gap-1 hover:text-primary">
+                                                        <span>Stock: <Highlight text={item.stock.toString()} highlight={searchTerm} /></span>
                                                         <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">${Number(productPrice).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">${Number(itemPrice).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant={getStatusBadgeVariant(product.status)}>
-                                            {product.status}
+                                        <Badge variant={getStatusBadgeVariant(item.status)}>
+                                            {item.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell"><Highlight text={product.sku} highlight={searchTerm} /></TableCell>
+                                    <TableCell className="hidden md:table-cell"><Highlight text={item.sku} highlight={searchTerm} /></TableCell>
                                 </TableRow>
                             )}) : (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center">
-                                        No products found. Start by adding a new product.
+                                        No items found. Start by adding a new item.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -584,12 +596,3 @@ export default function InventoryPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
-
-    
-    

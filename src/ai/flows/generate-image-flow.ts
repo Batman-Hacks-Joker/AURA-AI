@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating an image from a text prompt.
@@ -28,18 +29,19 @@ const generateImageFlow = ai.defineFlow(
   },
   async (input) => {
     const { media } = await ai.generate({
-        model: 'googleai/gemini-pro-vision',
-        prompt: `Generate an image based on this description: ${input.prompt}`,
-        config: {
-          safetySettings: [
-            {
-              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-              threshold: 'BLOCK_ONLY_HIGH',
-            }
-          ]
-        }
+      model: 'googleai/gemini-2.5-flash-image-preview',
+      prompt: input.prompt,
+      config: {
+        responseModalities: ['IMAGE', 'TEXT'],
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_ONLY_HIGH',
+          },
+        ],
+      },
     });
-    
+
     if (!media.url) {
       throw new Error('Image generation failed to return a data URI.');
     }

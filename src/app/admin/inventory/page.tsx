@@ -390,10 +390,72 @@ export default function InventoryPage() {
             {launchingItem && <LaunchAnimation item={launchingItem} onDismiss={() => setLaunchingItem(null)} />}
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                         <div className="text-center flex-1">
-                            <CardTitle>{companyName} Inventory</CardTitle>
-                            <CardDescription>A list of all items in your main warehouse.</CardDescription>
+                    <div className="text-center mb-4">
+                        <CardTitle>{companyName} Inventory</CardTitle>
+                        <CardDescription>A list of all items in your main warehouse.</CardDescription>
+                    </div>
+                     <div className="flex items-center justify-between gap-2 pt-4">
+                        <div className="flex items-center gap-2">
+                             <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search items..."
+                                    className="pl-10 sm:w-[300px] h-9"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-9 gap-1">
+                                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                                        <span className="sr-only sm:not-sr-only">Filter</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Filter & Sort</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>Sort by Price</DropdownMenuSubTrigger>
+                                        <DropdownMenuPortal>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'asc' })}>
+                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'desc' })}>
+                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                                </DropdownMenuItem>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>Sort by Stock</DropdownMenuSubTrigger>
+                                        <DropdownMenuPortal>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'asc' })}>
+                                                    <ArrowUp className="mr-2 h-4 w-4" /> Ascending
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'desc' })}>
+                                                    <ArrowDown className="mr-2 h-4 w-4" /> Descending
+                                                </DropdownMenuItem>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => setShowLaunchedFirst(!showLaunchedFirst)}>
+                                        {showLaunchedFirst ? '✓ Show Launched First' : 'Show Launched First'}
+                                    </DropdownMenuItem>
+                                    {(sortConfig || showLaunchedFirst) && (
+                                        <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={resetFilters} className="text-destructive focus:text-destructive">
+                                            <X className="mr-2 h-4 w-4" /> Reset Filters
+                                        </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -411,68 +473,6 @@ export default function InventoryPage() {
                                 </Link>
                             </Button>
                         </div>
-                    </div>
-                     <div className="flex items-center justify-end gap-2 pt-4">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search items..."
-                                className="pl-10 sm:w-[300px] h-9"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-9 gap-1">
-                                    <SlidersHorizontal className="h-3.5 w-3.5" />
-                                    <span className="sr-only sm:not-sr-only">Filter</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Filter & Sort</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>Sort by Price</DropdownMenuSubTrigger>
-                                    <DropdownMenuPortal>
-                                        <DropdownMenuSubContent>
-                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'asc' })}>
-                                                <ArrowUp className="mr-2 h-4 w-4" /> Ascending
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'price', direction: 'desc' })}>
-                                                <ArrowDown className="mr-2 h-4 w-4" /> Descending
-                                            </DropdownMenuItem>
-                                        </DropdownMenuSubContent>
-                                    </DropdownMenuPortal>
-                                </DropdownMenuSub>
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>Sort by Stock</DropdownMenuSubTrigger>
-                                    <DropdownMenuPortal>
-                                        <DropdownMenuSubContent>
-                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'asc' })}>
-                                                <ArrowUp className="mr-2 h-4 w-4" /> Ascending
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSortConfig({ key: 'stock', direction: 'desc' })}>
-                                                <ArrowDown className="mr-2 h-4 w-4" /> Descending
-                                            </DropdownMenuItem>
-                                        </DropdownMenuSubContent>
-                                    </DropdownMenuPortal>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setShowLaunchedFirst(!showLaunchedFirst)}>
-                                    {showLaunchedFirst ? '✓ Show Launched First' : 'Show Launched First'}
-                                </DropdownMenuItem>
-                                {(sortConfig || showLaunchedFirst) && (
-                                    <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={resetFilters} className="text-destructive focus:text-destructive">
-                                        <X className="mr-2 h-4 w-4" /> Reset Filters
-                                    </DropdownMenuItem>
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </CardHeader>
                 <CardContent>

@@ -14,14 +14,14 @@ service cloud.firestore {
     // Rules for admin user profiles
     match /admins/{adminId} {
       allow read, update: if isSignedIn() && isOwner(adminId);
-      allow create: if isSignedIn() && isOwner(adminId); // FIX: Removed check for 'request.resource.data.id'
+      allow create: if isSignedIn() && isOwner(adminId);
       allow delete: if false; // Generally, don't allow users to delete their own profiles
     }
 
     // Rules for customer user profiles (assuming a 'customers' collection)
     match /customers/{customerId} {
       allow read, update: if isSignedIn() && isOwner(customerId);
-      allow create: if isSignedIn() && isOwner(customerId) && request.resource.data.id == customerId;
+      allow create: if isSignedIn() && isOwner(customerId); // FIX: Removed check for 'request.resource.data.id'
       allow delete: if false;
     }
 

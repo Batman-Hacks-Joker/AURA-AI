@@ -26,7 +26,7 @@ interface CustomWindow extends Window {
 }
 declare const window: CustomWindow;
 
-type ProductDetails = ProductDetailsOutput & { stock: number };
+type ProductDetails = ProductDetailsOutput;
 
 export function ProductCreationChat() {
     const { user } = useAuth();
@@ -57,13 +57,13 @@ export function ProductCreationChat() {
             setIsEditMode(true);
             setEditingProduct(product);
 
-            const details = {
+            const details: ProductDetails = {
                 productName: product.productName || product.name,
                 productPrice: product.productPrice || Number(product.price),
                 productCategory: product.productCategory || product.category,
                 productFeatures: product.productFeatures || [],
                 productBenefits: product.productBenefits || [],
-                stock: product.stock,
+                productStock: product.stock ?? product.stockAmount,
             };
 
             setGeneratedDetails(details);
@@ -195,12 +195,8 @@ export function ProductCreationChat() {
                 return;
             }
 
-            const detailsWithStock = {
-                ...result,
-                stock: Math.floor(Math.random() * 100)
-            }
-            setGeneratedDetails(detailsWithStock);
-            setEditableDetails(detailsWithStock);
+            setGeneratedDetails(result);
+            setEditableDetails(result);
         } catch (error) {
             console.error(error);
             toast({
@@ -245,15 +241,16 @@ export function ProductCreationChat() {
             };
         }
 
+        const sku = isEditMode && editingProduct ? editingProduct.sku : `SKU-${productId.substring(0, 8).toUpperCase()}`;
 
         const productToSave = {
             ...(isEditMode && editingProduct ? editingProduct : {}), // Persist existing fields like isLaunched
-            id: productId,
+            id: sku, // Use SKU as the ID
             name: detailsToSave.productName,
-            sku: isEditMode && editingProduct ? editingProduct.sku : `SKU-${productId.substring(0, 8).toUpperCase()}`,
+            sku: sku,
             companyName: "Your Company",
             price: detailsToSave.productPrice,
-            stockAmount: detailsToSave.stock,
+            stockAmount: detailsToSave.productStock,
             itemDetails: finalBenefits.join('\n'),
             agentId: null,
             isLaunched: isEditMode && editingProduct ? editingProduct.isLaunched : false,
@@ -263,16 +260,16 @@ export function ProductCreationChat() {
             productCategory: detailsToSave.productCategory,
             productFeatures: finalFeatures,
             productBenefits: finalBenefits,
-            stock: detailsToSave.stock,
+            stock: detailsToSave.productStock,
             image: imageToSave,
         };
 
-        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, productId);
+        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, productToSave.id);
         setDocumentNonBlocking(docRef, productToSave, { merge: true });
         
         // If the item is already launched, update the public listing too
         if (productToSave.isLaunched) {
-            const launchedDocRef = doc(firestore, 'products_launched', productId);
+            const launchedDocRef = doc(firestore, 'products_launched', productToSave.id);
             setDocumentNonBlocking(launchedDocRef, productToSave, { merge: true });
         }
 
@@ -305,9 +302,9 @@ export function ProductCreationChat() {
                 newList[index] = value;
                 return { ...prev, [field]: newList };
             }
-            if (field === 'productPrice') {
-                const price = parseFloat(value);
-                return { ...prev, [field]: price < 0 ? 0 : value };
+            if (field === 'productPrice' || field === 'productStock') {
+                const numValue = parseFloat(value);
+                return { ...prev, [field]: numValue < 0 ? 0 : value };
             }
             return { ...prev, [field]: value };
         });
@@ -384,7 +381,7 @@ export function ProductCreationChat() {
                     </div>
                     <div>
                         <Label htmlFor="stock" className="font-bold text-md">Stock Units</Label>
-                        <Input id="stock" type="number" value={editableDetails.stock} onChange={(e) => handleDetailChange('stock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} />
+                        <Input id="stock" type="number" value={editableDetails.productStock} onChange={(e) => handleDetailChange('productStock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} />
                     </div>
                 </div>
                 <div>
@@ -444,7 +441,7 @@ export function ProductCreationChat() {
         return (
             <div className="space-y-4">
                 <p><strong className="text-muted-foreground font-bold text-md">Price:</strong> ${generatedDetails.productPrice}</p>
-                <p><strong className="text-muted-foreground font-bold text-md">Stock:</strong> {generatedDetails.stock} units</p>
+                <p><strong className="text-muted-foreground font-bold text-md">Stock:</strong> {generatedDetails.productStock} units</p>
                 <div>
                     <h4 className="font-bold text-md">Key Features</h4>
                     <ul className="list-disc list-inside text-muted-foreground">
@@ -601,5 +598,3 @@ export function ProductCreationChat() {
         </div>
     );
 }
-
-    

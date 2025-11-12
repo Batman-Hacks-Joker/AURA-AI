@@ -22,7 +22,8 @@ const ProductDetailsOutputSchema = z.object({
   productName: z.string().describe('A creative and marketable name for the product.'),
   productFeatures: z.array(z.string()).describe('A list of 3-5 key technical features or specifications.'),
   productBenefits: z.array(z.string()).describe('A list of 3-5 key benefits that explain how the features help the customer.'),
-  productPrice: z.number().describe('A suggested retail price, as a number.'),
+  productPrice: z.number().describe('A suggested retail price, as a number. If a price is mentioned in the user description, use that price.'),
+  productStock: z.number().describe('The number of units in stock. If a stock amount is mentioned in the user description, use that number.'),
   productCategory: z.string().describe('The most appropriate e-commerce category for the product (e.g., Electronics, Home Goods, Automotive).'),
 });
 export type ProductDetailsOutput = z.infer<typeof ProductDetailsOutputSchema>;
@@ -37,7 +38,9 @@ const productDetailPrompt = ai.definePrompt({
   output: {schema: ProductDetailsOutputSchema},
   prompt: `You are an expert product marketing and e-commerce launch specialist. Your task is to take a simple product description from a user and transform it into a compelling product listing.
 
-  Based on the following product description, generate a creative product name, 3-5 key features, 3-5 key customer benefits, a suitable price point, and an appropriate e-commerce category.
+  Based on the following product description, generate a creative product name, 3-5 key features, 3-5 key customer benefits, a suitable price point, the stock quantity, and an appropriate e-commerce category.
+
+  If the user mentions a price or stock amount in their description, you MUST use those values for the 'productPrice' and 'productStock' fields.
 
   User's Product Description: {{{productDescription}}}
 

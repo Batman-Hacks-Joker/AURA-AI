@@ -214,8 +214,14 @@ export default function InventoryPage() {
 
     const handleRemoveItem = (item: Item) => {
         if (!user || !firestore) return;
-        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, item.id);
-        deleteDocumentNonBlocking(docRef);
+
+        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, item.id);
+        deleteDocumentNonBlocking(inventoryDocRef);
+
+        if (item.isLaunched) {
+            const launchedDocRef = doc(firestore, 'products_launched', item.id);
+            deleteDocumentNonBlocking(launchedDocRef);
+        }
 
         toast({
             title: "Item Removed",
@@ -223,66 +229,40 @@ export default function InventoryPage() {
         });
     }
 
-    const handleLaunchItem = (itemToLaunch: Item) => {
+
+    const handleLaunchToggle = (itemToToggle: Item) => {
         if (!user || !firestore) return;
 
-        const isLaunching = !itemToLaunch.isLaunched;
+        const isLaunching = !itemToToggle.isLaunched;
         const batch = writeBatch(firestore);
 
-        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, itemToLaunch.id);
-        const launchedDocRef = doc(firestore, `products_launched`, itemToLaunch.id);
+        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, itemToToggle.id);
+        const launchedDocRef = doc(firestore, 'products_launched', itemToToggle.id);
+
+        batch.update(inventoryDocRef, { isLaunched: isLaunching });
 
         if (isLaunching) {
-            // Move from inventory to launched
-            const launchedProductData = { ...itemToLaunch, isLaunched: true };
+            const launchedProductData = { ...itemToToggle, isLaunched: true, launched: true };
             batch.set(launchedDocRef, launchedProductData);
-            batch.delete(inventoryDocRef);
             
-            setLaunchingItem(itemToLaunch);
+            setLaunchingItem(itemToToggle);
             setTimeout(() => setLaunchingItem(null), 5000);
         } else {
-            // Move from launched to inventory
-            const inventoryProductData = { ...itemToLaunch, isLaunched: false };
-            batch.set(inventoryDocRef, inventoryProductData);
             batch.delete(launchedDocRef);
         }
 
         batch.commit().then(() => {
             toast({
                 title: `Item ${isLaunching ? "Launched" : "Un-launched"}!`,
-                description: `${itemToLaunch.name} has been ${isLaunching ? "launched to the marketplace" : "moved back to inventory"}.`,
+                description: `${itemToToggle.name} has been ${isLaunching ? "launched to the marketplace" : "removed from the marketplace"}.`,
             });
         }).catch(error => {
-            console.error("Error launching item: ", error);
+            console.error("Error toggling launch status: ", error);
             toast({
                 variant: "destructive",
-                title: "Launch Failed",
+                title: "Update Failed",
                 description: "There was an error updating the item status."
             });
-        });
-    };
-    
-    // This needs to be adapted for launched products as well
-    const handleUnlaunchItem = (itemToUnlaunch: Item) => {
-        if (!user || !firestore) return;
-        
-        const batch = writeBatch(firestore);
-        
-        const launchedDocRef = doc(firestore, 'products_launched', itemToUnlaunch.id);
-        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, itemToUnlaunch.id);
-
-        const inventoryProductData = { ...itemToUnlaunch, isLaunched: false, launched: false };
-        batch.set(inventoryDocRef, inventoryProductData);
-        batch.delete(launchedDocRef);
-        
-        batch.commit().then(() => {
-            toast({
-                title: "Item Un-launched!",
-                description: `${itemToUnlaunch.name} has been moved back to your inventory.`,
-            });
-        }).catch(error => {
-            console.error("Error unlaunching item: ", error);
-            toast({ variant: "destructive", title: "Un-launch Failed" });
         });
     };
 
@@ -497,7 +477,7 @@ export default function InventoryPage() {
                                                                 <Pencil className="mr-2 h-4 w-4" />
                                                                 <span>Edit Item</span>
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => item.isLaunched ? handleUnlaunchItem(item) : handleLaunchItem(item)}>
+                                                            <DropdownMenuItem onClick={() => handleLaunchToggle(item)}>
                                                                 <ArrowUpRight className="mr-2 h-4 w-4" />
                                                                 <span>{item.isLaunched ? "Un-launch Item" : "Launch Item"}</span>
                                                             </DropdownMenuItem>

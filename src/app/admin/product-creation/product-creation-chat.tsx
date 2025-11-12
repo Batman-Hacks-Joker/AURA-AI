@@ -16,8 +16,8 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProductDetailsOutput } from '@/ai/flows/product-detail-prompting';
-import { useAuth, useFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { useAuth, useFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, collection, setDoc } from 'firebase/firestore';
 
 
 interface CustomWindow extends Window {
@@ -36,7 +36,7 @@ export function ProductCreationChat() {
     const [isListening, setIsListening] = useState(false);
     const [generatedDetails, setGeneratedDetails] = useState<ProductDetails | null>(null);
     const recognitionRef = useRef<any | null>(null);
-    const { toast } = useToast();
+    const { toast, dismiss } = useToast();
     const router = useRouter();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -46,7 +46,8 @@ export function ProductCreationChat() {
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [editingProductId, setEditingProductId] = useState<string | null>(null);
+    const [editingProduct, setEditingProduct] = useState<any | null>(null);
+    const lastRemovedItem = useRef<{ item: any; inventoryRef: any, launchedRef: any, wasLaunched: boolean } | null>(null);
 
 
     useEffect(() => {
@@ -54,7 +55,7 @@ export function ProductCreationChat() {
         if (editingProductRaw) {
             const product = JSON.parse(editingProductRaw);
             setIsEditMode(true);
-            setEditingProductId(product.id);
+            setEditingProduct(product);
 
             const details = {
                 productName: product.productName || product.name,
@@ -112,6 +113,46 @@ export function ProductCreationChat() {
     }, []);
 
 
+    const handleDeleteItem = () => {
+        if (!isEditMode || !editingProduct || !user || !firestore) return;
+
+        const inventoryRef = doc(firestore, `users/${user.uid}/products_inventory`, editingProduct.id);
+        const launchedRef = doc(firestore, 'products_launched', editingProduct.id);
+        
+        // Stash item for undo
+        lastRemovedItem.current = { item: editingProduct, inventoryRef, launchedRef, wasLaunched: editingProduct.isLaunched };
+        
+        // Delete from Firestore
+        deleteDocumentNonBlocking(inventoryRef);
+        if (editingProduct.isLaunched) {
+            deleteDocumentNonBlocking(launchedRef);
+        }
+
+        const { id: toastId } = toast({
+            title: "Item Deleted",
+            description: `"${editingProduct.productName || editingProduct.name}" has been removed.`,
+            duration: 5000,
+            onUndo: () => {
+                if (lastRemovedItem.current) {
+                    const { item, inventoryRef, launchedRef, wasLaunched } = lastRemovedItem.current;
+                    setDocumentNonBlocking(inventoryRef, item, { merge: true });
+                    if (wasLaunched) {
+                        setDocumentNonBlocking(launchedRef, item, { merge: true });
+                    }
+                    toast({
+                        title: "Undo Successful",
+                        description: `"${item.productName || item.name}" has been restored.`,
+                    });
+                    lastRemovedItem.current = null;
+                    dismiss(toastId);
+                }
+            },
+        });
+        
+        // Redirect after deletion
+        router.push('/admin/inventory');
+    };
+
     const handleClear = () => {
         setInput('');
         setIsLoading(false);
@@ -120,7 +161,7 @@ export function ProductCreationChat() {
         setProductImage(null);
         setIsEditing(false);
         setIsEditMode(false);
-        setEditingProductId(null);
+        setEditingProduct(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -187,7 +228,7 @@ export function ProductCreationChat() {
         const finalFeatures = (detailsToSave.productFeatures || []).filter((f: string) => f && f.trim() !== '');
         const finalBenefits = (detailsToSave.productBenefits || []).filter((b: string) => b && b.trim() !== '');
 
-        const productId = editingProductId || doc(collection(firestore, `users/${user.uid}/products_inventory`)).id;
+        const productId = isEditMode && editingProduct ? editingProduct.id : doc(collection(firestore, `users/${user.uid}/products_inventory`)).id;
         
         // Prepare the image data, replacing base64 with a placeholder if needed.
         let imageToSave = null;
@@ -206,15 +247,16 @@ export function ProductCreationChat() {
 
 
         const productToSave = {
+            ...(isEditMode && editingProduct ? editingProduct : {}), // Persist existing fields like isLaunched
             id: productId,
             name: detailsToSave.productName,
             sku: `SKU-${productId.substring(0, 8).toUpperCase()}`,
-            companyName: "Your Company", // Placeholder
+            companyName: "Your Company",
             price: detailsToSave.productPrice,
             stockAmount: detailsToSave.stock,
             itemDetails: finalBenefits.join('\n'),
-            agentId: null, // Placeholder
-            isLaunched: false,
+            agentId: null,
+            isLaunched: isEditMode && editingProduct ? editingProduct.isLaunched : false,
             adminId: user.uid,
             productName: detailsToSave.productName,
             productPrice: detailsToSave.productPrice,
@@ -227,6 +269,13 @@ export function ProductCreationChat() {
 
         const docRef = doc(firestore, `users/${user.uid}/products_inventory`, productId);
         setDocumentNonBlocking(docRef, productToSave, { merge: true });
+        
+        // If the item is already launched, update the public listing too
+        if (productToSave.isLaunched) {
+            const launchedDocRef = doc(firestore, 'products_launched', productId);
+            setDocumentNonBlocking(launchedDocRef, productToSave, { merge: true });
+        }
+
 
         toast({
             title: isEditMode ? 'Item Updated!' : 'Item Saved!',
@@ -425,9 +474,9 @@ export function ProductCreationChat() {
                                 {isEditMode ? 'Update Item' : 'AURA AI Input'}
                             </CardTitle>
                             {isEditMode && (
-                                <Button variant="destructive" size="sm" onClick={handleClear}>
+                                <Button variant="destructive" size="sm" onClick={handleDeleteItem}>
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Start Over
+                                    Delete Item
                                 </Button>
                             )}
                         </div>
@@ -553,4 +602,3 @@ export function ProductCreationChat() {
     );
 }
 
-    

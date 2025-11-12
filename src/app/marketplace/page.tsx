@@ -10,13 +10,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 
 type Product = {
     id: string;
@@ -31,6 +31,7 @@ type Product = {
     status: string;
     launched?: boolean;
     isLaunched?: boolean;
+    adminId: string;
     image?: {
         id: string;
         description: string;
@@ -92,21 +93,48 @@ function CartButton({ product }: { product: Product }) {
     );
 }
 
-function AdminEditButton({ product }: { product: Product }) {
+function AdminButtons({ product }: { product: Product }) {
     const router = useRouter();
-
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    
     const handleEdit = (e: React.MouseEvent) => {
-        e.stopPropagation(); // prevent card click
+        e.stopPropagation();
         e.preventDefault();
         localStorage.setItem('editingProduct', JSON.stringify(product));
         router.push('/admin/product-creation');
     };
 
+    const handleUnlaunch = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!firestore) return;
+        
+        // Remove from launched products
+        const launchedDocRef = doc(firestore, 'products_launched', product.id);
+        deleteDocumentNonBlocking(launchedDocRef);
+
+        // Update the inventory item
+        const inventoryDocRef = doc(firestore, `users/${product.adminId}/products_inventory`, product.id);
+        setDocumentNonBlocking(inventoryDocRef, { isLaunched: false }, { merge: true });
+
+        toast({
+            title: "Product Un-launched",
+            description: `${product.productName || product.name} has been removed from the marketplace.`
+        });
+    };
+
     return (
-        <Button onClick={handleEdit} size="sm" variant="outline">
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-        </Button>
+        <div className="flex gap-2">
+            <Button onClick={handleEdit} size="sm" variant="outline">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+            </Button>
+            <Button onClick={handleUnlaunch} size="sm" variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+            </Button>
+        </div>
     );
 }
 
@@ -236,7 +264,7 @@ export default function MarketplacePage() {
                                     </CardHeader>
                                     <div className="p-4 flex flex-col flex-grow">
                                         <div className="flex justify-between items-start gap-2">
-                                            <CardTitle className="group-hover:text-primary transition-colors flex-grow">{productName}</CardTitle>
+                                            <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
                                             <button onClick={(e) => handleAgentIconClick(e, assignedAgent)} className="flex-shrink-0">
                                                 <Bot className={cn(
                                                     "h-5 w-5",
@@ -253,7 +281,7 @@ export default function MarketplacePage() {
                                         <CardFooter className="p-0 pt-4 flex-col items-start gap-2">
                                             <div className="w-full flex justify-between items-center">
                                                 <p className="font-semibold text-lg">${Number(productPrice).toLocaleString()}</p>
-                                                {role === 'admin' && <AdminEditButton product={product} />}
+                                                {role === 'admin' && <AdminButtons product={product} />}
                                             </div>
                                             {role !== 'admin' && (
                                                 isOwned ? (

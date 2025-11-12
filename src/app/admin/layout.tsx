@@ -118,7 +118,6 @@ function AdminSidebarInner() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname === '/admin/dashboard';
 
   return (
     <>

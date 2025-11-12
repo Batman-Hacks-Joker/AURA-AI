@@ -250,7 +250,7 @@ export function ProductCreationChat() {
             ...(isEditMode && editingProduct ? editingProduct : {}), // Persist existing fields like isLaunched
             id: productId,
             name: detailsToSave.productName,
-            sku: `SKU-${productId.substring(0, 8).toUpperCase()}`,
+            sku: isEditMode && editingProduct ? editingProduct.sku : `SKU-${productId.substring(0, 8).toUpperCase()}`,
             companyName: "Your Company",
             price: detailsToSave.productPrice,
             stockAmount: detailsToSave.stock,
@@ -602,3 +602,4 @@ export function ProductCreationChat() {
     );
 }
 
+    

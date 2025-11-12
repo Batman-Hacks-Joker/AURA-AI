@@ -57,27 +57,11 @@ export default function ProductDetailPage() {
     const { toast } = useToast();
     const { role } = useAuth();
     
-    // Find the product ID from the SKU. This is inefficient and for demo purposes.
-    // In a real app, you would query by SKU or have SKU as the document ID.
-    const [productId, setProductId] = useState<string | null>(null);
-    useEffect(() => {
-        // This is a stand-in for a proper SKU lookup.
-        // We are assuming the SKU is part of the document ID or a field we can query.
-        // For this demo, we'll try to find the ID from localStorage as a fallback.
-        const storedProductsRaw = localStorage.getItem('products');
-        if (storedProductsRaw) {
-            const allProducts: Product[] = JSON.parse(storedProductsRaw);
-            const foundProduct = allProducts.find(p => p.sku === sku);
-            if (foundProduct) {
-                setProductId(foundProduct.id);
-            }
-        }
-    }, [sku]);
-    
     const productDocRef = useMemoFirebase(() => {
-        if (!firestore || !productId) return null;
-        return doc(firestore, `products_launched`, productId);
-    }, [firestore, productId]);
+        if (!firestore || !sku) return null;
+        // The SKU from the URL is used as the document ID
+        return doc(firestore, `products_launched`, sku as string);
+    }, [firestore, sku]);
 
     const { data: product, isLoading } = useDoc<Product>(productDocRef);
 
@@ -120,7 +104,7 @@ export default function ProductDetailPage() {
         "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
     };
     
-    if (isLoading || !product && !productId) {
+    if (isLoading) {
         return (
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto py-8">
                 <Skeleton className="rounded-lg aspect-square w-full" />
@@ -229,3 +213,4 @@ export default function ProductDetailPage() {
     );
 }
 
+    

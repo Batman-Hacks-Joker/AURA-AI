@@ -54,13 +54,7 @@ type SortConfig = {
     direction: 'asc' | 'desc';
 } | null;
 
-const defaultProducts: Product[] = [
-    { name: "Off-Road Beast", sku: "ORB-001", category: "Trucks", price: "55000", stock: 120, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'truck-1')},
-    { name: "Urban Explorer", sku: "UEX-250", category: "EV", price: "42000", stock: 5, status: "Need Refill", image: PlaceHolderImages.find(p => p.id === 'ev-1') },
-    { name: "City Commuter", sku: "CC-A1", category: "Sedan", price: "35000", stock: 0, status: "Out of Stock", image: PlaceHolderImages.find(p => p.id === 'sedan-1') },
-    { name: "Family Voyager", sku: "FVZ99-C", category: "SUV", price: "48000", stock: 45, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'suv-1') },
-    { name: "Adventure Seeker", sku: "ASK-05", category: "Off-Road", price: "62000", stock: 200, status: "In Stock", image: PlaceHolderImages.find(p => p.id === 'offroad-1') },
-];
+const defaultProducts: Product[] = [];
 
 const getUniqueProducts = (products: Product[]): Product[] => {
     const seen = new Set<string>();
@@ -487,7 +481,7 @@ export default function InventoryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {displayedProducts.map((product) => {
+                            {displayedProducts.length > 0 ? displayedProducts.map((product) => {
                                 const productName = product.productName || product.name;
                                 const productPrice = product.productPrice || product.price;
                                 const productImage = product.image || imageMap[product.name];
@@ -576,7 +570,13 @@ export default function InventoryPage() {
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell"><Highlight text={product.sku} highlight={searchTerm} /></TableCell>
                                 </TableRow>
-                            )})}
+                            )}) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                        No products found. Start by adding a new product.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -591,4 +591,5 @@ export default function InventoryPage() {
 
     
 
+    
     

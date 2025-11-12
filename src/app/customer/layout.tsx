@@ -44,7 +44,9 @@ function CustomerSidebarInner() {
   return (
     <Sidebar collapsible="icon" onClick={handleClick}>
       <SidebarHeader className="flex items-center justify-between">
-        <Logo collapsed={isCollapsed} />
+        <Link href="/">
+          <Logo collapsed={isCollapsed} />
+        </Link>
         <SidebarToggle />
       </SidebarHeader>
       <SidebarContent>

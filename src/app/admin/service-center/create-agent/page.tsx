@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw, Save, SquareArrowUp } from "lucide-react";
+import { UploadCloud, FileText, BrainCircuit, Loader2, Trash2, Pencil, RotateCcw, Save, SquareArrowUp, FileUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateFlashcards } from "../actions/generate-flashcards-action";
@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 type Flashcard = {
@@ -54,6 +55,7 @@ export default function CreateAgentPage() {
 
     const [agentName, setAgentName] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const { toast } = useToast();
@@ -96,6 +98,7 @@ export default function CreateAgentPage() {
             ];
             if (allowedTypes.includes(selectedFile.type)) {
                 setFile(selectedFile);
+                setText(""); // Clear text if file is selected
                 if (flashcards.length > 0) {
                   setFlashcards([]);
                   setFlippedCardIndex(null);
@@ -109,10 +112,15 @@ export default function CreateAgentPage() {
             }
         }
     };
+    
+    const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setText(event.target.value);
+        setFile(null); // Clear file if text is entered
+    };
 
     const handleGenerateFlashcards = async () => {
-        if (!file) {
-            toast({ variant: "destructive", title: "No File Selected", description: "Please upload a document to generate responses." });
+        if (!file && !text.trim()) {
+            toast({ variant: "destructive", title: "No Content Provided", description: "Please upload a document or paste text to generate responses." });
             return;
         }
 
@@ -120,30 +128,39 @@ export default function CreateAgentPage() {
         setFlashcards([]);
         setFlippedCardIndex(null);
 
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64File = reader.result as string;
-            try {
-                const result = await generateFlashcards({ documentDataUri: base64File });
-                if (result.error) {
-                    toast({ variant: "destructive", title: "Generation Failed", description: result.error });
-                } else if (result.flashcards) {
-                    setFlashcards(result.flashcards);
-                    toast({ title: "Agent Responses Generated!", description: `Successfully created ${result.flashcards.length} responses from your document.` });
-                }
-            } catch (error) {
-                console.error("Response generation error:", error);
-                toast({ variant: "destructive", title: "An Unexpected Error Occurred", description: "Please try again." });
-            } finally {
+        if (file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64File = reader.result as string;
+                await generateFromContent({ documentDataUri: base64File });
+            };
+            reader.onerror = () => {
                 setIsLoading(false);
-            }
-        };
-        reader.onerror = () => {
-            setIsLoading(false);
-            toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
-        };
+                toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
+            };
+        } else {
+            await generateFromContent({ documentText: text });
+        }
     };
+    
+    const generateFromContent = async (content: { documentDataUri?: string, documentText?: string }) => {
+        try {
+            const result = await generateFlashcards(content);
+            if (result.error) {
+                toast({ variant: "destructive", title: "Generation Failed", description: result.error });
+            } else if (result.flashcards) {
+                setFlashcards(result.flashcards);
+                toast({ title: "Agent Responses Generated!", description: `Successfully created ${result.flashcards.length} responses.` });
+            }
+        } catch (error) {
+            console.error("Response generation error:", error);
+            toast({ variant: "destructive", title: "An Unexpected Error Occurred", description: "Please try again." });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
 
     const handleEditClick = (index: number) => {
         const card = flashcards[index];
@@ -210,7 +227,7 @@ export default function CreateAgentPage() {
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight">{isEditMode ? "Update Agent" : "Create Agent"}</h1>
                             <p className="text-muted-foreground">
-                                {isEditMode ? `Editing agent: ${agentName}` : "Build a new AI agent by providing a name and a knowledge base document."}
+                                {isEditMode ? `Editing agent: ${agentName}` : "Build a new AI agent by providing a name and a knowledge base."}
                             </p>
                         </div>
                         {flashcards.length > 0 && (
@@ -240,25 +257,41 @@ export default function CreateAgentPage() {
                         <CardHeader>
                             <CardTitle>2. Knowledge Base</CardTitle>
                             <CardDescription>
-                                {isEditMode ? "Upload a new document to replace the existing knowledge base, or modify the responses below." : "Upload a user manual or FAQ document to generate Q&A responses for your new agent."}
+                                {isEditMode ? "Provide new content to replace the existing knowledge base." : "Upload a document or paste text to generate Q&A responses for your new agent."}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg">
-                                <UploadCloud className="w-10 h-10 text-muted-foreground" />
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                    {file ? `Selected: ${file.name}` : "Drag & drop a file or click to upload"}
-                                </p>
-                                <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT</p>
-                                <input type="file" className="sr-only" id="file-upload" onChange={handleFileChange} accept=".pdf,.doc,.docx,.txt" />
-                                <Button asChild variant="outline" size="sm" className="mt-4">
-                                    <label htmlFor="file-upload">
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        {file ? "Change File" : "Browse File"}
-                                    </label>
-                                </Button>
-                            </div>
-                            <Button onClick={handleGenerateFlashcards} disabled={!file || isLoading} className="w-full bg-accent hover:bg-accent/90">
+                            <Tabs defaultValue="file">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="file"><FileUp className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
+                                    <TabsTrigger value="text"><Pencil className="mr-2 h-4 w-4" />Paste Text</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="file">
+                                    <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg">
+                                        <UploadCloud className="w-10 h-10 text-muted-foreground" />
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            {file ? `Selected: ${file.name}` : "Drag & drop a file or click to upload"}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT</p>
+                                        <input type="file" className="sr-only" id="file-upload" onChange={handleFileChange} accept=".pdf,.doc,.docx,.txt" />
+                                        <Button asChild variant="outline" size="sm" className="mt-4">
+                                            <label htmlFor="file-upload">
+                                                <FileText className="mr-2 h-4 w-4" />
+                                                {file ? "Change File" : "Browse File"}
+                                            </label>
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="text">
+                                    <Textarea 
+                                        placeholder="Paste your knowledge base text here..."
+                                        className="min-h-[200px]"
+                                        value={text}
+                                        onChange={handleTextChange}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                            <Button onClick={handleGenerateFlashcards} disabled={(!file && !text.trim()) || isLoading} className="w-full bg-accent hover:bg-accent/90">
                                 {isLoading ? (
                                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
                                 ) : (

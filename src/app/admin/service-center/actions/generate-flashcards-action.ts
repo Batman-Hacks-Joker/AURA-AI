@@ -4,7 +4,8 @@
 import { generateFlashcardsFlow } from '@/ai/flows/generate-flashcards-flow';
 
 type Input = {
-  documentDataUri: string;
+  documentDataUri?: string;
+  documentText?: string;
 };
 
 export async function generateFlashcards(input: Input) {

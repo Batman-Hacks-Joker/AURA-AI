@@ -451,45 +451,6 @@ export function ProductCreationChat() {
                     )}
                 </Card>
 
-                {generatedDetails && !isLoading && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Item Image</CardTitle>
-                            <CardDescription>Upload a custom image or generate one with AI.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {productImage ? (
-                                <div className="relative">
-                                    <Image src={productImage.url} alt="Generated product" width={500} height={500} className="rounded-md w-full object-cover aspect-video" />
-                                     <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => setProductImage(null)}><X className="h-4 w-4"/></Button>
-                                </div>
-                            ) : isGeneratingImage ? (
-                                <div className="w-full aspect-video flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : (
-                                 <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer hover:bg-accent/10">
-                                    <UploadCloud className="w-8 h-8 text-muted-foreground" />
-                                    <p className="mt-2 text-sm text-muted-foreground">Upload an image</p>
-                                    <span className="text-primary text-sm font-medium">Browse File</span>
-                                    <input type="file" ref={fileInputRef} className="sr-only" id="file-upload" onChange={handleImageFileChange} accept="image/*" />
-                                </label>
-                            )}
-                             {!productImage && !isGeneratingImage && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="image-prompt">Or generate with AI</Label>
-                                    <Textarea id="image-prompt" placeholder="e.g., 'A sleek white electric car, studio lighting'" value={imageGenPrompt} onChange={(e) => setImageGenPrompt(e.target.value)} />
-                                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage} className="w-full">
-                                        {isGeneratingImage ? <Loader2 className="animate-spin" /> : <><ImageIcon className="mr-2"/>Generate Image</>}
-                                    </Button>
-                                </div>
-                             )}
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
-
-            <div className="space-y-8">
                 {isLoading ? (
                     <Card>
                         <CardHeader>
@@ -529,6 +490,45 @@ export function ProductCreationChat() {
                         </CardHeader>
                         <CardContent>
                            {(isEditing || isEditMode) ? renderEditableFields() : renderStaticDetails()}
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+
+            <div className="space-y-8">
+                {generatedDetails && !isLoading && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Item Image</CardTitle>
+                            <CardDescription>Upload a custom image or generate one with AI.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {productImage ? (
+                                <div className="relative">
+                                    <Image src={productImage.url} alt="Generated product" width={500} height={500} className="rounded-md w-full object-cover aspect-video" />
+                                     <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => setProductImage(null)}><X className="h-4 w-4"/></Button>
+                                </div>
+                            ) : isGeneratingImage ? (
+                                <div className="w-full aspect-video flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : (
+                                 <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer hover:bg-accent/10">
+                                    <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                                    <p className="mt-2 text-sm text-muted-foreground">Upload an image</p>
+                                    <span className="text-primary text-sm font-medium">Browse File</span>
+                                    <input type="file" ref={fileInputRef} className="sr-only" id="file-upload" onChange={handleImageFileChange} accept="image/*" />
+                                </label>
+                            )}
+                             {!productImage && !isGeneratingImage && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="image-prompt">Or generate with AI</Label>
+                                    <Textarea id="image-prompt" placeholder="e.g., 'A sleek white electric car, studio lighting'" value={imageGenPrompt} onChange={(e) => setImageGenPrompt(e.target.value)} />
+                                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage} className="w-full">
+                                        {isGeneratingImage ? <Loader2 className="animate-spin" /> : <><ImageIcon className="mr-2"/>Generate Image</>}
+                                    </Button>
+                                </div>
+                             )}
                         </CardContent>
                     </Card>
                 )}

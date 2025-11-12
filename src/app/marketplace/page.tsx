@@ -81,15 +81,17 @@ function CartButton({ product }: { product: Product }) {
 function AdminEditButton({ product }: { product: Product }) {
     const router = useRouter();
 
-    const handleEdit = () => {
+    const handleEdit = (e: React.MouseEvent) => {
+        e.stopPropagation(); // prevent card click
+        e.preventDefault();
         localStorage.setItem('editingProduct', JSON.stringify(product));
         router.push('/admin/product-creation');
     };
 
     return (
-        <Button onClick={handleEdit} className="w-full">
+        <Button onClick={handleEdit} size="sm" variant="outline">
             <Pencil className="mr-2 h-4 w-4" />
-            Edit Item
+            Edit
         </Button>
     );
 }
@@ -174,53 +176,53 @@ export default function MarketplacePage() {
                         const isOwned = purchasedSkus.has(product.sku);
 
                         return (
-                            <Card key={product.sku} className="group relative flex flex-col h-full transition-shadow duration-300 hover:shadow-lg overflow-hidden">
-                                <CardHeader className="p-0">
-                                    <Link href={`/marketplace/${product.sku}`} className="block">
-                                        {productImage ? (
-                                            <Image
-                                                src={productImage.imageUrl}
-                                                alt={productName}
-                                                width={600}
-                                                height={400}
-                                                data-ai-hint={productImage.imageHint}
-                                                className="rounded-t-lg aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="rounded-t-lg aspect-[4/3] bg-muted flex items-center justify-center">
-                                                <span className="text-sm text-muted-foreground">No Image</span>
+                            <Link href={`/marketplace/${product.sku}`} key={product.sku} className="group block">
+                                <Card className="flex flex-col h-full transition-shadow duration-300 hover:shadow-lg overflow-hidden">
+                                    <CardHeader className="p-0">
+                                            {productImage ? (
+                                                <Image
+                                                    src={productImage.imageUrl}
+                                                    alt={productName}
+                                                    width={600}
+                                                    height={400}
+                                                    data-ai-hint={productImage.imageHint}
+                                                    className="rounded-t-lg aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="rounded-t-lg aspect-[4/3] bg-muted flex items-center justify-center">
+                                                    <span className="text-sm text-muted-foreground">No Image</span>
+                                                </div>
+                                            )}
+                                    </CardHeader>
+                                    <div className="p-4 flex flex-col flex-grow">
+                                        <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
+                                        <CardDescription>{product.productCategory || product.category}</CardDescription>
+                                        <CardContent className="p-0 pt-2 flex-grow">
+                                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                                {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
+                                            </p>
+                                        </CardContent>
+                                        <CardFooter className="p-0 pt-4 flex-col items-start gap-2">
+                                            <div className="w-full flex justify-between items-center">
+                                                <p className="font-semibold text-lg">${Number(productPrice).toLocaleString()}</p>
+                                                {role === 'admin' && <AdminEditButton product={product} />}
                                             </div>
-                                        )}
-                                    </Link>
-                                </CardHeader>
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <Link href={`/marketplace/${product.sku}`} className="group/title block">
-                                        <CardTitle className="group-hover/title:text-primary transition-colors">{productName}</CardTitle>
-                                    </Link>
-                                    <CardDescription>{product.productCategory || product.category}</CardDescription>
-                                    <CardContent className="p-0 pt-2 flex-grow">
-                                        <p className="text-sm text-muted-foreground line-clamp-2">
-                                            {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
-                                        </p>
-                                    </CardContent>
-                                    <CardFooter className="p-0 pt-4 flex-col items-start gap-2">
-                                        <p className="font-semibold text-lg w-full">${Number(productPrice).toLocaleString()}</p>
-                                        {role === 'admin' ? null : isOwned ? (
-                                            <Badge variant="secondary" className="w-full flex justify-center items-center h-9">
-                                                <CheckCircle className="mr-2 h-4 w-4" />
-                                                Owned
-                                            </Badge>
-                                        ) : (
-                                            <CartButton product={product} />
-                                        )}
-                                    </CardFooter>
-                                </div>
-                                {role === 'admin' && (
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <AdminEditButton product={product} />
+                                            {role !== 'admin' && (
+                                                isOwned ? (
+                                                    <Badge variant="secondary" className="w-full flex justify-center items-center h-10 mt-2">
+                                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                                        Owned
+                                                    </Badge>
+                                                ) : (
+                                                    <div className="w-full mt-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                                        <CartButton product={product} />
+                                                    </div>
+                                                )
+                                            )}
+                                        </CardFooter>
                                     </div>
-                                )}
-                            </Card>
+                                </Card>
+                             </Link>
                         );
                     })}
                 </div>

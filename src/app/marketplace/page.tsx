@@ -9,9 +9,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase/auth/use-auth';
 
 type Product = {
     name: string;
@@ -77,10 +78,27 @@ function CartButton({ product }: { product: Product }) {
     );
 }
 
+function AdminEditButton({ product }: { product: Product }) {
+    const router = useRouter();
+
+    const handleEdit = () => {
+        localStorage.setItem('editingProduct', JSON.stringify(product));
+        router.push('/admin/product-creation');
+    };
+
+    return (
+        <Button onClick={handleEdit} className="w-full">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Item
+        </Button>
+    );
+}
+
 export default function MarketplacePage() {
     const [launchedProducts, setLaunchedProducts] = useState<Product[]>([]);
     const [purchasedSkus, setPurchasedSkus] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
+    const { role } = useAuth();
 
     useEffect(() => {
         const loadData = () => {
@@ -156,9 +174,9 @@ export default function MarketplacePage() {
                         const isOwned = purchasedSkus.has(product.sku);
 
                         return (
-                            <Card key={product.sku} className="flex flex-col h-full transition-shadow duration-300 hover:shadow-lg">
-                                <CardHeader>
-                                    <Link href={`/marketplace/${product.sku}`} className="group block">
+                            <Card key={product.sku} className="group relative flex flex-col h-full transition-shadow duration-300 hover:shadow-lg overflow-hidden">
+                                <CardHeader className="p-0">
+                                    <Link href={`/marketplace/${product.sku}`} className="block">
                                         {productImage ? (
                                             <Image
                                                 src={productImage.imageUrl}
@@ -166,33 +184,42 @@ export default function MarketplacePage() {
                                                 width={600}
                                                 height={400}
                                                 data-ai-hint={productImage.imageHint}
-                                                className="rounded-lg aspect-[4/3] object-cover"
+                                                className="rounded-t-lg aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         ) : (
-                                            <div className="rounded-lg aspect-[4/3] bg-muted flex items-center justify-center">
+                                            <div className="rounded-t-lg aspect-[4/3] bg-muted flex items-center justify-center">
                                                 <span className="text-sm text-muted-foreground">No Image</span>
                                             </div>
                                         )}
-                                        <CardTitle className="pt-4 group-hover:text-primary transition-colors">{productName}</CardTitle>
+                                    </Link>
+                                </CardHeader>
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <Link href={`/marketplace/${product.sku}`} className="group/title block">
+                                        <CardTitle className="group-hover/title:text-primary transition-colors">{productName}</CardTitle>
                                     </Link>
                                     <CardDescription>{product.productCategory || product.category}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex-grow">
-                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                        {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
-                                    </p>
-                                </CardContent>
-                                <CardFooter className="flex-col items-start gap-2">
-                                     <p className="font-semibold text-lg w-full">${Number(productPrice).toLocaleString()}</p>
-                                    {isOwned ? (
-                                        <Badge variant="secondary" className="w-full flex justify-center items-center h-9">
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            Owned
-                                        </Badge>
-                                    ) : (
-                                        <CartButton product={product} />
-                                    )}
-                                </CardFooter>
+                                    <CardContent className="p-0 pt-2 flex-grow">
+                                        <p className="text-sm text-muted-foreground line-clamp-2">
+                                            {product.productFeatures?.[0] || 'Check out the details for this amazing new product.'}
+                                        </p>
+                                    </CardContent>
+                                    <CardFooter className="p-0 pt-4 flex-col items-start gap-2">
+                                        <p className="font-semibold text-lg w-full">${Number(productPrice).toLocaleString()}</p>
+                                        {role === 'admin' ? null : isOwned ? (
+                                            <Badge variant="secondary" className="w-full flex justify-center items-center h-9">
+                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                Owned
+                                            </Badge>
+                                        ) : (
+                                            <CartButton product={product} />
+                                        )}
+                                    </CardFooter>
+                                </div>
+                                {role === 'admin' && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <AdminEditButton product={product} />
+                                    </div>
+                                )}
                             </Card>
                         );
                     })}

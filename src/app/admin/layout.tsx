@@ -111,27 +111,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/admin/dashboard" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <LayoutDashboard className="h-5 w-5" />
                         <span className="hidden md:inline">Dashboard</span>
-                        <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                     <Link href="/admin/product-creation" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <PackagePlus className="h-5 w-5" />
                         <span className="hidden md:inline">Item Creation</span>
-                        <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                     <Link href="/admin/inventory" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <Warehouse className="h-5 w-5" />
                         <span className="hidden md:inline">Inventory</span>
-                        <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                     <Link href="/marketplace" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <Store className="h-5 w-5" />
                         <span className="hidden md:inline">Marketplace</span>
-                        <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                     <Link href="/admin/service-center" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <Wrench className="h-5 w-5" />
                         <span className="hidden md:inline">Service Center</span>
-                        <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                 </div>
             </header>

@@ -120,27 +120,27 @@ export default function AdminDashboardPage() {
                 <Link href="/admin/dashboard" className="relative group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <LayoutDashboard className="h-5 w-5" />
                     <span className="text-xs">Dashboard</span>
-                    <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                 </Link>
                 <Link href="/admin/product-creation" className="relative group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <PackagePlus className="h-5 w-5" />
                     <span className="text-xs">Item Creation</span>
-                    <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                 </Link>
                 <Link href="/admin/inventory" className="relative group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <Warehouse className="h-5 w-5" />
                     <span className="text-xs">Inventory</span>
-                    <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                 </Link>
                 <Link href="/marketplace" className="relative group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <Store className="h-5 w-5" />
                     <span className="text-xs">Marketplace</span>
-                    <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                 </Link>
                 <Link href="/admin/service-center" className="relative group flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                     <Wrench className="h-5 w-5" />
                     <span className="text-xs">Service Center</span>
-                    <span className="absolute -bottom-2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                 </Link>
             </div>
 

@@ -480,7 +480,7 @@ export default function InventoryPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
+                                    <TableHead className="w-[100px]">Image</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead className="text-right">Price</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
@@ -494,7 +494,7 @@ export default function InventoryPage() {
                                     const itemImage = item.image || imageMap[item.name];
                                     return (
                                     <TableRow key={item.sku}>
-                                        <TableCell className="hidden sm:table-cell">
+                                        <TableCell>
                                         {itemImage ? (
                                             <Image
                                                 alt={itemName}
@@ -575,7 +575,7 @@ export default function InventoryPage() {
                                                 {item.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="hidden md:table-cell"><Highlight text={item.sku} highlight={searchTerm} /></TableCell>
+                                        <TableCell><Highlight text={item.sku} highlight={searchTerm} /></TableCell>
                                     </TableRow>
                                 )}) : (
                                     <TableRow>

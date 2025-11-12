@@ -481,12 +481,12 @@ export function ProductCreationChat() {
                                 </div>
                             ) : (
                                  <div className="grid grid-cols-2 gap-4">
-                                     <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg text-center">
+                                     <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer hover:bg-accent/10">
                                         <UploadCloud className="w-8 h-8 text-muted-foreground" />
                                         <p className="mt-2 text-sm text-muted-foreground">Upload an image</p>
+                                        <span className="text-primary text-sm font-medium">Browse File</span>
                                         <input type="file" ref={fileInputRef} className="sr-only" id="file-upload" onChange={handleImageFileChange} accept="image/*" />
-                                        <Button asChild variant="link" size="sm"><label htmlFor="file-upload">Browse File</label></Button>
-                                    </div>
+                                    </label>
                                     <div className="space-y-2">
                                         <Label htmlFor="image-prompt">Or generate with AI</Label>
                                         <Textarea id="image-prompt" placeholder="e.g., 'A sleek white electric car, studio lighting'" value={imageGenPrompt} onChange={(e) => setImageGenPrompt(e.target.value)} />
@@ -554,3 +554,5 @@ export function ProductCreationChat() {
         </div>
     );
 }
+
+    

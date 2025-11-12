@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,17 +115,6 @@ export default function ServiceCenterPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Service Center</h1>
-                    <p className="text-muted-foreground">Monitor customer support and manage AI agents.</p>
-                </div>
-                <Button asChild>
-                    <Link href="/admin/service-center/create-agent">
-                        <UserPlus className="mr-2 h-4 w-4" /> Create Agent
-                    </Link>
-                </Button>
-            </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {metrics.map((metric) => (
@@ -143,8 +133,17 @@ export default function ServiceCenterPage() {
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Manage Agents</CardTitle>
-                        <CardDescription>Assign your created AI agents to products.</CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Manage Agents</CardTitle>
+                                <CardDescription>Assign your created AI agents to products.</CardDescription>
+                            </div>
+                            <Button asChild>
+                                <Link href="/admin/service-center/create-agent">
+                                    <UserPlus className="mr-2 h-4 w-4" /> Create Agent
+                                </Link>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         {agents.length === 0 ? (

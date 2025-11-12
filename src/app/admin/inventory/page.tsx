@@ -391,28 +391,6 @@ export default function InventoryPage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>{companyName} Inventory</CardTitle>
-                        <CardDescription>A list of all items in your main warehouse.</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="h-8 gap-1">
-                            <File className="h-3.5 w-3.5" />
-                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                Export
-                            </span>
-                        </Button>
-                        <Button size="sm" asChild className="h-8 gap-1 bg-accent hover:bg-accent/90">
-                            <Link href="/admin/product-creation">
-                              <PlusCircle className="h-3.5 w-3.5" />
-                              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                  Add Item
-                              </span>
-                            </Link>
-                        </Button>
-                      </div>
-                    </div>
-                     <div className="flex items-center justify-between gap-2 pt-4">
                         <div className="flex items-center gap-2">
                              <div className="relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -475,6 +453,22 @@ export default function InventoryPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" className="h-8 gap-1">
+                            <File className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                Export
+                            </span>
+                        </Button>
+                        <Button size="sm" asChild className="h-8 gap-1 bg-accent hover:bg-accent/90">
+                            <Link href="/admin/product-creation">
+                              <PlusCircle className="h-3.5 w-3.5" />
+                              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                  Add Item
+                              </span>
+                            </Link>
+                        </Button>
+                      </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -482,7 +476,7 @@ export default function InventoryPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[100px]">Image</TableHead>
+                                    <TableHead>Image</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead className="text-right">Price</TableHead>
                                     <TableHead className="text-center">Status</TableHead>

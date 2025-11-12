@@ -27,10 +27,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 import React from "react";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/firebase/auth/use-auth";
 
 function AdminSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
+  const { userProfile } = useAuth();
   const isCollapsed = state === 'collapsed';
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -42,6 +43,8 @@ function AdminSidebarInner() {
       toggleSidebar();
     }
   };
+  
+  const displayName = userProfile ? userProfile.displayName.split(' ')[0] : 'Admin';
 
   return (
     <Sidebar collapsible="icon" onClick={handleClick}>
@@ -57,7 +60,7 @@ function AdminSidebarInner() {
             <div className="group/menu-item relative flex items-center gap-2">
                 <UserMenu />
                 <span className="text-sm font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-                  Hi, Admin!
+                  Hi, {displayName}!
                 </span>
             </div>
           </SidebarMenuItem>

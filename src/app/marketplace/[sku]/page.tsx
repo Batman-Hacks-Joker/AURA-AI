@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -13,9 +13,12 @@ import { ShoppingCart, Heart, Car, Wrench, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useAuth, useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
 
 type Product = {
+    id: string;
     name: string;
     productName?: string;
     sku: string;
@@ -26,6 +29,7 @@ type Product = {
     stock: number;
     status: string;
     launched?: boolean;
+    isLaunched?: boolean;
     image?: {
         id: string;
         description: string;
@@ -48,23 +52,35 @@ const categoryIcons: { [key: string]: React.ElementType } = {
 
 export default function ProductDetailPage() {
     const { sku } = useParams();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
+    const { firestore } = useFirebase();
     const router = useRouter();
+    const { toast } = useToast();
     const { role } = useAuth();
     
+    // Find the product ID from the SKU. This is inefficient and for demo purposes.
+    // In a real app, you would query by SKU or have SKU as the document ID.
+    const [productId, setProductId] = useState<string | null>(null);
     useEffect(() => {
-        if (sku) {
-            const storedProductsRaw = localStorage.getItem('products');
-            if (storedProductsRaw) {
-                const allProducts: Product[] = JSON.parse(storedProductsRaw);
-                const foundProduct = allProducts.find(p => p.sku === sku && p.launched);
-                setProduct(foundProduct || null);
+        // This is a stand-in for a proper SKU lookup.
+        // We are assuming the SKU is part of the document ID or a field we can query.
+        // For this demo, we'll try to find the ID from localStorage as a fallback.
+        const storedProductsRaw = localStorage.getItem('products');
+        if (storedProductsRaw) {
+            const allProducts: Product[] = JSON.parse(storedProductsRaw);
+            const foundProduct = allProducts.find(p => p.sku === sku);
+            if (foundProduct) {
+                setProductId(foundProduct.id);
             }
         }
-        setIsLoading(false);
     }, [sku]);
+    
+    const productDocRef = useMemoFirebase(() => {
+        if (!firestore || !productId) return null;
+        return doc(firestore, `products_launched`, productId);
+    }, [firestore, productId]);
+
+    const { data: product, isLoading } = useDoc<Product>(productDocRef);
+
 
     const handleAddToCart = () => {
         if (!product) return;
@@ -104,7 +120,7 @@ export default function ProductDetailPage() {
         "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
     };
     
-    if (isLoading) {
+    if (isLoading || !product && !productId) {
         return (
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto py-8">
                 <Skeleton className="rounded-lg aspect-square w-full" />
@@ -212,3 +228,5 @@ export default function ProductDetailPage() {
         </div>
     );
 }
+
+    

@@ -16,7 +16,8 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProductDetailsOutput } from '@/ai/flows/product-detail-prompting';
-import { GenerateImageOutput } from '@/ai/flows/generate-image-flow';
+import { useAuth, useFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc, collection, writeBatch } from 'firebase/firestore';
 
 
 interface CustomWindow extends Window {
@@ -28,6 +29,8 @@ declare const window: CustomWindow;
 type ProductDetails = ProductDetailsOutput & { stock: number };
 
 export function ProductCreationChat() {
+    const { user } = useAuth();
+    const { firestore } = useFirebase();
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
@@ -36,7 +39,6 @@ export function ProductCreationChat() {
     const { toast } = useToast();
     const router = useRouter();
 
-    // New states for editing and image generation
     const [isEditing, setIsEditing] = useState(false);
     const [editableDetails, setEditableDetails] = useState<ProductDetails | null>(null);
     const [productImage, setProductImage] = useState<{url: string; hint: string} | null>(null);
@@ -44,18 +46,19 @@ export function ProductCreationChat() {
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [originalSku, setOriginalSku] = useState<string | null>(null);
+    const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
 
     useEffect(() => {
         const editingProductRaw = localStorage.getItem('editingProduct');
         if (editingProductRaw) {
             const product = JSON.parse(editingProductRaw);
             setIsEditMode(true);
-            setOriginalSku(product.sku);
+            setEditingProductId(product.id);
 
             const details = {
                 productName: product.productName || product.name,
-                productPrice: product.productPrice || product.price,
+                productPrice: product.productPrice || Number(product.price),
                 productCategory: product.productCategory || product.category,
                 productFeatures: product.productFeatures || [],
                 productBenefits: product.productBenefits || [],
@@ -68,7 +71,6 @@ export function ProductCreationChat() {
                 setProductImage({ url: product.image.imageUrl, hint: product.image.imageHint });
             }
             
-            // Clean up localStorage
             localStorage.removeItem('editingProduct');
         }
 
@@ -118,7 +120,7 @@ export function ProductCreationChat() {
         setProductImage(null);
         setIsEditing(false);
         setIsEditMode(false);
-        setOriginalSku(null);
+        setEditingProductId(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -171,68 +173,54 @@ export function ProductCreationChat() {
     };
 
     const handleSave = () => {
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to save an item.' });
+            return;
+        }
+
         const detailsToSave = isEditing || isEditMode ? editableDetails : generatedDetails;
         if (!detailsToSave) {
-            toast({
-                variant: 'destructive',
-                title: 'No Details to Save',
-                description: "Please generate item details before saving.",
-            });
+            toast({ variant: 'destructive', title: 'No Details to Save', description: "Please generate item details before saving." });
             return;
         }
         
         const finalFeatures = (detailsToSave.productFeatures || []).filter((f: string) => f && f.trim() !== '');
         const finalBenefits = (detailsToSave.productBenefits || []).filter((b: string) => b && b.trim() !== '');
 
+        const productId = editingProductId || doc(collection(firestore, `users/${user.uid}/products_inventory`)).id;
+
         const productToSave = {
+            id: productId,
             name: detailsToSave.productName,
+            sku: `SKU-${productId.substring(0, 8).toUpperCase()}`,
+            companyName: "Your Company", // Placeholder
             price: detailsToSave.productPrice,
-            category: detailsToSave.productCategory,
-            stock: detailsToSave.stock,
-            sku: originalSku || `SKU-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-            status: detailsToSave.stock > 0 ? "In Stock" : "Out of Stock",
-            image: productImage ? {
-                id: `img-${Date.now()}`,
-                description: `Image for ${detailsToSave.productName}`,
-                imageUrl: productImage.url,
-                imageHint: productImage.hint,
-            } : undefined,
-            launched: false,
+            stockAmount: detailsToSave.stock,
+            itemDetails: finalBenefits.join('\n'),
+            agentId: null, // Placeholder
+            isLaunched: false,
+            adminId: user.uid,
             productName: detailsToSave.productName,
             productPrice: detailsToSave.productPrice,
             productCategory: detailsToSave.productCategory,
             productFeatures: finalFeatures,
             productBenefits: finalBenefits,
+            stock: detailsToSave.stock,
+            image: productImage ? {
+                id: `img-${Date.now()}`,
+                description: `Image for ${detailsToSave.productName}`,
+                imageUrl: productImage.url,
+                imageHint: productImage.hint,
+            } : null,
         };
 
-        let existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, productId);
+        setDocumentNonBlocking(docRef, productToSave, { merge: true });
 
-        if (isEditMode && originalSku) {
-            const productIndex = existingProducts.findIndex((p: any) => p.sku === originalSku);
-            if (productIndex > -1) {
-                productToSave.launched = existingProducts[productIndex].launched;
-                existingProducts[productIndex] = productToSave;
-                toast({
-                    title: 'Item Updated!',
-                    description: `"${productToSave.name}" has been updated in your inventory.`,
-                });
-            } else {
-                 existingProducts.push(productToSave);
-                 toast({
-                    title: 'Item Saved!',
-                    description: `"${productToSave.name}" has been added to your inventory.`,
-                });
-            }
-        } else {
-            existingProducts.push(productToSave);
-            toast({
-                title: 'Item Saved!',
-                description: `"${productToSave.name}" has been added to your inventory.`,
-            });
-        }
-        
-        localStorage.setItem('products', JSON.stringify(existingProducts));
-        window.dispatchEvent(new Event('storage'));
+        toast({
+            title: isEditMode ? 'Item Updated!' : 'Item Saved!',
+            description: `"${productToSave.name}" has been saved to your inventory.`,
+        });
 
         router.push('/admin/inventory');
     };
@@ -428,7 +416,7 @@ export function ProductCreationChat() {
                             {isEditMode && (
                                 <Button variant="destructive" size="sm" onClick={handleClear}>
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Remove Item
+                                    Start Over
                                 </Button>
                             )}
                         </div>
@@ -556,3 +544,5 @@ export function ProductCreationChat() {
         </div>
     );
 }
+
+    

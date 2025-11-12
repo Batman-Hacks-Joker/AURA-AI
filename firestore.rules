@@ -1,91 +1,7 @@
-/**
- * @file Firebase Security Rules for Firestore.
- * @description This ruleset enforces a user-ownership model for admin users and their product inventory, while also providing public read access to launched products in the marketplace.
- *
- * Data Structure:
- * - /users/{adminId}/products_inventory/{productId}: Stores products not yet launched, owned by the admin user.
- * - /products_launched/{productId}: Stores products that have been launched into the marketplace; publicly readable.
- * - /agents/{agentId}: Stores agent details; only accessible by authenticated users.
- * - /admins/{adminId}: Stores admin user details; only accessible by the admin user themselves.
- *
- * Key Security Decisions:
- * - Launched products are publicly readable, but only admins can create, update, or delete them, and only if they own the product.
- * - Admin users have full CRUD access to their own product inventory.
- * - Listing of documents in `/users/{adminId}/products_inventory/{productId}` is allowed only for the owning admin.
- * - Agents can only be created by admins, only be read by authenticated users, and can not be updated or deleted once created.
- *
- * Denormalization for Authorization:
- * - The `adminId` field is denormalized in both `/products_launched/{productId}` and `/users/{adminId}/products_inventory/{productId}` to ensure authorization independence. This eliminates the need for `get()` calls in security rules to verify ownership, improving performance and security.
- *
- * Structural Segregation:
- * - Products are segregated based on their 'isLaunched' status. Unlaunched products are stored in a user-specific subcollection (`/users/{adminId}/products_inventory/{productId}`), while launched products are stored in a top-level collection (`/products_launched/{productId}`). This enables public read access to launched products without compromising the security of unlaunched products.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Allows admins to manage their product inventory.
-     * @path /users/{adminId}/products_inventory/{productId}
-     * @allow (create) request.auth.uid == 'admin123' && request.resource.data.adminId == 'admin123'
-     * @allow (get, list, update, delete) request.auth.uid == 'admin123'
-     * @deny (create) request.auth.uid != 'admin123'
-     * @deny (update, delete) request.auth.uid != 'admin123' || resource.data.adminId != 'admin123'
-     * @principle Enforces document ownership and path-based authorization.
-     */
-    match /users/{adminId}/products_inventory/{productId} {
-      allow get, list: if isSignedIn() && isOwner(adminId);
-      allow create: if isSignedIn() && isOwner(adminId) && request.resource.data.adminId == adminId;
-      allow update: if isSignedIn() && isExistingOwner(adminId) && resource.data.adminId == adminId;
-      allow delete: if isSignedIn() && isExistingOwner(adminId) && resource.data.adminId == adminId;
-    }
-
-    /**
-     * @description Allows anyone to read launched products, but only the owning admin can create, update, or delete them.
-     * @path /products_launched/{productId}
-     * @allow (get, list) true
-     * @allow (create) request.auth.uid == 'admin123' && request.resource.data.adminId == 'admin123' && request.resource.data.isLaunched == true
-     * @allow (update, delete) request.auth.uid == 'admin123' && resource.data.adminId == 'admin123'
-     * @deny (create) request.auth.uid != 'admin123' || request.resource.data.adminId != request.auth.uid
-     * @deny (update, delete) request.auth.uid != 'admin123' || resource.data.adminId != request.auth.uid
-     * @principle Public read access with owner-only writes.
-     */
-    match /products_launched/{productId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && isAdmin(request.auth.uid) && request.resource.data.adminId == request.auth.uid && request.resource.data.isLaunched == true;
-      allow update: if isSignedIn() && isAdmin(request.auth.uid) && isExistingOwnerByAdminId(resource.data.adminId);
-      allow delete: if isSignedIn() && isAdmin(request.auth.uid) && isExistingOwnerByAdminId(resource.data.adminId);
-    }
-
-        /**
-         * @description Allows read access for Agents to signed in users. create operation can only be performed by an admin user. No update or delete are possible.
-         * @path /agents/{agentId}
-         * @allow (get, list) true
-         * @allow (create) request.auth.uid == 'admin123'
-         * @deny (create) request.auth.uid != 'admin123'
-         * @principle Restricts write access to admins and allows read access to authenticated users.
-         */
-    match /agents/{agentId} {
-        allow get, list: if isSignedIn();
-        allow create: if isSignedIn() && isAdmin(request.auth.uid);
-        allow update, delete: if false;
-    }
-
-    /**
-     * @description Allows admins to read and update their own profile information.
-     * @path /admins/{adminId}
-     * @allow (get, update) request.auth.uid == 'admin123'
-     * @allow (create) request.auth.uid == 'admin123'
-     * @deny (get, update) request.auth.uid != 'admin123'
-     * @principle Enforces document ownership for admin profiles.
-     */
-    match /admins/{adminId} {
-      allow get: if isSignedIn() && isOwner(adminId);
-      allow create: if isSignedIn() && isOwner(adminId) && request.resource.data.id == adminId;
-      allow update: if isSignedIn() && isOwner(adminId) && resource.data.id == adminId;
-      allow delete: if false;
-      allow list: if false;
-    }
 
     function isSignedIn() {
       return request.auth != null;
@@ -95,17 +11,41 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-        return isSignedIn() && isOwner(userId) && resource != null;
+    // Rules for admin user profiles
+    match /admins/{adminId} {
+      allow read, update: if isSignedIn() && isOwner(adminId);
+      allow create: if isSignedIn() && isOwner(adminId) && request.resource.data.id == adminId;
+      allow delete: if false; // Generally, don't allow users to delete their own profiles
     }
 
-    function isExistingOwnerByAdminId(adminId) {
-        return isSignedIn() && request.auth.uid == adminId && resource != null;
+    // Rules for customer user profiles (assuming a 'customers' collection)
+    match /customers/{customerId} {
+      allow read, update: if isSignedIn() && isOwner(customerId);
+      allow create: if isSignedIn() && isOwner(customerId) && request.resource.data.id == customerId;
+      allow delete: if false;
     }
 
-    function isAdmin(userId) {
-      // Replace with your actual admin role check (e.g., from a custom claim)
-      return userId != null;
+    // Rules for an admin's private product inventory
+    match /users/{adminId}/products_inventory/{productId} {
+      allow read, list, create, update, delete: if isSignedIn() && isOwner(adminId);
+    }
+
+    // Rules for products launched to the public marketplace
+    match /products_launched/{productId} {
+      allow get, list: if true; // Anyone can view launched products
+      allow create: if isSignedIn() && request.resource.data.adminId == request.auth.uid && request.resource.data.isLaunched == true;
+      allow update, delete: if isSignedIn() && resource.data.adminId == request.auth.uid;
+    }
+
+    // Rules for AI agents
+    match /agents/{agentId} {
+      allow get, list: if isSignedIn();
+      // Only admins can create agents. We'd need a way to check for admin role.
+      // Using a placeholder for now. In a real app, use custom claims.
+      allow create: if isSignedIn(); 
+      allow update, delete: if false; // Agents are immutable once created
     }
   }
 }
+
+    

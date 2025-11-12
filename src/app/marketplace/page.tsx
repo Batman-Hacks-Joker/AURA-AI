@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -10,14 +10,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot, X } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Bot, Headset } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase/auth/use-auth';
+import { useAuth, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { collection } from 'firebase/firestore';
 
 type Product = {
+    id: string;
     name: string;
     productName?: string;
     sku: string;
@@ -28,6 +30,7 @@ type Product = {
     stock: number;
     status: string;
     launched?: boolean;
+    isLaunched?: boolean;
     image?: {
         id: string;
         description: string;
@@ -108,44 +111,43 @@ function AdminEditButton({ product }: { product: Product }) {
 }
 
 export default function MarketplacePage() {
-    const [launchedProducts, setLaunchedProducts] = useState<Product[]>([]);
+    const { firestore } = useFirebase();
     const [purchasedSkus, setPurchasedSkus] = useState<Set<string>>(new Set());
-    const [isLoading, setIsLoading] = useState(true);
     const { role } = useAuth();
-    const [agents, setAgents] = useState<Agent[]>([]);
-    const [agentMap, setAgentMap] = useState<Map<string, Agent>>(new Map());
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+    const launchedProductsCollectionRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'products_launched');
+    }, [firestore]);
+    const { data: launchedProducts, isLoading: isLoadingProducts } = useCollection<Product>(launchedProductsCollectionRef);
+    
+    const agentsCollectionRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'agents');
+    }, [firestore]);
+    const { data: agents, isLoading: isLoadingAgents } = useCollection<Agent>(agentsCollectionRef);
+    
+    const agentMap = useMemo(() => {
+        const newAgentMap = new Map<string, Agent>();
+        if (agents) {
+            agents.forEach(agent => {
+                if (agent.assignedProductSku) {
+                    newAgentMap.set(agent.assignedProductSku, agent);
+                }
+            });
+        }
+        return newAgentMap;
+    }, [agents]);
+
 
     useEffect(() => {
         const loadData = () => {
-            const storedProductsRaw = localStorage.getItem('products');
             const purchasedProductsRaw = localStorage.getItem('purchasedProducts');
-            const storedAgentsRaw = localStorage.getItem('serviceAgents');
-            
-            if (storedProductsRaw) {
-                const allProducts: Product[] = JSON.parse(storedProductsRaw);
-                const launched = allProducts.filter(p => p.launched);
-                setLaunchedProducts(launched);
-            }
-
             if (purchasedProductsRaw) {
                 const purchasedProducts: Product[] = JSON.parse(purchasedProductsRaw);
                 setPurchasedSkus(new Set(purchasedProducts.map(p => p.sku)));
             }
-            
-            if (storedAgentsRaw) {
-                const allAgents: Agent[] = JSON.parse(storedAgentsRaw);
-                setAgents(allAgents);
-                const newAgentMap = new Map<string, Agent>();
-                allAgents.forEach(agent => {
-                    if (agent.assignedProductSku) {
-                        newAgentMap.set(agent.assignedProductSku, agent);
-                    }
-                });
-                setAgentMap(newAgentMap);
-            }
-
-            setIsLoading(false);
         };
         
         loadData();
@@ -171,6 +173,8 @@ export default function MarketplacePage() {
             setSelectedAgent(agent);
         }
     };
+    
+    const isLoading = isLoadingProducts || isLoadingAgents;
 
     return (
         <div className="space-y-6">
@@ -197,7 +201,7 @@ export default function MarketplacePage() {
                         </Card>
                     ))}
                 </div>
-            ) : launchedProducts.length === 0 ? (
+            ) : !launchedProducts || launchedProducts.length === 0 ? (
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold">No Products Launched Yet</h2>
                     <p className="text-muted-foreground mt-2">Check back later to see new products in the marketplace.</p>
@@ -231,8 +235,8 @@ export default function MarketplacePage() {
                                             )}
                                     </CardHeader>
                                     <div className="p-4 flex flex-col flex-grow">
-                                        <div className="flex justify-between items-start">
-                                            <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
+                                        <div className="flex justify-between items-start gap-2">
+                                            <CardTitle className="group-hover:text-primary transition-colors flex-grow">{productName}</CardTitle>
                                             <button onClick={(e) => handleAgentIconClick(e, assignedAgent)} className="flex-shrink-0">
                                                 <Bot className={cn(
                                                     "h-5 w-5",
@@ -295,3 +299,5 @@ export default function MarketplacePage() {
         </div>
     );
 }
+
+    

@@ -26,9 +26,12 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/firebase/auth/use-auth";
+import { useAuth, useFirebase, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, doc, writeBatch } from "firebase/firestore";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 
 type Item = {
+    id: string;
     name: string;
     sku: string;
     category: string;
@@ -36,6 +39,7 @@ type Item = {
     stock: number;
     status: string;
     launched?: boolean;
+    isLaunched?: boolean;
     image?: {
         id: string;
         description: string;
@@ -47,23 +51,13 @@ type Item = {
     productPrice?: number;
     productFeatures?: string[];
     productBenefits?: string[];
+    adminId: string;
 };
 
 type SortConfig = {
     key: 'price' | 'stock';
     direction: 'asc' | 'desc';
 } | null;
-
-const defaultItems: Item[] = [];
-
-const getUniqueItems = (items: Item[]): Item[] => {
-    const seen = new Set<string>();
-    return items.filter(item => {
-        const duplicate = seen.has(item.sku);
-        seen.add(item.sku);
-        return !duplicate;
-    });
-};
 
 const ConfettiPiece = ({ id }: { id: number }) => {
     const style = {
@@ -144,36 +138,31 @@ const imageMap: { [key: string]: any } = {
 
 
 export default function InventoryPage() {
-    const { userProfile } = useAuth();
-    const [companyName, setCompanyName] = useState('');
-    const [allItems, setAllItems] = useState<Item[]>([]);
+    const { user, userProfile } = useAuth();
+    const { firestore } = useFirebase();
+    const router = useRouter();
+
+    const inventoryCollectionRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return collection(firestore, `users/${user.uid}/products_inventory`);
+    }, [user, firestore]);
+
+    const { data: inventoryItems, isLoading: isLoadingInventory } = useCollection<Item>(inventoryCollectionRef);
+
     const [displayedItems, setDisplayedItems] = useState<Item[]>([]);
     const { toast, dismiss } = useToast();
-    const router = useRouter();
     const lastRemovedItem = useRef<{ item: Item, index: number } | null>(null);
     const [editingStockSku, setEditingStockSku] = useState<string | null>(null);
     const [stockValue, setStockValue] = useState(0);
 
-    // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [showLaunchedFirst, setShowLaunchedFirst] = useState(false);
     
-    // Launch Animation State
     const [launchingItem, setLaunchingItem] = useState<Item | null>(null);
 
-    useEffect(() => {
-        const storedName = localStorage.getItem('companyName');
-        if (storedName) {
-          setCompanyName(storedName);
-        } else if (userProfile) {
-          const defaultName = userProfile.displayName;
-          setCompanyName(defaultName);
-        }
-      }, [userProfile]);
-
     const processItems = (items: Item[]): Item[] => {
-        return getUniqueItems(items).map(p => {
+        return items.map(p => {
             let status: string;
             if (p.stock === 0) {
                 status = "Out of Stock";
@@ -182,145 +171,121 @@ export default function InventoryPage() {
             } else {
                 status = "In Stock";
             }
-            return { ...p, status };
+            return { ...p, status, launched: p.isLaunched };
         });
     }
-
-    const loadItems = () => {
-        const storedItemsRaw = localStorage.getItem('products');
-        let itemsToLoad: Item[];
-        if (storedItemsRaw) {
-            const storedItems: Item[] = JSON.parse(storedItemsRaw);
-            itemsToLoad = processItems(storedItems);
-            if (itemsToLoad.length !== storedItems.length) {
-                localStorage.setItem('products', JSON.stringify(itemsToLoad));
-            }
-        } else {
-            itemsToLoad = processItems(defaultItems);
-            localStorage.setItem('products', JSON.stringify(itemsToLoad));
-        }
-        setAllItems(itemsToLoad);
-        setDisplayedItems(itemsToLoad);
-    };
     
     useEffect(() => {
-        loadItems();
-        window.addEventListener('storage', loadItems);
-        return () => window.removeEventListener('storage', loadItems);
-    }, []);
+        if (inventoryItems) {
+            const processed = processItems(inventoryItems);
+            let filtered = [...processed];
 
-    // Effect for Search and Filtering
-    useEffect(() => {
-        let filtered = [...allItems];
+            if (searchTerm.length > 0) {
+                const lowercasedTerm = searchTerm.toLowerCase();
+                filtered = filtered.filter(p =>
+                    (p.productName || p.name).toLowerCase().includes(lowercasedTerm) ||
+                    p.sku.toLowerCase().includes(lowercasedTerm) ||
+                    p.stock.toString().includes(lowercasedTerm)
+                );
+            }
+            
+            if (sortConfig !== null) {
+                filtered.sort((a, b) => {
+                    const aValue = sortConfig.key === 'price' ? (a.productPrice || Number(a.price)) : a.stock;
+                    const bValue = sortConfig.key === 'price' ? (b.productPrice || Number(b.price)) : b.stock;
+                    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
 
-        // Apply search
-        if (searchTerm.length > 0) {
-            const lowercasedTerm = searchTerm.toLowerCase();
-            filtered = filtered.filter(p =>
-                (p.productName || p.name).toLowerCase().includes(lowercasedTerm) ||
-                p.sku.toLowerCase().includes(lowercasedTerm) ||
-                p.stock.toString().includes(lowercasedTerm)
-            ).sort((a, b) => {
-                const aName = a.productName || a.name;
-                const aMatch = aName.toLowerCase().includes(lowercasedTerm) || a.sku.toLowerCase().includes(lowercasedTerm) || a.stock.toString().includes(lowercasedTerm);
-                const bName = b.productName || b.name;
-                const bMatch = bName.toLowerCase().includes(lowercasedTerm) || b.sku.toLowerCase().includes(lowercasedTerm) || b.stock.toString().includes(lowercasedTerm);
-                if (aMatch && !bMatch) return -1;
-                if (!aMatch && bMatch) return 1;
-                return 0;
-            });
+            if (showLaunchedFirst) {
+                filtered.sort((a, b) => {
+                    if (a.launched && !b.launched) return -1;
+                    if (!a.launched && b.launched) return 1;
+                    return 0;
+                });
+            }
+
+            setDisplayedItems(filtered);
+        } else {
+            setDisplayedItems([]);
         }
-        
-        // Apply sorting
-        if (sortConfig !== null) {
-            filtered.sort((a, b) => {
-                const aValue = sortConfig.key === 'price' ? (a.productPrice || Number(a.price)) : a.stock;
-                const bValue = sortConfig.key === 'price' ? (b.productPrice || Number(b.price)) : b.stock;
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'asc' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'asc' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
+    }, [searchTerm, sortConfig, showLaunchedFirst, inventoryItems]);
 
-        // Apply "Launched First" filter
-        if (showLaunchedFirst) {
-            filtered.sort((a, b) => {
-                if (a.launched && !b.launched) return -1;
-                if (!a.launched && b.launched) return 1;
-                return 0;
-            });
-        }
-
-        setDisplayedItems(filtered);
-    }, [searchTerm, sortConfig, showLaunchedFirst, allItems]);
-
-    const updateLocalStorage = (updatedItems: Item[]) => {
-        const processed = processItems(updatedItems);
-        setAllItems(processed);
-        localStorage.setItem('products', JSON.stringify(processed));
-    };
-
-    const handleRemoveItem = (sku: string) => {
-        const currentItems: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
-        const itemIndex = currentItems.findIndex((p: Item) => p.sku === sku);
-        if (itemIndex === -1) return;
-
-        const itemToRemove = currentItems[itemIndex];
-        lastRemovedItem.current = { item: itemToRemove, index: itemIndex };
-        
-        const updatedItems = currentItems.filter((p: Item) => p.sku !== sku);
-        updateLocalStorage(updatedItems);
-
-        const { id } = toast({
-            title: "Item Removed",
-            description: `Item with SKU ${sku} has been removed.`,
-            duration: 5000,
-            onUndo: () => {
-                if (lastRemovedItem.current) {
-                    const { item, index } = lastRemovedItem.current;
-                    const itemsFromStorage: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
-                    const restoredItems = [
-                        ...itemsFromStorage.slice(0, index),
-                        item,
-                        ...itemsFromStorage.slice(index)
-                    ];
-                    updateLocalStorage(restoredItems);
-                    lastRemovedItem.current = null;
-                    dismiss(id);
-                }
-            },
-        });
-    }
-
-    const handleLaunchItem = (sku: string) => {
-        const currentItems: Item[] = JSON.parse(localStorage.getItem('products') || '[]');
-        const itemIndex = currentItems.findIndex(p => p.sku === sku);
-        if (itemIndex === -1) return;
-
-        const itemToLaunch = currentItems[itemIndex];
-        
-        const updatedItems = currentItems.map(p => p.sku === sku ? { ...p, launched: !p.launched } : p);
-        updateLocalStorage(updatedItems);
-        
-        const isNowLaunched = updatedItems[itemIndex].launched;
-        
-        // Trigger animation only when launching
-        if (isNowLaunched) {
-            setLaunchingItem(itemToLaunch);
-            setTimeout(() => {
-                setLaunchingItem(null);
-            }, 5000); // Hide animation after 5 seconds
-        }
+    const handleRemoveItem = (item: Item) => {
+        if (!user || !firestore) return;
+        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, item.id);
+        deleteDocumentNonBlocking(docRef);
 
         toast({
-            title: `Item ${isNowLaunched ? "Launched" : "Un-launched"}!`,
-            description: `${itemToLaunch.name} has been ${isNowLaunched ? "launched" : "removed from the marketplace"}.`,
+            title: "Item Removed",
+            description: `Item with SKU ${item.sku} has been removed.`,
         });
     }
+
+    const handleLaunchItem = (itemToLaunch: Item) => {
+        if (!user || !firestore) return;
+
+        const isLaunching = !itemToLaunch.isLaunched;
+        const batch = writeBatch(firestore);
+
+        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, itemToLaunch.id);
+        const launchedDocRef = doc(firestore, `products_launched`, itemToLaunch.id);
+
+        if (isLaunching) {
+            // Move from inventory to launched
+            const launchedProductData = { ...itemToLaunch, isLaunched: true };
+            batch.set(launchedDocRef, launchedProductData);
+            batch.delete(inventoryDocRef);
+            
+            setLaunchingItem(itemToLaunch);
+            setTimeout(() => setLaunchingItem(null), 5000);
+        } else {
+            // Move from launched to inventory
+            const inventoryProductData = { ...itemToLaunch, isLaunched: false };
+            batch.set(inventoryDocRef, inventoryProductData);
+            batch.delete(launchedDocRef);
+        }
+
+        batch.commit().then(() => {
+            toast({
+                title: `Item ${isLaunching ? "Launched" : "Un-launched"}!`,
+                description: `${itemToLaunch.name} has been ${isLaunching ? "launched to the marketplace" : "moved back to inventory"}.`,
+            });
+        }).catch(error => {
+            console.error("Error launching item: ", error);
+            toast({
+                variant: "destructive",
+                title: "Launch Failed",
+                description: "There was an error updating the item status."
+            });
+        });
+    };
+    
+    // This needs to be adapted for launched products as well
+    const handleUnlaunchItem = (itemToUnlaunch: Item) => {
+        if (!user || !firestore) return;
+        
+        const batch = writeBatch(firestore);
+        
+        const launchedDocRef = doc(firestore, 'products_launched', itemToUnlaunch.id);
+        const inventoryDocRef = doc(firestore, `users/${user.uid}/products_inventory`, itemToUnlaunch.id);
+
+        const inventoryProductData = { ...itemToUnlaunch, isLaunched: false, launched: false };
+        batch.set(inventoryDocRef, inventoryProductData);
+        batch.delete(launchedDocRef);
+        
+        batch.commit().then(() => {
+            toast({
+                title: "Item Un-launched!",
+                description: `${itemToUnlaunch.name} has been moved back to your inventory.`,
+            });
+        }).catch(error => {
+            console.error("Error unlaunching item: ", error);
+            toast({ variant: "destructive", title: "Un-launch Failed" });
+        });
+    };
 
     const handleEditItem = (item: Item) => {
         localStorage.setItem('editingProduct', JSON.stringify(item));
@@ -332,17 +297,16 @@ export default function InventoryPage() {
         setStockValue(currentStock);
     }
 
-    const handleStockUpdate = (sku: string) => {
-        if (!editingStockSku) return;
+    const handleStockUpdate = (item: Item) => {
+        if (!editingStockSku || !user || !firestore) return;
 
-        const updatedItems = allItems.map(p => 
-            p.sku === sku ? { ...p, stock: stockValue } : p
-        );
-        updateLocalStorage(updatedItems);
+        const docRef = doc(firestore, `users/${user.uid}/products_inventory`, item.id);
+        setDocumentNonBlocking(docRef, { stock: stockValue }, { merge: true });
+        
         setEditingStockSku(null);
         toast({
             title: "Stock Updated",
-            description: `Stock for SKU ${sku} has been set to ${stockValue}.`
+            description: `Stock for SKU ${item.sku} has been set to ${stockValue}.`
         });
     }
     
@@ -484,7 +448,13 @@ export default function InventoryPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {displayedItems.length > 0 ? displayedItems.map((item) => {
+                                {isLoadingInventory ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            Loading inventory...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : displayedItems.length > 0 ? displayedItems.map((item) => {
                                     const itemName = item.productName || item.name;
                                     const itemPrice = item.productPrice || item.price;
                                     const itemImage = item.image || imageMap[item.name];
@@ -528,12 +498,12 @@ export default function InventoryPage() {
                                                                 <Pencil className="mr-2 h-4 w-4" />
                                                                 <span>Edit Item</span>
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleLaunchItem(item.sku)}>
+                                                            <DropdownMenuItem onClick={() => item.isLaunched ? handleUnlaunchItem(item) : handleLaunchItem(item)}>
                                                                 <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                                <span>{item.launched ? "Un-launch Item" : "Launch Item"}</span>
+                                                                <span>{item.isLaunched ? "Un-launch Item" : "Launch Item"}</span>
                                                             </DropdownMenuItem>
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveItem(item.sku)}>
+                                                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRemoveItem(item)}>
                                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                                 <span>Remove Item</span>
                                                             </DropdownMenuItem>
@@ -545,7 +515,7 @@ export default function InventoryPage() {
                                                     item.launched ? "text-green-600" : "text-muted-foreground"
                                                 )}>
                                                     {item.launched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                                                    <span>{item.launched ? "Launched" : "Yet to launch"}</span>
+                                                    <span>{item.launched ? "Launched" : "In Inventory"}</span>
                                                 </div>
                                                 <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 group">
                                                     {editingStockSku === item.sku ? (
@@ -553,8 +523,8 @@ export default function InventoryPage() {
                                                             type="number"
                                                             value={stockValue}
                                                             onChange={(e) => setStockValue(e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
-                                                            onBlur={() => handleStockUpdate(item.sku)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(item.sku)}
+                                                            onBlur={() => handleStockUpdate(item)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleStockUpdate(item)}
                                                             autoFocus
                                                             className="h-6 w-20"
                                                         />
@@ -590,3 +560,5 @@ export default function InventoryPage() {
         </div>
     );
 }
+
+    

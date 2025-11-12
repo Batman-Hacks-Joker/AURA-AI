@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -134,7 +135,7 @@
         "definition": {
           "entityName": "Product",
           "schema": {
-            "$ref": "#/backend/entities/Product"
+            "$ref": "#/entities/Product"
           },
           "description": "Stores products created by the admin that are not yet launched. Includes denormalized 'adminId' for authorization independence.",
           "params": [
@@ -154,7 +155,7 @@
         "definition": {
           "entityName": "Product",
           "schema": {
-            "$ref": "#/backend/entities/Product"
+            "$ref": "#/entities/Product"
           },
           "description": "Stores products that have been launched into the marketplace. Includes denormalized 'adminId' for authorization independence.",
           "params": [
@@ -170,7 +171,7 @@
         "definition": {
           "entityName": "Agent",
           "schema": {
-            "$ref": "#/backend/entities/Agent"
+            "$ref": "#/entities/Agent"
           },
           "description": "Stores agent details.",
           "params": [
@@ -186,7 +187,7 @@
         "definition": {
           "entityName": "Admin",
           "schema": {
-            "$ref": "#/backend/entities/Admin"
+            "$ref": "#/entities/Admin"
           },
           "description": "Stores admin user details.",
           "params": [
@@ -201,3 +202,5 @@
     "reasoning": "The Firestore structure is designed to manage products, agents, and admins with a focus on inventory and marketplace listings. It prioritizes authorization independence and supports secure listing operations. The structure uses segregation based on the 'isLaunched' status of products, separating launched products (marketplace) from unlaunched products (inventory) for admin users.  Admin-owned data is structured under `/users/{adminId}/` to ensure clear ownership and straightforward security rules. The `products_launched` collection stores data for the marketplace, enabling efficient and secure listing for all users.  Agents are stored in a top-level collection for easy management and association with products. The `adminId` field is denormalized in both `products_launched` and `/users/{adminId}/products_inventory` to ensure authorization independence, eliminating the need for `get()` calls in security rules to verify ownership. This design supports the QAPs principle by using structural segregation based on the 'isLaunched' status and path-based ownership for inventory management. The use of top-level collections for launched products ensures efficient listing without complex security rules."
   }
 }
+
+    

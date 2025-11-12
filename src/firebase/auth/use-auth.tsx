@@ -1,3 +1,4 @@
+
 'use client';
 import {
   GoogleAuthProvider,
@@ -33,6 +34,7 @@ export interface UserProfile {
   displayName: string;
   email: string;
   createdAt: any; // Use 'any' for serverTimestamp
+  companyName?: string;
 }
 
 // Define the context state

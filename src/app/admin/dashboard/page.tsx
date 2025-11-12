@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase/auth/use-auth";
+import { useAuth, useFirebase, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { doc } from "firebase/firestore";
 
 const stats = [
   {
@@ -39,31 +40,34 @@ const stats = [
 ];
 
 export default function AdminDashboardPage() {
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
+  const { firestore } = useFirebase();
   const [companyName, setCompanyName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const { toast } = useToast();
 
+  const adminDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `admins/${user.uid}`);
+  }, [user, firestore]);
+
   useEffect(() => {
-    const storedName = localStorage.getItem('companyName');
-    if (storedName) {
-      setCompanyName(storedName);
-      setInputValue(storedName);
-    } else if (userProfile) {
-      // Default to user's display name if no company name is set
-      const defaultName = userProfile.displayName;
-      setCompanyName(defaultName);
-      setInputValue(defaultName);
+    if (userProfile) {
+        const name = userProfile.companyName || userProfile.displayName;
+        setCompanyName(name);
+        setInputValue(name);
     }
   }, [userProfile]);
 
   const handleSave = () => {
-    if (inputValue.trim()) {
+    if (inputValue.trim() && adminDocRef) {
       const newName = inputValue.trim();
-      localStorage.setItem('companyName', newName);
+      setDocumentNonBlocking(adminDocRef, { companyName: newName }, { merge: true });
+      
       setCompanyName(newName);
       setIsEditing(false);
+      
       toast({
         title: "Company Name Saved!",
         description: `Your company name has been set to "${newName}".`,

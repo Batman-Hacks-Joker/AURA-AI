@@ -13,8 +13,8 @@ export function Logo({
       <Image 
         src="/logo.png" 
         alt="AURA AI Logo" 
-        width={90} 
-        height={36} 
+        width={140} 
+        height={56} 
         className="dark:invert"
         />
     </div>

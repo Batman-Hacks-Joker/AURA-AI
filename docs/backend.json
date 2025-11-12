@@ -1,61 +1,203 @@
 {
   "entities": {
-    "AdminProfile": {
-      "title": "Admin Profile",
-      "description": "Represents an admin user's profile information.",
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
       "type": "object",
+      "description": "Represents a product listed in the marketplace or stored in the inventory.",
       "properties": {
-        "displayName": {
+        "id": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "Unique identifier for the product."
         },
-        "email": {
+        "name": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
+          "description": "The name of the product."
         },
-        "createdAt": {
+        "imageUrl": {
           "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user profile was created."
+          "description": "URL of the product's image.",
+          "format": "uri"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Stock Keeping Unit, a unique identifier for the product."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the company that produces/sells the product."
+        },
+        "stockAmount": {
+          "type": "number",
+          "description": "The number of units currently in stock."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "itemDetails": {
+          "type": "string",
+          "description": "Detailed description of the product."
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Reference to Agent. (Relationship: Agent 1:N Product)"
+        },
+        "isLaunched": {
+          "type": "boolean",
+          "description": "Indicates whether the product is launched in the marketplace or is still in inventory."
+        },
+        "adminId": {
+          "type": "string",
+          "description": "Reference to Admin. (Relationship: Admin 1:N Product).  The ID of the admin user who created the product."
         }
       },
-      "required": ["displayName", "email", "createdAt"]
+      "required": [
+        "id",
+        "name",
+        "sku",
+        "companyName",
+        "stockAmount",
+        "price",
+        "itemDetails",
+        "isLaunched",
+        "adminId"
+      ]
     },
-    "CustomerProfile": {
-      "title": "Customer Profile",
-      "description": "Represents a customer user's profile information.",
+    "Agent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Agent",
       "type": "object",
+      "description": "Represents an agent associated with a product, providing knowledge base support.",
       "properties": {
-        "displayName": {
+        "id": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "Unique identifier for the agent."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the agent."
+        },
+        "details": {
+          "type": "string",
+          "description": "Detailed information about the agent and their expertise."
+        },
+        "knowledgeBase": {
+          "type": "string",
+          "description": "Link or content of the agent's knowledge base."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "details",
+        "knowledgeBase"
+      ]
+    },
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an admin user who can create and manage products.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the admin user."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the admin."
         },
         "email": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user profile was created."
+          "description": "The email address of the admin.",
+          "format": "email"
         }
       },
-      "required": ["displayName", "email", "createdAt"]
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/admins/{adminId}": {
-      "schema": { "$ref": "#/entities/AdminProfile" },
-      "description": "Stores profile information for admin users."
-    },
-    "/customers/{customerId}": {
-      "schema": { "$ref": "#/entities/CustomerProfile" },
-      "description": "Stores profile information for customer users."
-    }
+    "structure": [
+      {
+        "path": "/users/{adminId}/products_inventory/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores products created by the admin that are not yet launched. Includes denormalized 'adminId' for authorization independence.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The ID of the admin user who owns the product inventory."
+            },
+            {
+              "name": "productId",
+              "description": "The unique ID of the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products_launched/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores products that have been launched into the marketplace. Includes denormalized 'adminId' for authorization independence.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique ID of the launched product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/agents/{agentId}",
+        "definition": {
+          "entityName": "Agent",
+          "schema": {
+            "$ref": "#/backend/entities/Agent"
+          },
+          "description": "Stores agent details.",
+          "params": [
+            {
+              "name": "agentId",
+              "description": "The unique ID of the agent."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Stores admin user details.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique ID of the admin user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage products, agents, and admins with a focus on inventory and marketplace listings. It prioritizes authorization independence and supports secure listing operations. The structure uses segregation based on the 'isLaunched' status of products, separating launched products (marketplace) from unlaunched products (inventory) for admin users.  Admin-owned data is structured under `/users/{adminId}/` to ensure clear ownership and straightforward security rules. The `products_launched` collection stores data for the marketplace, enabling efficient and secure listing for all users.  Agents are stored in a top-level collection for easy management and association with products. The `adminId` field is denormalized in both `products_launched` and `/users/{adminId}/products_inventory` to ensure authorization independence, eliminating the need for `get()` calls in security rules to verify ownership. This design supports the QAPs principle by using structural segregation based on the 'isLaunched' status and path-based ownership for inventory management. The use of top-level collections for launched products ensures efficient listing without complex security rules."
   }
 }

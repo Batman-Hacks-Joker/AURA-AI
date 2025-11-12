@@ -9,10 +9,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, CheckCircle, ArrowRight, Pencil } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, Pencil, Headset, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase/auth/use-auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type Product = {
     name: string;
@@ -34,6 +36,14 @@ type Product = {
     productFeatures?: string[];
     productBenefits?: string[];
 };
+
+type Agent = {
+    id: string;
+    name: string;
+    knowledgeBase: { question: string; answer: string; }[];
+    assignedProductSku?: string;
+};
+
 
 function CartButton({ product }: { product: Product }) {
     const router = useRouter();
@@ -101,11 +111,15 @@ export default function MarketplacePage() {
     const [purchasedSkus, setPurchasedSkus] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
     const { role } = useAuth();
+    const [agents, setAgents] = useState<Agent[]>([]);
+    const [agentMap, setAgentMap] = useState<Map<string, Agent>>(new Map());
+    const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
     useEffect(() => {
         const loadData = () => {
             const storedProductsRaw = localStorage.getItem('products');
             const purchasedProductsRaw = localStorage.getItem('purchasedProducts');
+            const storedAgentsRaw = localStorage.getItem('serviceAgents');
             
             if (storedProductsRaw) {
                 const allProducts: Product[] = JSON.parse(storedProductsRaw);
@@ -118,6 +132,18 @@ export default function MarketplacePage() {
                 setPurchasedSkus(new Set(purchasedProducts.map(p => p.sku)));
             }
             
+            if (storedAgentsRaw) {
+                const allAgents: Agent[] = JSON.parse(storedAgentsRaw);
+                setAgents(allAgents);
+                const newAgentMap = new Map<string, Agent>();
+                allAgents.forEach(agent => {
+                    if (agent.assignedProductSku) {
+                        newAgentMap.set(agent.assignedProductSku, agent);
+                    }
+                });
+                setAgentMap(newAgentMap);
+            }
+
             setIsLoading(false);
         };
         
@@ -135,6 +161,14 @@ export default function MarketplacePage() {
         "City Commuter": PlaceHolderImages.find(p => p.id === 'sedan-1'),
         "Family Voyager": PlaceHolderImages.find(p => p.id === 'suv-1'),
         "Adventure Seeker": PlaceHolderImages.find(p => p.id === 'offroad-1'),
+    };
+
+    const handleAgentIconClick = (e: React.MouseEvent, agent: Agent | undefined) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (agent) {
+            setSelectedAgent(agent);
+        }
     };
 
     return (
@@ -174,6 +208,7 @@ export default function MarketplacePage() {
                         const productPrice = product.productPrice || product.price;
                         const productImage = product.image || imageMap[productName];
                         const isOwned = purchasedSkus.has(product.sku);
+                        const assignedAgent = agentMap.get(product.sku);
 
                         return (
                             <Link href={`/marketplace/${product.sku}`} key={product.sku} className="group block">
@@ -195,7 +230,15 @@ export default function MarketplacePage() {
                                             )}
                                     </CardHeader>
                                     <div className="p-4 flex flex-col flex-grow">
-                                        <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            <CardTitle className="group-hover:text-primary transition-colors">{productName}</CardTitle>
+                                            <button onClick={(e) => handleAgentIconClick(e, assignedAgent)}>
+                                                <Headset className={cn(
+                                                    "h-5 w-5",
+                                                    assignedAgent ? "text-green-500 cursor-pointer" : "text-muted-foreground"
+                                                )} />
+                                            </button>
+                                        </div>
                                         <CardDescription>{product.productCategory || product.category}</CardDescription>
                                         <CardContent className="p-0 pt-2 flex-grow">
                                             <p className="text-sm text-muted-foreground line-clamp-2">
@@ -226,6 +269,27 @@ export default function MarketplacePage() {
                         );
                     })}
                 </div>
+            )}
+            {selectedAgent && (
+                <Dialog open={!!selectedAgent} onOpenChange={() => setSelectedAgent(null)}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Headset className="text-primary" />
+                                Assigned Service Agent
+                            </DialogTitle>
+                            <DialogDescription>
+                                This product is supported by the following AI agent.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <h3 className="text-lg font-semibold">{selectedAgent.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                                This agent has a knowledge base with {selectedAgent.knowledgeBase.length} responses.
+                            </p>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );

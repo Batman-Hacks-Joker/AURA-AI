@@ -2,12 +2,14 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Wrench, Package, Building, Pencil, Save, Check } from "lucide-react";
+import { DollarSign, Users, Wrench, Package, Building, Pencil, Save, Check, PackagePlus, Warehouse, Store, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/firebase/auth/use-auth";
+import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
 const stats = [
   {
@@ -114,7 +116,32 @@ export default function AdminDashboardPage() {
             )}
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium mb-4">
+                <Link href="/admin/dashboard" className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="text-xs">Dashboard</span>
+                </Link>
+                <Link href="/admin/product-creation" className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <PackagePlus className="h-5 w-5" />
+                    <span className="text-xs">Item Creation</span>
+                </Link>
+                <Link href="/admin/inventory" className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Warehouse className="h-5 w-5" />
+                    <span className="text-xs">Inventory</span>
+                </Link>
+                <Link href="/marketplace" className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Store className="h-5 w-5" />
+                    <span className="text-xs">Marketplace</span>
+                </Link>
+                <Link href="/admin/service-center" className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                    <Wrench className="h-5 w-5" />
+                    <span className="text-xs">Service Center</span>
+                </Link>
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 pt-4">
                 {stats.map((stat) => (
                 <Card key={stat.title}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

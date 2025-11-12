@@ -26,6 +26,8 @@ import { SidebarToggle } from "@/components/sidebar-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
 import React from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 function AdminSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
@@ -93,34 +95,39 @@ function AdminSidebarInner() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isDashboard = pathname === '/admin/dashboard';
+
     return (
       <>
         <AdminSidebarInner />
         <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4 shrink-0">
-              <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
-                  <Link href="/admin/dashboard" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
-                      <LayoutDashboard className="h-5 w-5" />
-                      <span className="hidden md:inline">Dashboard</span>
-                  </Link>
-                  <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
-                      <PackagePlus className="h-5 w-5" />
-                      <span className="hidden md:inline">Item Creation</span>
-                  </Link>
-                  <Link href="/admin/inventory" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
-                      <Warehouse className="h-5 w-5" />
-                      <span className="hidden md:inline">Inventory</span>
-                  </Link>
-                  <Link href="/marketplace" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
-                      <Store className="h-5 w-5" />
-                      <span className="hidden md:inline">Marketplace</span>
-                  </Link>
-                  <Link href="/admin/service-center" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
-                      <Wrench className="h-5 w-5" />
-                      <span className="hidden md:inline">Service Center</span>
-                  </Link>
-              </div>
-          </header>
+          {!isDashboard && (
+            <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4 shrink-0">
+                <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
+                    <Link href="/admin/dashboard" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                        <LayoutDashboard className="h-5 w-5" />
+                        <span className="hidden md:inline">Dashboard</span>
+                    </Link>
+                    <Link href="/admin/product-creation" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                        <PackagePlus className="h-5 w-5" />
+                        <span className="hidden md:inline">Item Creation</span>
+                    </Link>
+                    <Link href="/admin/inventory" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                        <Warehouse className="h-5 w-5" />
+                        <span className="hidden md:inline">Inventory</span>
+                    </Link>
+                    <Link href="/marketplace" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                        <Store className="h-5 w-5" />
+                        <span className="hidden md:inline">Marketplace</span>
+                    </Link>
+                    <Link href="/admin/service-center" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                        <Wrench className="h-5 w-5" />
+                        <span className="hidden md:inline">Service Center</span>
+                    </Link>
+                </div>
+            </header>
+          )}
           <main className="p-4 sm:p-6 lg:p-8 bg-background flex-1 overflow-y-auto">
             {children}
           </main>

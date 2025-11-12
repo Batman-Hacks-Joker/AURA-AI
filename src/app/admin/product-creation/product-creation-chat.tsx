@@ -33,7 +33,7 @@ export function ProductCreationChat() {
     const { firestore } = useFirebase();
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isListening, setIsListening] = useState(isListening);
+    const [isListening, setIsListening] = useState(false);
     const [generatedDetails, setGeneratedDetails] = useState<ProductDetails | null>(null);
     const recognitionRef = useRef<any | null>(null);
     const { toast } = useToast();
@@ -544,5 +544,7 @@ export function ProductCreationChat() {
         </div>
     );
 }
+
+    
 
     

@@ -111,9 +111,9 @@ export default function KnowledgeBasePage() {
     const generateFromContent = async (content: { documentDataUri?: string, documentText?: string }) => {
         try {
             const result = await generateFlashcards(content);
-            if (result.error) {
+            if ('error' in result) {
                 toast({ variant: "destructive", title: "Generation Failed", description: result.error });
-            } else if (result.flashcards) {
+            } else if ('flashcards' in result) {
                 setFlashcards(result.flashcards);
                 toast({ title: "Flashcards Generated!", description: `Successfully created ${result.flashcards.length} flashcards from your content.` });
             }
@@ -283,6 +283,8 @@ export default function KnowledgeBasePage() {
         </Dialog>
     );
 }
+    
+
     
 
     

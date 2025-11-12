@@ -1,10 +1,14 @@
 
 'use server';
 
-import { generateProductDetails } from '@/ai/flows/product-detail-prompting';
-import { generateImage } from '@/ai/flows/generate-image-flow';
+import { generateProductDetails, ProductDetailsOutput } from '@/ai/flows/product-detail-prompting';
+import { generateImage, GenerateImageOutput } from '@/ai/flows/generate-image-flow';
 
-export async function getProductCreationResponse(productDescription: string, conversationHistory: string) {
+type ProductCreationResponse = ProductDetailsOutput | { error: string };
+type ImageGenerationResponse = GenerateImageOutput | { error: string };
+
+
+export async function getProductCreationResponse(productDescription: string, conversationHistory: string): Promise<ProductCreationResponse> {
   try {
     const result = await generateProductDetails({ productDescription });
     return result;
@@ -18,7 +22,7 @@ export async function getProductCreationResponse(productDescription: string, con
   }
 }
 
-export async function getGeneratedImage(prompt: string) {
+export async function getGeneratedImage(prompt: string): Promise<ImageGenerationResponse> {
     try {
         const result = await generateImage({ prompt });
         return result;

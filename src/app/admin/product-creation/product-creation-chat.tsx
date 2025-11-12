@@ -15,26 +15,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ProductDetailsOutput } from '@/ai/flows/product-detail-prompting';
+import { GenerateImageOutput } from '@/ai/flows/generate-image-flow';
+
 
 interface CustomWindow extends Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
 }
 declare const window: CustomWindow;
 
+type ProductDetails = ProductDetailsOutput & { stock: number };
 
 export function ProductCreationChat() {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const [generatedDetails, setGeneratedDetails] = useState<any>(null);
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const [generatedDetails, setGeneratedDetails] = useState<ProductDetails | null>(null);
+    const recognitionRef = useRef<any | null>(null);
     const { toast } = useToast();
     const router = useRouter();
 
     // New states for editing and image generation
     const [isEditing, setIsEditing] = useState(false);
-    const [editableDetails, setEditableDetails] = useState<any>(null);
+    const [editableDetails, setEditableDetails] = useState<ProductDetails | null>(null);
     const [productImage, setProductImage] = useState<{url: string; hint: string} | null>(null);
     const [imageGenPrompt, setImageGenPrompt] = useState('');
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -81,12 +85,12 @@ export function ProductCreationChat() {
 
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => setIsListening(false);
-        recognition.onerror = (event) => {
+        recognition.onerror = (event: any) => {
             console.error('Speech recognition error', event.error);
             setIsListening(false);
         };
 
-        recognition.onresult = (event) => {
+        recognition.onresult = (event: any) => {
             let finalTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
@@ -146,7 +150,7 @@ export function ProductCreationChat() {
         
         try {
             const details = await getProductCreationResponse(input, "");
-            if (details.error) {
+            if ('error' in details) {
                 toast({
                     variant: 'destructive',
                     title: 'Error Generating Details',
@@ -245,9 +249,9 @@ export function ProductCreationChat() {
     const handleEditToggle = () => {
         if (isEditing) {
             const cleanDetails = {
-                ...editableDetails,
-                productFeatures: (editableDetails.productFeatures || []).filter((f: string) => f && f.trim() !== ''),
-                productBenefits: (editableDetails.productBenefits || []).filter((b: string) => b && b.trim() !== '')
+                ...editableDetails!,
+                productFeatures: (editableDetails!.productFeatures || []).filter((f: string) => f && f.trim() !== ''),
+                productBenefits: (editableDetails!.productBenefits || []).filter((b: string) => b && b.trim() !== '')
             };
             setEditableDetails(cleanDetails);
             setGeneratedDetails(cleanDetails);
@@ -303,8 +307,8 @@ export function ProductCreationChat() {
         }
         setIsGeneratingImage(true);
         try {
-            const result: any = await getGeneratedImage(imageGenPrompt);
-            if (result.error) {
+            const result = await getGeneratedImage(imageGenPrompt);
+            if ('error' in result) {
                 toast({ variant: 'destructive', title: 'Image Generation Failed', description: result.error });
                 setProductImage(null);
             } else {

@@ -42,7 +42,7 @@ const generateImageFlow = ai.defineFlow(
       },
     });
 
-    const imageUrl = response.media.url;
+    const imageUrl = response.media?.url;
 
     if (!imageUrl) {
       throw new Error('Image generation failed to return a data URI.');

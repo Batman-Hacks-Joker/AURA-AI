@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
@@ -20,6 +21,7 @@ import {
   Store,
   Wrench,
   LayoutDashboard,
+  PanelLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { SidebarToggle } from "@/components/sidebar-toggle";
@@ -29,6 +31,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/firebase/auth/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 function AdminSidebarInner() {
   const { toggleSidebar, state } = useSidebar();
@@ -120,9 +123,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <>
         <AdminSidebarInner />
         <SidebarInset className="flex flex-col max-h-screen">
-          {!isDashboard && (
             <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-card gap-4 px-4 shrink-0">
-                <div className="flex-1 flex items-center justify-center gap-2 md:gap-6 text-sm font-medium">
+                <div className="flex items-center gap-2 md:hidden">
+                    <SidebarTrigger>
+                        <PanelLeft />
+                        <span className="sr-only">Toggle Menu</span>
+                    </SidebarTrigger>
+                </div>
+                <div className="hidden md:flex flex-1 items-center justify-center gap-2 md:gap-6 text-sm font-medium">
                     <Link href="/admin/dashboard" className="relative group flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                         <LayoutDashboard className="h-5 w-5" />
                         <span className="hidden md:inline">Dashboard</span>
@@ -149,8 +157,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300"></span>
                     </Link>
                 </div>
+                {/* Spacer to push user menu to the right on mobile */}
+                <div className="flex-1 md:hidden" /> 
+                <div className="flex items-center gap-2">
+                    <div className="md:hidden">
+                      <UserMenu />
+                    </div>
+                </div>
             </header>
-          )}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background">
             {children}
           </main>

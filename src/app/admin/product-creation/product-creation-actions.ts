@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generateProductDetails } from '@/ai/flows/product-detail-prompting';

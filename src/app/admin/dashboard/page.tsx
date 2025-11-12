@@ -1,5 +1,12 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, Wrench, Package } from "lucide-react";
+import { DollarSign, Users, Wrench, Package, Building, Pencil, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const stats = [
   {
@@ -29,11 +36,76 @@ const stats = [
 ];
 
 export default function AdminDashboardPage() {
+  const [companyName, setCompanyName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const storedName = localStorage.getItem('companyName');
+    if (storedName) {
+      setCompanyName(storedName);
+      setInputValue(storedName);
+    } else {
+      setIsEditing(true);
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (inputValue.trim()) {
+      localStorage.setItem('companyName', inputValue.trim());
+      setCompanyName(inputValue.trim());
+      setIsEditing(false);
+      toast({
+        title: "Company Name Saved!",
+        description: `Your company name has been set to "${inputValue.trim()}".`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Invalid Name",
+        description: "Company name cannot be empty.",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back, Admin!</h1>
-        <p className="text-muted-foreground">Here's a snapshot of your business today.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back, Admin!</h1>
+          <p className="text-muted-foreground">Here's a snapshot of your business today.</p>
+        </div>
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building className="h-5 w-5 text-primary" />
+              Company Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Enter your company name"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                />
+                <Button size="icon" onClick={handleSave}>
+                  <Save className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-lg">{companyName}</p>
+                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -51,7 +123,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
       
-      {/* Additional dashboard components can go here, like charts or recent activity feeds */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>

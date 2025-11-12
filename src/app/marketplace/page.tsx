@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -130,9 +129,9 @@ function AdminButtons({ product }: { product: Product }) {
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
             </Button>
-            <Button onClick={handleUnlaunch} size="sm" variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+            <Button onClick={handleUnlaunch} size="icon" variant="destructive">
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
             </Button>
         </div>
     );
@@ -326,4 +325,5 @@ export default function MarketplacePage() {
             )}
         </div>
     );
-}
+
+    

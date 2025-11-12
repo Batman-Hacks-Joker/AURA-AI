@@ -1,74 +1,6 @@
-/**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for the `/users/{userId}` collection,
- *              where each user can only access their own profile data. Admin privileges are granted based on the existence
- *              of an `/roles_admin/{userId}` document, providing elevated access to all user data.
- *              All writes are validated to ensure data consistency and prevent unauthorized modifications.
- *
- * Data Structure:
- * - /users/{userId}: Stores individual user profiles. 'userId' MUST match the authenticated user's UID.
- * - /roles_admin/{userId}: Existence of this document grants admin privileges to the specified user.
- *
- * Key Security Decisions:
- * - User data is private and only accessible to the owning user or an admin.
- * - User listing is restricted to admins.
- * - The 'id' field within each user document is immutable and must match the 'userId' path parameter.
- * - Admin role is determined by the existence of a document in `/roles_admin/{userId}`
- *
- * Denormalization for Authorization:
- * - Admin status is checked by verifying the existence of a document in the `/roles_admin/{userId}` collection,
- *   avoiding the need to store a global admin list or use custom claims.
- *
- * Structural Segregation:
- * - User profiles are stored in a dedicated `/users/{userId}` collection, ensuring clear ownership and simplifying access control.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Secure user profile data under /users/{userId}.
-     * @path /users/{userId}
-     * @allow (create) User 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
-     * @allow (get) User 'user_abc' can read their profile if request.auth.uid == 'user_abc'. Admin can read any profile
-     * @allow (update) User 'user_abc' can update their profile if request.auth.uid == 'user_abc'. Admin can update any profile
-     * @allow (delete) User 'user_abc' can delete their profile if request.auth.uid == 'user_abc'. Admin can delete any profile
-     * @deny (create) User 'user_xyz' cannot create a profile under /users/user_abc.
-     * @deny (get) User 'user_xyz' cannot read the profile at /users/user_abc unless they are an admin.
-     * @deny (update) User 'user_xyz' cannot update the profile at /users/user_abc unless they are an admin.
-     * @deny (delete) User 'user_xyz' cannot delete the profile at /users/user_abc unless they are an admin.
-     * @principle Enforces document ownership for reads and writes. Validates that the user ID in the path matches the authenticated user's ID.
-     */
-    match /users/{userId} {
-      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow list: if false;
-
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && isExistingOwner(userId);
-      allow delete: if isSignedIn() && (isOwner(userId) || isAdmin()) && isExistingOwner(userId);
-    }
-
-     /**
-      * @description Secure admin role data under /roles_admin/{userId}.
-      * @path /roles_admin/{userId}
-      * @allow (create) User 'user_abc' can create their profile if request.auth.uid == 'user_abc' and the 'id' field matches.
-      * @allow (get) User 'user_abc' can read their profile if request.auth.uid == 'user_abc'.
-      * @allow (update) User 'user_abc' can update their profile if request.auth.uid == 'user_abc'.
-      * @allow (delete) User 'user_abc' can delete their profile if request.auth.uid == 'user_abc'.
-      * @deny (create) User 'user_xyz' cannot create a profile under /users/user_abc.
-      * @deny (get) User 'user_xyz' cannot read the profile at /users/user_abc.
-      * @deny (update) User 'user_xyz' cannot update the profile at /users/user_abc.
-      * @deny (delete) User 'user_xyz' cannot delete the profile at /users/user_abc.
-      * @principle Enforces document ownership for reads and writes. Validates that the user ID in the path matches the authenticated user's ID and the 'id' field in the document.
-      */
-    match /roles_admin/{userId} {
-       allow get: if isSignedIn() && isOwner(userId);
-       allow list: if false;
-
-       allow create: if isSignedIn() && isOwner(userId);
-       allow update: if isSignedIn() && isOwner(userId) && isExistingOwner(userId);
-       allow delete: if isSignedIn() && isOwner(userId) && isExistingOwner(userId);
-    }
 
     function isSignedIn() {
       return request.auth != null;
@@ -78,12 +10,12 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-       return isOwner(userId) && resource != null;
+    match /admins/{adminId} {
+      allow read, write: if isSignedIn() && isOwner(adminId);
     }
 
-     function isAdmin() {
-        return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-     }
+    match /customers/{customerId} {
+      allow read, write: if isSignedIn() && isOwner(customerId);
+    }
   }
 }

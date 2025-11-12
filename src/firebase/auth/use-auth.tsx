@@ -1,4 +1,3 @@
-
 'use client';
 import {
   GoogleAuthProvider,
@@ -13,7 +12,7 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   createContext,
   ReactNode,
@@ -27,6 +26,8 @@ import { useDoc } from '@/firebase/firestore/use-doc';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
+export type Role = 'admin' | 'customer';
+
 // Define the shape of the user profile data
 export interface UserProfile {
   displayName: string;
@@ -39,7 +40,8 @@ interface AuthContextState {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signIn: () => Promise<void>;
+  role: Role | null;
+  signIn: (role: Role) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -52,12 +54,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<Role | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname.startsWith('/login/admin')) {
+      setRole('admin');
+    } else if (pathname.startsWith('/login/customer')) {
+      setRole('customer');
+    } else if (localStorage.getItem('userRole')) {
+      setRole(localStorage.getItem('userRole') as Role);
+    }
+  }, [pathname]);
 
   const userDocRef = useMemo(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, `users/${user.uid}`) as DocumentReference<UserProfile>;
-  }, [user, firestore]);
+    if (!user || !firestore || !role) return null;
+    const collectionName = role === 'admin' ? 'admins' : 'customers';
+    return doc(firestore, `${collectionName}/${user.uid}`) as DocumentReference<UserProfile>;
+  }, [user, firestore, role]);
 
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
@@ -65,11 +80,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      if (user) {
-        const userRef = doc(firestore, 'users', user.uid);
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
+  const signIn = async (selectedRole: Role) => {
+    setRole(selectedRole);
+    localStorage.setItem('userRole', selectedRole);
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const loggedInUser = result.user;
+      if (loggedInUser) {
+        const collectionName = selectedRole === 'admin' ? 'admins' : 'customers';
+        const userRef = doc(firestore, collectionName, loggedInUser.uid);
         const profileData = {
-          displayName: user.displayName || 'Anonymous',
-          email: user.email || '',
+          displayName: loggedInUser.displayName || 'Anonymous',
+          email: loggedInUser.email || '',
           createdAt: serverTimestamp(),
         };
 
@@ -84,23 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             errorEmitter.emit('permission-error', permissionError);
           });
       }
-    });
-
-    return () => unsubscribe();
-  }, [auth, firestore, router]);
-
-  const signIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error('Sign-in error:', error);
+      localStorage.removeItem('userRole');
     }
   };
 
   const logOut = async () => {
     try {
       await signOut(auth);
+      localStorage.removeItem('userRole');
+      setRole(null);
       router.push('/login');
     } catch (error) {
       console.error('Sign-out error:', error);
@@ -113,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         userProfile: userProfile as UserProfile | null,
         loading,
+        role,
         signIn,
         signOut: logOut,
       }}

@@ -9,7 +9,7 @@ import { useAuth } from '@/firebase/auth/use-auth';
 
 
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { user, userProfile, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -19,22 +19,21 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
     }
   }, [user, loading, router]);
   
-  if (loading || !user) {
+  if (loading || !user || !role) {
     // You can render a loading spinner here
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  // This is a placeholder, in a real app you would fetch the user's role from your database
-  const role = 'customer'; 
-
   // Redirect if user is on the wrong dashboard
   if (pathname.startsWith('/admin') && role !== 'admin') {
     router.replace('/customer/dashboard');
     return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
-  } else if (pathname.startsWith('/customer') && role !== 'customer') {
-    router.replace('/admin/dashboard');
-    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
+  } else if (pathname.startsWith('/customer') && role !== 'admin') { // Allow admin to see customer pages for now
+    // Keep admin on customer page if they navigate there.
+  } else if (pathname.startsWith('/customer') && role === 'customer') {
+    // allow
   }
+
 
   const LayoutComponent = role === 'admin' ? AdminLayout : CustomerLayout;
 

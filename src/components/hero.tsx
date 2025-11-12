@@ -7,10 +7,7 @@ import { useAuth } from "@/firebase/auth/use-auth";
 
 export function Hero() {
   const speakerImage = PlaceHolderImages.find(p => p.id === 'product-1');
-  const { user } = useAuth();
-  
-  // This is a placeholder role. In a real app, you'd fetch this from your database.
-  const role = user ? 'customer' : null;
+  const { user, role } = useAuth();
 
   const getStartedLink = user && role ? `/${role}/dashboard` : "/login";
   const getStartedText = user ? "Go to Dashboard" : "Get Started";

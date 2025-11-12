@@ -1,8 +1,30 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Represents a user's profile information.",
+    "AdminProfile": {
+      "title": "Admin Profile",
+      "description": "Represents an admin user's profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user profile was created."
+        }
+      },
+      "required": ["displayName", "email", "createdAt"]
+    },
+    "CustomerProfile": {
+      "title": "Customer Profile",
+      "description": "Represents a customer user's profile information.",
       "type": "object",
       "properties": {
         "displayName": {
@@ -27,9 +49,13 @@
     "providers": ["google.com"]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Stores public profile information for each user."
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminProfile" },
+      "description": "Stores profile information for admin users."
+    },
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/CustomerProfile" },
+      "description": "Stores profile information for customer users."
     }
   }
 }
